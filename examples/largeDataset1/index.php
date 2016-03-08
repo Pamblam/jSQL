@@ -5,7 +5,7 @@
         <title>jSQL test</title>
     </head>
     <body>
-		<script src="../jSQL.js"></script>
+		<script src="../../jSQL.js"></script>
 		<script>
 			
 			echo("<h1>Loading</h1>");
@@ -14,23 +14,21 @@
 			xhttp.onreadystatechange = function() {
 				if (xhttp.readyState == 4 && xhttp.status == 200) {
 					var data = JSON.parse(xhttp.responseText);
-					var t = jSQL.createTable("myTable", data);
+					jSQL.createTable("myTable", data);
 					
 					clear();
-					echo("<h2>Dataset</h2>");
-					echo(t.data.length+" total rows<br>");
+					echo("<h1>Example 1</h1><p>Created `myTable` from JSON via AJAX</p>");
+					echo("<p>There are "+jSQL.tables.myTable.data.length+" total rows in `myTable`</p>");
 					
-					var query = jSQL.
-									select(['SPONSORID', 'SIC', 'CRRT']).
-									from('myTable').
-									where("SIC").equals("8093-T").
-									and("CRRT").equals("All");
-							
+					//var query = jSQL.select(['SPONSORID', 'SIC', 'CRRT']).from('myTable').where('SIC').equals('8093-T').and('CRRT').equals('All').limit(50);
+					var query = jSQL.query("SELECT `SPONSORID`, `SIC`, `CRRT` FROM `myTable` WHERE `SIC` = '8093-T' AND `CRRT` = 'All' LIMIT 50");
+					
 					var results = query.fetch();
 					
-					echo("<h3>"+results.length+" rows <i>WHERE `SIC` = '8093-T' AND `CRRT` = 'All'</i></h3>");
-					var tbl = makeTable(results); console.log(tbl);
-					echo(tbl);
+					echo("<p><code>var query = jSQL.query(\"SELECT `SPONSORID`, `SIC`, `CRRT` FROM `myTable` WHERE `SIC` = '8093-T' AND `CRRT` = 'All' LIMIT 50\");</code><hr>");
+					echo("<code>var query = jSQL.select(['SPONSORID', 'SIC', 'CRRT']).from('myTable').where('SIC').equals('8093-T').and('CRRT').equals('All').limit(50);</code></p>");
+					echo("<p><b>"+results.length+" rows</b></p>");
+					echo(makeTable(results));
 				}
 			};
 			xhttp.open("GET", "testdata.json", true);
