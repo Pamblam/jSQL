@@ -14,24 +14,25 @@
 			xhttp.onreadystatechange = function() {
 				if (xhttp.readyState == 4 && xhttp.status == 200) {
 					var data = JSON.parse(xhttp.responseText);
-					jSQL.createTable("myTable", data);
+					jSQL.createTable("zips", data);
 					
 					clear();
-					echo("<h1>Example 1</h1><p>Created `myTable` from JSON via AJAX</p>");
-					echo("<p>There are "+jSQL.tables.myTable.data.length+" total rows in `myTable`</p>");
+					echo("<h1>Example 1</h1><p>Created `zips` from JSON via AJAX</p>");
+					echo("<p>There are "+jSQL.tables.zips.data.length+" total rows in `zips`</p>");
 					
-					//var query = jSQL.select(['SPONSORID', 'SIC', 'CRRT']).from('myTable').where('SIC').equals('8093-T').and('CRRT').equals('All').limit(50);
-					var query = jSQL.query("SELECT `SPONSORID`, `SIC`, `CRRT` FROM `myTable` WHERE `SIC` = '8093-T' AND `CRRT` = 'All' LIMIT 50");
+					//var query = jSQL.select('*').from('zips').where('TERR').equals('FL03').orderBy(['CITY', 'ZIP']).desc().limit(25);
+					var query = jSQL.query("SELECT * FROM `zips` WHERE `TERR` = 'FL03' ORDER BY city, zip DESC LIMIT 25");
 					
-					var results = query.fetch();
+					query.execute();
 					
-					echo("<p><code>var query = jSQL.query(\"SELECT `SPONSORID`, `SIC`, `CRRT` FROM `myTable` WHERE `SIC` = '8093-T' AND `CRRT` = 'All' LIMIT 50\");</code><hr>");
-					echo("<code>var query = jSQL.select(['SPONSORID', 'SIC', 'CRRT']).from('myTable').where('SIC').equals('8093-T').and('CRRT').equals('All').limit(50);</code></p>");
+					var results = query.fetchAll();
+					echo("<p><code>var query = jSQL.query(\"SELECT * FROM `zips` WHERE `TERR` = 'FL03' ORDER BY city, zip DESC LIMIT 25\");</code><hr>");
+					echo("<code>var query = jSQL.select('*').from('zips').where('TERR').equals('FL03').orderBy(['CITY', 'ZIP']).desc().limit(25);</code></p>");
 					echo("<p><b>"+results.length+" rows</b></p>");
 					echo(makeTable(results));
 				}
 			};
-			xhttp.open("GET", "testdata.json", true);
+			xhttp.open("GET", "zips.data.json", true);
 			xhttp.send();
 
 			// Some helper functions

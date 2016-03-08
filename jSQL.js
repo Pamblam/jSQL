@@ -120,7 +120,7 @@ function jSQLParseQuery(query){
 		case "INSERT": console.log("@todo parse INSERT statement"); break;
 		case "CREATE": console.log("@todo parse CREATE statement"); break;
 		case "SELECT":
-			var table, columns, query;
+			var table, columns, query, orderColumns = [];
 			var upperWords = query.toUpperCase().split(" "); upperWords.shift();
 			var fromIndex = upperWords.indexOf("FROM");
 			if(fromIndex < 0) throw "Unintelligible query. Expected 'FROM'";
@@ -158,8 +158,8 @@ function jSQLParseQuery(query){
 				throw c+" column not found in "+table+" table";
 			};
 			
-			for(var i=0;i<columns.length;i++)
-				columns[i] = convertToCol(columns[i]);
+			if(columns.length == 1 && columns[0] == "*") columns = '*';
+			else for(var i=0;i<columns.length;i++) columns[i] = convertToCol(columns[i]);
 			
 			// Generate the query object
 			query = jSQL.select(columns).from(table);
@@ -188,6 +188,32 @@ function jSQLParseQuery(query){
 						break;
 					case "LIMIT":
 						query = query.limit(words.shift());
+						break;
+					case "ORDER":
+						if(words.shift().toUpperCase() != "BY") throw "Expected 'ORDER BY', got something else.";
+						while(words.length > 0){
+							var nextWord = words.shift();
+							try{
+								// Remove the comma if there is one
+								while(nextWord.indexOf(",") == nextWord.length-1)
+									nextWord = nextWord.substr(0, nextWord.length-1);
+				
+								nextWord = convertToCol(nextWord);
+								orderColumns.push(nextWord);
+							}catch(e){
+								words.unshift(nextWord); 
+								break;
+							}
+						}
+						query = query.orderBy(orderColumns);
+						break;
+					case "ASC":
+						if(!orderColumns.length) throw "Must call OREDER BY before using ASC.";
+						query = query.asc();
+						break;
+					case "DESC":
+						if(!orderColumns.length) throw "Must call OREDER BY before using DESC.";
+						query = query.desc();
 						break;
 					default: throw "Unintelligible query. Near: "+piece;
 				}
@@ -231,6 +257,9 @@ function jSQLTableSelect(table, columns){
 	self.conditions = [];
 	self.LIMIT = 0;
 	self.finalConditions = [];
+	self.sortColumn = [];
+	self.sortDirection = "ASC";
+	self.resultSet = [];
 	 
 	self.init = function(table, columns){
 		self.table = table;
@@ -285,7 +314,27 @@ function jSQLTableSelect(table, columns){
 		return self;
 	};
 	
-	self.fetch = function(){
+	self.orderBy = function(columns){
+		if(!Array.isArray(columns)) columns = [columns];
+		for(var i=columns.length; i--;)
+			if(self.table.columns.indexOf(columns[i]) < 0) throw "There is no "+columns[i]+" column in the "+self.table.name+" table.";
+		self.sortColumn = columns;
+		return self;
+	};
+	
+	self.asc = function(){
+		if('' == self.sortColumn) throw "Must use orderBy clause before using ASC";
+		self.sortDirection = "ASC";
+		return self;
+	};
+	
+	self.desc = function(){
+		if('' == self.sortColumn) throw "Must use orderBy clause before using DESC";
+		self.sortDirection = "DESC";
+		return self;
+	};
+	
+	self.execute = function(){
 		var results = [];
 		if(self.conditions.length > 0) self.finalConditions.push(self.conditions);
 		for(var i=0; i<self.table.data.length; i++){
@@ -339,7 +388,50 @@ function jSQLTableSelect(table, columns){
 				}
 			}
 		}
-		return results;
+		if(self.sortColumn.length > 0){
+			results.sort(function(a, b){
+				
+				return (function srrrrt(i){
+					if('undefined' == typeof self.sortColumn[i]) return 0;
+					if(a[self.sortColumn[i]] < b[self.sortColumn[i]]) return -1;
+					if(a[self.sortColumn[i]] > b[self.sortColumn[i]]) return 1;
+					return srrrrt(i+1);
+				}(0));
+					
+			});
+			if(self.sortDirection == "DESC") results.reverse();
+		}
+		self.resultSet = results;
+		return self;
+	};
+	
+	
+	self.fetch = function(Mode){
+		if('undefined' == typeof Mode) Mode = "ASSOC";
+		Mode = Mode.toUpperCase();
+		if(Mode !== "ASSOC" && Mode !== "ARRAY") throw "Fetch expects paramter one to be 'ASSOC', 'ARRAY', or blank";
+		if(!self.resultSet.length) return false;
+		var row = self.resultSet.shift();
+		if(Mode == "ARRAY"){
+			var r = [];
+			for(var name in row) if(row.hasOwnProperty(name)) r.push(row[name]);
+			row = r;
+		}
+		return row;
+	};
+	
+	self.fetchAll = function(Mode){
+		if('undefined' == typeof Mode) Mode = "ASSOC";
+		Mode = Mode.toUpperCase();
+		if(Mode !== "ASSOC" && Mode !== "ARRAY") throw "Fetch expects paramter one to be 'ASSOC', 'ARRAY', or blank";
+		if(!self.resultSet.length) return false;
+		
+		var res = [];
+		while(self.resultSet.length > 0){
+			res.push(self.fetch(Mode));
+		}
+		
+		return res;
 	};
 	
 	self.init(table, columns);

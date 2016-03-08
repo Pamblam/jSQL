@@ -6,12 +6,12 @@ A work in progress, jSQL (or, javaScript Query Language,) is a Javascript based,
  - Easier than alternatives
  - Support for SELECT statements
  - Method chaining alternative to SQL syntax
+ - Data sorting via the ORDER BY clause
  
 ### Goals
  - Support for CREATE, UPDATE, INSERT  statements
  - Faster than alternatives
  - Support for (semi) persistent storage
- - ORDER BY caluse on SELECT (Data sorting)
  - Storage and querying of all native javascript types
  - Typecasting data depending on it's column type
  
@@ -20,8 +20,9 @@ A work in progress, jSQL (or, javaScript Query Language,) is a Javascript based,
 jSQL.createTable("Products", data);
 var productID = prompt(" Product Name Lookup \n Please enter a Product ID#:");
 var query = jSQL.query("SELECT `Name` FROM `Products` WHERE `ProductID` = '" +productID+ "'");
-var results = query.fetch();
-var message = !!results.length ? "Product name: " +results[0].Name : "Product not found.";
+query.execute();
+var row = query.fetch("ASSOC");
+var message = !!row.length ? "Product name: " +row.Name : "Product not found.";
 alert(message);
 ```
 
