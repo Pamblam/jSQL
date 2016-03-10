@@ -469,12 +469,115 @@
 		return new jSQLTableInsert(tablename);
 	}
 	
+	function WebSQLInit(){
+		var ret = false, db = null;
+		try {
+			db = openDatabase("jSQL", "1.0", "jSQL Info Schema", (5 * 1024 * 1024));
+			if(db) ret = new WebSQLAPI(db);
+		} catch (e) { }
+		return ret;
+	}
+	
+	function WebSQLAPI(db){
+		var self = this;
+		self.db = db;
+		self.type = "WebSQL";
+		
+		self.init = function(){
+			console.log("constructed WebSQLAPI");
+		};
+		
+		self.saveTable = function(table){
+			
+		};
+		
+		self.init();
+	}
+	
+	function IndexedDbInit() {
+		var ret = false;
+		try {
+			indexedDB = window.indexedDB || window.webkitIndexedDB || window.mozIndexedDB || window.msIndexedDB;
+			IDBTransaction = window.hasOwnProperty('webkitIndexedDB') ? window.webkitIDBTransaction : window.IDBTransaction;
+			IDBKeyRange = window.hasOwnProperty('webkitIndexedDB') ? window.webkitIDBKeyRange : window.IDBKeyRange;
+		} catch (e) { }
+		if(indexedDB) {
+			try{
+				var req = indexedDB.open("jSQL", 1);
+				ret = new IndexedDBAPI(req);
+			}catch(e){ }
+		}
+		return ret;
+	}
+	
+	function IndexedDBAPI(request){
+		var self= this;
+		self.type = "IndexedDB";
+		self.db = null;
+		
+		self.init = function(){
+			request.onsuccess = function (event) {
+				var setVersionRequest, version =1;
+				self.db = event.target.result;
+				version = String(version);
+				if (self.db.setVersion && version !== self.db.version) {
+					setVersionRequest = self.db.setVersion(version);
+					setVersionRequest.onfailure = function(){
+						throw "Error setting IndexedDB version"; 
+					};
+				}
+			};
+			request.onupgradeneeded = function (event) {
+				self.db = event.target.result;
+			};
+			request.onerror = function (event) {
+				alert("You've opted out of offline storage. Operation cancelled.");
+				throw "User denied storage.";
+			};
+		};
+		
+		self.saveTable = function(table){
+			if (self.db.objectStoreNames.contains(table.name)) 
+				self.db.deleteObjectStore(table.name);
+			self.db.createObjectStore(table.name);
+			var transaction = self.db.transaction([table.name], IDBTransaction.READ_WRITE || 'readwrite');
+			transaction.onerror = function(){ throw "Transaction error, could not save table."; };
+			var store = transaction.objectStore(table.name);
+			for(var rownum in table.data){
+				var row = table.data[rownum];
+				var r = {}; for(var i in row) r[i] = row[i];
+				store.add(r).onerror = function(){ throw "Error trying to store data."; };
+			}
+		};
+		
+		self.init();
+	}
+	
+	function persistanceManager(){
+		var self = this;
+		self.api = null;
+				
+		self.persist = function(){
+			for(var tableName in jSQL.tables){
+				self.api.saveTable(tableName);
+			}
+		};
+		
+		self.init = function(){
+			self.api = WebSQLInit() || IndexedDbInit() || 1;
+			if(self.api === 1) throw "Browser does not support persistant data.";
+		};
+		
+		self.init();
+	}
+	
 	return {
 		tables: {},
 		query: jSQLParseQuery,
 		createTable: createTable,
 		select: select,
-		insertInto: insertInto
+		insertInto: insertInto,
+		persist: (new persistanceManager()).persist
 	};
 	
 }());

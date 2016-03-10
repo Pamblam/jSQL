@@ -8,10 +8,28 @@
 		<script src="../../jSQL.js"></script>
 		<script>
 			
+			// Create the table
+			jSQL.createTable("randomStrings", ["time", "str"], []);
+			
 			// http://labs.ft.com/2012/09/ft-style-web-app-on-firefox-and-ie6-to-ie10/
-			echo("todo.. ");
-
-			// Some helper functions
+			drawButtons();
+			
+			function addRecord(){
+				var time = Math.floor(Date.now() / 1000); 
+				var str = prompt("Enter an arbitrary string: ");
+				jSQL.tables.randomStrings.insertRow({time:time, str:str});
+				clear(); echo("<h3>Persistance Test</h3>");
+				echo(makeTable(jSQL.query("SELECT * FROM randomStrings").execute().fetchAll()));
+				drawButtons();
+			}
+			
+			function drawButtons(){
+				echo('<button onclick="addRecord();">Add a record</button>');
+				if(jSQL.tables.randomStrings.data.length > 0){
+					echo('<button onclick="jSQL.persist();">Save</button>');
+				}
+			}
+			
 			function echo(text){
 				document.getElementsByTagName('body')[0].insertAdjacentHTML('beforeend', text);
 			}
