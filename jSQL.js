@@ -19,17 +19,15 @@
 		self.init = function(name, columns, data){
 			self.name = name;
 
-			// First param is array of arrays, no third param
-			//  - Create the table only, no data
-			if(Array.isArray(columns) && 'undefined' == typeof data){
-				// Some validation
-				var i=0; while(i--) if('string' != typeof columns) throw "Column names must be strings.";
-			}
+			// If first param is array, no third param
+			if(Array.isArray(columns) && undefined === data)
+				// Create the data parameter from column param
+				{data = columns; columns = [];}
 
-			// Second param is array of objects
+			// If second param is array of objects
 			// - Create table from first object
 			// - Generate data (3rd) param
-			if(Array.isArray(columns) &&  typeof columns[0] == "object"){
+			if(Array.isArray(columns) && !Array.isArray(columns[0]) && typeof columns[0]=="object"){
 				var cols = [];
 				for(var name in columns[0])
 					if(columns[0].hasOwnProperty(name))
@@ -47,7 +45,25 @@
 			for(var i=0; i<columns.length; i++) self.colmap[columns[i]] = i;
 
 			// Load the data, if there is any
-			if(typeof data !== 'undefined') self.loadData(data);
+			if(data !== undefined) self.loadData(data);
+		};
+		
+		self.renameColumn = function(oldname, newname){
+			if(undefined === oldname || "string" != typeof newname) throw "renameColumn expects and old column name and a new one, both must be strings.";
+			if(self.columns.indexOf(oldname) < 0) throw "The column "+oldname+" does not exist in this table.";
+			self.columns.splice(self.columns.indexOf(oldname), 1, newname);
+		};
+		
+		self.addColumn = function(name, defaultVal){
+			if(undefined === defaultVal) defaultVal = null;
+			if('string' != typeof name) name = (function r(n){
+				for(var i=0; i<self.columns.length; i++)
+					if(self.columns[i]=="u"+n) return r(n+1);
+				return "u"+n;
+			}(0));
+			self.columns.push(name);
+			var i=self.data.length; while(i--) self.data[i].push(defaultVal);
+			self.colmap[name] =  self.columns.length -1;
 		};
 
 		// Load the dataset into the table
@@ -68,16 +84,41 @@
 			// If the row is an Array
 			//	- Insert the data sequentially
 			// If the row is an Object
-			//	- Insert the rows into the columns specified by the property names
-			// Fill in any missing columns with null
-			// Ignore any extra colunmns
+			//	- Insert the rows into the columns specified by the property name
+			// Fill in any missing columns in the dataset with null
 			if(Array.isArray(data)){
+				while(data.length > self.columns.length)
+					self.addColumn();
+				while(data.length < self.columns.length)
+					data.push(null);
 				for(var n=0; n<data.length; n++)
-					if(n<self.columns.length) row.push(data[n]);
+					row.push(data[n]);
 				while(row.length < self.columns.length) row.push(null);
 			}else if(typeof data == 'object'){
+				
+				// Loop each column of the table
 				for(var n=0; n<self.columns.length; n++)
-					row.push(typeof data[self.columns[n]] == 'undefined' ? null : data[self.columns[n]]);
+					// If the column doesn't exist in the data row..
+					if(data[self.columns[n]] === undefined)
+						// ..add an empty value for it in the data row
+						data[self.columns[n]] = null;
+				
+				// Loop each column in the data row
+				for(var colname in data)
+					// If the data row column doesn't exist in the table..
+					if(function(l){ while(l--) if(self.columns[l]==colname) return 0; return 1; }(self.columns.length)){
+						// ...and there is already an undefined row title...
+						if(self.columns.indexOf("u0") > -1){
+							// ...let the undefined row inherit this title,
+							self.renameColumn("u0", colname);
+							// and shift the unknown column titles
+							var i=1; while(self.columns.indexOf("u"+i)>-1)self.renameColumn("u"+i, "u"+(i-1));
+						// ..otherwise, just add the column to the table.
+						}else self.addColumn(colname);
+					}
+				
+				for(var n=0; n<self.columns.length; n++)
+					row.push(data[self.columns[n]]);
 			}else throw "Data not structured properly.";
 			self.data.push(row);
 		};
@@ -125,7 +166,7 @@
 						break;
 					}
 				}
-				if('undefined' == typeof jSQL.tables[table]) 
+				if(undefined === jSQL.tables[table]) 
 					throw "Table: "+table+" does not exist.";
 
 				// Predcit the correct casing for column and table names
@@ -186,11 +227,11 @@
 							query = query.orderBy(orderColumns);
 							break;
 						case "ASC":
-							if(!orderColumns.length) throw "Must call OREDER BY before using ASC.";
+							if(!orderColumns.length) throw "Must call ORDER BY before using ASC.";
 							query = query.asc();
 							break;
 						case "DESC":
-							if(!orderColumns.length) throw "Must call OREDER BY before using DESC.";
+							if(!orderColumns.length) throw "Must call ORDER BY before using DESC.";
 							query = query.desc();
 							break;
 						default: throw "Unintelligible query. Near: "+piece;
@@ -208,7 +249,7 @@
 		var self = this;
 		self.table = table;
 		self.values = function(data){
-			if('undefined' == typeof jSQL.tables[table])
+			if(undefined === jSQL.tables[table])
 				throw "Table: "+self.table+" doesn't exist.";
 			jSQL.tables[table].insertRow(data);
 			return true;
@@ -220,7 +261,7 @@
 		var self = this;
 		self.columns = columns;
 		self.from = function(table){
-			if('undefined' == typeof jSQL.tables[table])
+			if(undefined === jSQL.tables[table])
 				throw "Table: "+table+" doesn't exist.";
 			return new jSQLTableSelect(jSQL.tables[table], self.columns);
 		};
@@ -370,7 +411,7 @@
 				results.sort(function(a, b){
 
 					return (function srrrrt(i){
-						if('undefined' == typeof self.sortColumn[i]) return 0;
+						if(undefined === self.sortColumn[i]) return 0;
 						if(a[self.sortColumn[i]] < b[self.sortColumn[i]]) return -1;
 						if(a[self.sortColumn[i]] > b[self.sortColumn[i]]) return 1;
 						return srrrrt(i+1);
@@ -385,7 +426,7 @@
 
 
 		self.fetch = function(Mode){
-			if('undefined' == typeof Mode) Mode = "ASSOC";
+			if(undefined === Mode) Mode = "ASSOC";
 			Mode = Mode.toUpperCase();
 			if(Mode !== "ASSOC" && Mode !== "ARRAY") throw "Fetch expects paramter one to be 'ASSOC', 'ARRAY', or blank";
 			if(!self.resultSet.length) return false;
@@ -399,7 +440,7 @@
 		};
 
 		self.fetchAll = function(Mode){
-			if('undefined' == typeof Mode) Mode = "ASSOC";
+			if(undefined === Mode) Mode = "ASSOC";
 			Mode = Mode.toUpperCase();
 			if(Mode !== "ASSOC" && Mode !== "ARRAY") throw "Fetch expects paramter one to be 'ASSOC', 'ARRAY', or blank";
 			if(!self.resultSet.length) return false;
