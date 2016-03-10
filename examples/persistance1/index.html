@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>jSQL test</title>
+    </head>
+    <body>
+		<script src="../../jSQL.js"></script>
+		<script>
+			
+			// http://labs.ft.com/2012/09/ft-style-web-app-on-firefox-and-ie6-to-ie10/
+			echo("todo.. ");
+
+			// Some helper functions
+			function echo(text){
+				document.getElementsByTagName('body')[0].insertAdjacentHTML('beforeend', text);
+			}
+			
+			function clear(){
+				document.getElementsByTagName('body')[0].innerHTML = "";
+			}
+			
+			function makeTable(res){
+				var html = ["<table><thead><tr>"];
+				if('object' != typeof res[0]) 
+					throw "No table data..";
+				for(var name in res[0])
+					if(res[0].hasOwnProperty(name))
+						html.push("<th>"+name+"</th>");
+				html.push("</tr></thead><tbody>");
+				for(var i=0; i<res.length; i++){
+					html.push("<tr>");
+					for(var name in res[i])
+						if(res[0].hasOwnProperty(name))
+							html.push("<td>"+res[i][name]+"</td>");
+					html.push("</tr>");
+				}
+				html.push("</tbody></table><hr>");
+				return html.join('');
+			}
+	
+		</script>
+    </body>
+</html>
