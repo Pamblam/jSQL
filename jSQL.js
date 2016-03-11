@@ -514,6 +514,7 @@
 		var self= this;
 		self.type = "IndexedDB";
 		self.db = null;
+		self.stores = [];
 		
 		self.init = function(){
 			request.onsuccess = function (event) {
@@ -529,6 +530,8 @@
 			};
 			request.onupgradeneeded = function (event) {
 				self.db = event.target.result;
+				for(var i in jSQL.tables)
+					self.stores.push(transaction.objectStore(jSQL.tables[i].name));
 			};
 			request.onerror = function (event) {
 				alert("You've opted out of offline storage. Operation cancelled.");
@@ -542,7 +545,7 @@
 			self.db.createObjectStore(table.name);
 			var transaction = self.db.transaction([table.name], IDBTransaction.READ_WRITE || 'readwrite');
 			transaction.onerror = function(){ throw "Transaction error, could not save table."; };
-			var store = transaction.objectStore(table.name);
+			var store = self.stores[table.name];
 			for(var rownum in table.data){
 				var row = table.data[rownum];
 				var r = {}; for(var i in row) r[i] = row[i];
