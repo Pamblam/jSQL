@@ -724,35 +724,46 @@
 					rows.push({table: tbl, data:JSON.stringify(row)});
 				}
 				self.api.delete("jSQL_data_schema", function(){
-					self.api.insert("jSQL_data_schema", rows);
+					self.api.insert("jSQL_data_schema", rows, callback);
 				});
 			}
 		};
 		
 		self.load = function(callback){	
 			if("function" !== typeof callback) callback = function(){};
-			self.api.select("jSQL_data_schema", function(r){
-				jSQL.tables = {};
-				for(var i=r.length; i--;){
-					var tablename = r[i].table;
-					var rowdata = JSON.parse(r[i].data)
-					// Create the table in memory if it doesn't exist yet
-					if(undefined === jSQL.tables[tablename]){
-						var cols = [];
-						for(var c in rowdata)
-							if(rowdata.hasOwnProperty(c))
-								cols.push(c);
-						jSQL.createTable(tablename, cols, []);
-					}
-					// Check for and parse functions
-					for(var c in rowdata)
-						if(rowdata.hasOwnProperty(c))
-							if("string" == typeof rowdata[c] && rowdata[c].indexOf("#jSQLFunct#")===0)
-								rowdata[c] = exec(rowdata[c].substr(11));
-					jSQL.tables[tablename].insertRow(rowdata)
-					callback();
+			// Wait for the schema to be set up
+			var waiting = false;
+			var intvl = setInterval(function(){
+				if(waiting) return;
+				waiting = true;
+				try{
+					self.api.select("jSQL_data_schema", function(r){
+						jSQL.tables = {};
+						for(var i=r.length; i--;){
+							var tablename = r[i].table;
+							var rowdata = JSON.parse(r[i].data)
+							// Create the table in memory if it doesn't exist yet
+							if(undefined === jSQL.tables[tablename]){
+								var cols = [];
+								for(var c in rowdata)
+									if(rowdata.hasOwnProperty(c))
+										cols.push(c);
+								jSQL.createTable(tablename, cols, []);
+							}
+							// Check for and parse functions
+							for(var c in rowdata)
+								if(rowdata.hasOwnProperty(c))
+									if("string" == typeof rowdata[c] && rowdata[c].indexOf("#jSQLFunct#")===0)
+										rowdata[c] = exec(rowdata[c].substr(11));
+							jSQL.tables[tablename].insertRow(rowdata);
+							callback();
+						}
+					});
+					clearInterval(intvl);
+				}catch(e){
+					waiting = false;
 				}
-			});
+			}, 10);
 		};
 		
 		// Initialize the database

@@ -8,12 +8,12 @@
 		<script src="../../jSQL.js"></script>
 		<script>
 			
-//			// Create the table
-//			jSQL.load(function(){
-////				if(undefined === jSQL.tables.randomStrings)
+			// Create the table
+			jSQL.load(function(){
+				if(undefined === jSQL.tables.randomStrings)
 					jSQL.createTable("randomStrings", ["time", "str"], []);
-//				setTimeout(resetView, 3000);
-//			});
+				resetView();
+			});
 			
 			// http://labs.ft.com/2012/09/ft-style-web-app-on-firefox-and-ie6-to-ie10/
 			drawButtons();
@@ -34,8 +34,7 @@
 			function drawButtons(){
 				echo('<button onclick="addRecord();">Add</button>');
 				echo('<button onclick="loadData();">Reset (to last save)</button>');
-				if(jSQL.tables.randomStrings.data.length > 0){
-					
+				if(undefined !== jSQL.tables.randomStrings && jSQL.tables.randomStrings.data.length > 0){
 					echo('<button onclick="jSQL.persist();">Save</button>');
 				}
 			}
