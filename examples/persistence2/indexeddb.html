@@ -31,7 +31,8 @@
 						throw "indexedDB is not supported in this browser";
 
 					var version = 1;
-					var request = indexedDB.open("testefrss", version);
+					var dbname = window.location.href.replace(/\W+/g, ""); // use the current url to keep it unique
+					var request = indexedDB.open("jSQL_"+dbname, version);
 
 					var installModels = function() {
 						for(var i=modelData.length; i--;){
@@ -40,14 +41,28 @@
 							}
 							self.db.createObjectStore(modelData[i].name,  {keyPath: '_id', autoIncrement: true});
 						}
-						setTimeout(function(){
-							for(var i=modelData.length; i--;){
-								var name = modelData[i].name;
-								var data = modelData[i].rows == undefined ? [] : modelData[i].rows;
-								self.insert(name, data);
+
+						// Attempt to add the data every 10ms until the store is ready.
+						// Throw an error after 10 seconds
+						var x=0, working = false;
+						var ivl = setInterval(function(){
+							if(working) return; working = true;
+							try{
+								for(var i=modelData.length; i--;){
+									var name = modelData[i].name;
+									var data = modelData[i].rows == undefined ? [] : modelData[i].rows;
+									self.insert(name, data);
+								}
+								clearInterval(ivl);
+							}catch(e){
+								if(x > 1000){
+									clearInterval(ivl);
+									throw "Could not add data after 10 seconds.";
+								}
+								working = false;
 							}
-						}, 3000);
-						
+						}, 10);
+
 					};
 
 					request.onsuccess = function (event) {
@@ -62,7 +77,7 @@
 							setVersionRequest.onsuccess = function (event) {
 								installModels();
 								setVersionRequest.result.oncomplete = function () {
-									if (successCallback) successCallback();
+									successCallback();
 								};
 							};
 						} else {

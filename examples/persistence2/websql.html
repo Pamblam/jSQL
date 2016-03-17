@@ -9,14 +9,14 @@
 			function WebSQLAPI() {
 				var self = this;
 				self.db = null;
-				
+
 				// private function to execute a query
 				var __runQuery = function(query, data, successCallback, failureCallback) {
 					if(typeof successCallback != "function") successCallback = function(){};
 					if(typeof failureCallback != "function") failureCallback = function(){ throw "Could not execute query: "+query; };
-					 
+
 					var i, l, remaining;
-					
+
 					if(!Array.isArray(data[0])) data = [data];
 					remaining = data.length;
 					var innerSuccessCallback = function(tx, rs) {
@@ -37,12 +37,12 @@
 						}
 					});
 				};
-				
+
 				// Check that datastores exist.
 				// If not, create and populate them.
 				self.init = function(modelData, successCallback){
 					if(typeof successCallback != "function") successCallback = function(){};
-					
+
 					var installModels = function(){
 						try{
 							for(var i=modelData.length; i--;)
@@ -55,38 +55,38 @@
 								})(modelData[i].name, modelData[i].rows);
 						}catch(e){ throw "Error creating table"; }
 					};
-					
+
 					try {
 						var dbname = window.location.href.replace(/\W+/g, ""); // use the current url to keep it unique
-						self.db = openDatabase(dbname, "1.0", "jSQL "+dbname, (5 * 1024 * 1024));
+						self.db = openDatabase("jSQL_"+dbname, "1.0", "jSQL "+dbname, (5 * 1024 * 1024));
 					} catch(e){ throw "Error opening database"; }
-					
+
 					__runQuery("SELECT COUNT(*) FROM "+modelData[0].name, [], null, function(){
 						installModels()
 					});
-					
+
 					successCallback();
 				};
-				
+
 				// Insert a group of rows
 				self.insert = function(model, data, successCallback) {
 					if(typeof successCallback != "function") successCallback = function(){};
-					
+
 					var remaining = data.length, i, l, insertData = [];
 					if (remaining === 0) successCallback();
-					
+
 					// Convert article array of objects to array of arrays
 					for (i = 0, l = data.length; i < l; i = i + 1) 
 						insertData[i] = [JSON.stringify(data[i])];
 					__runQuery("INSERT INTO "+model+" (json) VALUES (?);", insertData, successCallback);
 				};
-				
+
 				// Delete all items from the database
 				self.delete = function(model, successCallback) {
 					if(typeof successCallback != "function") successCallback = function(){};
 					__runQuery("DELETE FROM "+model, [], successCallback);
 				};
-				
+
 				// Get all data from the datastore
 				self.select = function(model, successCallback) {
 					__runQuery("SELECT json FROM "+model, [], function(res){
@@ -96,7 +96,7 @@
 						successCallback(r);
 					});
 				};
-				
+
 			}
 			
 			var tables = [

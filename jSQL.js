@@ -469,110 +469,307 @@
 		return new jSQLTableInsert(tablename);
 	}
 	
-	function WebSQLInit(){
-		var ret = false, db = null;
-		try {
-			db = openDatabase("jSQL", "1.0", "jSQL Info Schema", (5 * 1024 * 1024));
-			if(db) ret = new WebSQLAPI(db);
-		} catch (e) { }
-		return ret;
-	}
-	
-	function WebSQLAPI(db){
+	function WebSQLAPI() {
 		var self = this;
-		self.db = db;
-		self.type = "WebSQL";
-		
-		self.init = function(){
-			console.log("constructed WebSQLAPI");
-		};
-		
-		self.saveTable = function(table){
-			
-		};
-		
-		self.init();
-	}
-	
-	function IndexedDbInit() {
-		var ret = false;
-		try {
-			indexedDB = window.indexedDB || window.webkitIndexedDB || window.mozIndexedDB || window.msIndexedDB;
-			IDBTransaction = window.hasOwnProperty('webkitIndexedDB') ? window.webkitIDBTransaction : window.IDBTransaction;
-			IDBKeyRange = window.hasOwnProperty('webkitIndexedDB') ? window.webkitIDBKeyRange : window.IDBKeyRange;
-		} catch (e) { }
-		if(indexedDB) {
-			try{
-				var req = indexedDB.open("jSQL", 1);
-				ret = new IndexedDBAPI(req);
-			}catch(e){ }
-		}
-		return ret;
-	}
-	
-	function IndexedDBAPI(request){
-		var self= this;
-		self.type = "IndexedDB";
 		self.db = null;
-		self.stores = [];
-		
-		self.init = function(){
+
+		// private function to execute a query
+		var __runQuery = function(query, data, successCallback, failureCallback) {
+			if(typeof successCallback != "function") successCallback = function(){};
+			if(typeof failureCallback != "function") failureCallback = function(){ throw "Could not execute query: "+query; };
+
+			var i, l, remaining;
+
+			if(!Array.isArray(data[0])) data = [data];
+			remaining = data.length;
+			var innerSuccessCallback = function(tx, rs) {
+				var i, l, output = [];
+				remaining = remaining - 1;
+				if (!remaining) {
+					for (i = 0, l = rs.rows.length; i < l; i = i + 1){
+						var j = rs.rows.item(i).json;
+						//j = JSON.parse(j);
+						output.push(j);
+					}
+					successCallback(output);
+				}
+			};
+			self.db.transaction(function (tx) {
+				for (i = 0, l = data.length; i < l; i = i + 1) {
+					tx.executeSql(query, data[i], innerSuccessCallback, failureCallback);
+				}
+			});
+		};
+
+		// Check that datastores exist.
+		// If not, create and populate them.
+		self.init = function(modelData, successCallback){
+			if(typeof successCallback != "function") successCallback = function(){};
+
+			var installModels = function(){
+				try{
+					for(var i=modelData.length; i--;)
+						(function(n, r){
+							__runQuery("DROP TABLE IF EXISTS "+n, [], function(){
+								__runQuery("CREATE TABLE IF NOT EXISTS "+n+"(json TEXT)", [], function(){
+									self.insert(n, r);
+								});
+							});
+						})(modelData[i].name, modelData[i].rows);
+				}catch(e){ throw "Error creating table"; }
+			};
+
+			try {
+				var dbname = window.location.href.replace(/\W+/g, ""); // use the current url to keep it unique
+				self.db = openDatabase("jSQL_"+dbname, "1.0", "jSQL "+dbname, (5 * 1024 * 1024));
+			} catch(e){ throw "Error opening database"; }
+
+			__runQuery("SELECT COUNT(*) FROM "+modelData[0].name, [], null, function(){
+				installModels();
+			});
+
+			successCallback();
+		};
+
+		// Insert a group of rows
+		self.insert = function(model, data, successCallback) {
+			if(typeof successCallback !== "function") successCallback = function(){};
+
+			var remaining = data.length, i, l, insertData = [];
+			if (remaining === 0) successCallback();
+
+			// Convert article array of objects to array of arrays
+			for (i = 0, l = data.length; i < l; i = i + 1) 
+				insertData[i] = [JSON.stringify(data[i])];
+			__runQuery("INSERT INTO "+model+" (json) VALUES (?);", insertData, successCallback);
+		};
+
+		// Delete all items from the database
+		self.delete = function(model, successCallback) {
+			if(typeof successCallback !== "function") successCallback = function(){};
+			__runQuery("DELETE FROM "+model, [], successCallback);
+		};
+
+		// Get all data from the datastore
+		self.select = function(model, successCallback) {
+			__runQuery("SELECT json FROM "+model, [], function(res){
+				var r = [];
+				for(var i = res.length; i--;)
+					r.push(JSON.parse(res[i]));
+				successCallback(r);
+			});
+		};
+
+	}
+	
+	function indexedDBAPI() {
+		var self = this;
+		self.db = null;
+		var indexedDB, IDBTransaction, IDBKeyRange;
+
+		// Check that datastores exist.
+		// If not, create and populate them.
+		self.init = function(modelData, successCallback){
+			if("function" !== typeof successCallback) successCallback = function(){};
+
+			try {
+				indexedDB = window.indexedDB || window.webkitIndexedDB || window.mozIndexedDB || window.msIndexedDB;
+				IDBTransaction = window.hasOwnProperty('webkitIndexedDB') ? window.webkitIDBTransaction : window.IDBTransaction;
+				IDBKeyRange = window.hasOwnProperty('webkitIndexedDB') ? window.webkitIDBKeyRange : window.IDBKeyRange;
+			} catch (e) {
+				throw "indexedDB is not supported in this browser";
+			}
+
+			if (!indexedDB)
+				throw "indexedDB is not supported in this browser";
+
+			var version = 1;
+			var dbname = window.location.href.replace(/\W+/g, ""); // use the current url to keep it unique
+			var request = indexedDB.open("jSQL_"+dbname, version);
+
+			var installModels = function() {
+				for(var i=modelData.length; i--;){
+					if (self.db.objectStoreNames.contains(modelData[i].name)) {
+						self.db.deleteObjectStore(modelData[i].name);
+					}
+					self.db.createObjectStore(modelData[i].name,  {keyPath: '_id', autoIncrement: true});
+				}
+
+				// Attempt to add the data every 10ms until the store is ready.
+				// Throw an error after 10 seconds
+				var x=0, working = false;
+				var ivl = setInterval(function(){
+					if(working) return; working = true;
+					try{
+						for(var i=modelData.length; i--;){
+							var name = modelData[i].name;
+							var data = modelData[i].rows == undefined ? [] : modelData[i].rows;
+							self.insert(name, data);
+						}
+						clearInterval(ivl);
+					}catch(e){
+						if(x > 1000){
+							clearInterval(ivl);
+							throw "Could not add data after 10 seconds.";
+						}
+						working = false;
+					}
+				}, 10);
+
+			};
+
 			request.onsuccess = function (event) {
-				var setVersionRequest, version =1;
+				var setVersionRequest;
 				self.db = event.target.result;
 				version = String(version);
 				if (self.db.setVersion && version !== self.db.version) {
 					setVersionRequest = self.db.setVersion(version);
 					setVersionRequest.onfailure = function(){
-						throw "Error setting IndexedDB version"; 
+						throw "Error updating datastore version";
 					};
+					setVersionRequest.onsuccess = function (event) {
+						installModels();
+						setVersionRequest.result.oncomplete = function () {
+							successCallback();
+						};
+					};
+				} else {
+					// User already has the datastores, no need to reinstall
+					successCallback();
 				}
 			};
 			request.onupgradeneeded = function (event) {
 				self.db = event.target.result;
-				for(var i in jSQL.tables)
-					self.stores.push(transaction.objectStore(jSQL.tables[i].name));
+				installModels();
 			};
 			request.onerror = function (event) {
-				alert("You've opted out of offline storage. Operation cancelled.");
-				throw "User denied storage.";
+				throw "Could not connect to the indexedDB datastore.";
 			};
 		};
-		
-		self.saveTable = function(table){
-			if (self.db.objectStoreNames.contains(table.name)) 
-				self.db.deleteObjectStore(table.name);
-			self.db.createObjectStore(table.name);
-			var transaction = self.db.transaction([table.name], IDBTransaction.READ_WRITE || 'readwrite');
-			transaction.onerror = function(){ throw "Transaction error, could not save table."; };
-			var store = self.stores[table.name];
-			for(var rownum in table.data){
-				var row = table.data[rownum];
-				var r = {}; for(var i in row) r[i] = row[i];
-				store.add(r).onerror = function(){ throw "Error trying to store data."; };
+
+		// Insert a group of rows
+		self.insert = function(model, data, successCallback) {
+			if(typeof successCallback !== "function") successCallback = function(){};
+			var transaction = self.db.transaction([model], IDBTransaction.READ_WRITE || 'readwrite');
+			var store, i, request;
+			var total = data.length;
+
+			var successCallbackInner = function() {
+				total = total - 1;
+				if (total === 0) successCallback(total);
+			};
+
+			transaction.onerror = function(){ throw "Could not initiate a transaction"; };;
+			store = transaction.objectStore(model);
+			for (i in data) {
+				if (data.hasOwnProperty(i)) {
+					request = store.add(data[i]);
+					request.onsuccess = successCallbackInner;
+					request.onerror = function(){ throw "Could not initiate a request"; };;
+				}
 			}
 		};
-		
-		self.init();
+
+		// Delete all items from the database
+		self.delete = function(model, successCallback) {
+			if(typeof successCallback != "function") successCallback = function(){};
+			var transaction = self.db.transaction([model], IDBTransaction.READ_WRITE || 'readwrite'), store, request;
+			transaction.onerror = function(){ throw "Could not initiate a transaction"; };;
+			store = transaction.objectStore(model);
+			request = store.clear();
+			request.onerror = function(){ throw "Could not initiate a request"; };;
+			request.onsuccess = successCallback;
+		};
+
+		// Get all data from the datastore
+		self.select = function(model, successCallback) {
+			if("function" !== typeof successCallback) successCallback = function(){};
+
+			var transaction = self.db.transaction([model], IDBTransaction.READ_ONLY || 'readonly'), store, request, results = [];
+			transaction.onerror = function(){ throw "Could not initiate a transaction"; };;
+			store = transaction.objectStore(model);
+			request = store.openCursor();
+			request.onerror = function(){ throw "Could not initiate a request"; };
+			request.onsuccess = function (event) {
+				var result = event.target.result;
+				if (!result) {
+					successCallback(results);
+					return;
+				}
+				results.push(result.value);
+				result['continue']();
+			};
+		};
 	}
 	
-	function persistanceManager(){
+	var persistenceManager = new (function(){
 		var self = this;
 		self.api = null;
-				
-		self.persist = function(){
-			for(var tableName in jSQL.tables){
-				self.api.saveTable(tableName);
+		self.error = false;
+		
+		self.persist = function(callback){
+			if("function" === typeof callback) callback = function(){};
+			if(self.error!==false) throw self.error;
+			for(var tbl in jSQL.tables){
+				if(!jSQL.tables.hasOwnProperty(tbl)) continue;
+				var data = jSQL.select("*").from(tbl).execute().fetchAll();
+				var rows = [];
+				for(var i=data.length; i--;){
+					var row = data[i];
+					for(var n in row){
+						if(!row.hasOwnProperty(n)) continue;
+						if("function" === typeof row[n])
+							row[n] = "#jSQLFunct#"+(row[n].toString());
+					}
+					rows.push({table: tbl, data:JSON.stringify(row)});
+				}
+				self.api.delete("jSQL_data_schema", function(){
+					self.api.insert("jSQL_data_schema", rows);
+				});
 			}
 		};
 		
-		self.init = function(){
-			self.api = WebSQLInit() || IndexedDbInit() || 1;
-			if(self.api === 1) throw "Browser does not support persistant data.";
+		self.load = function(callback){	
+			if("function" !== typeof callback) callback = function(){};
+			self.api.select("jSQL_data_schema", function(r){
+				jSQL.tables = {};
+				for(var i=r.length; i--;){
+					var tablename = r[i].table;
+					var rowdata = JSON.parse(r[i].data)
+					// Create the table in memory if it doesn't exist yet
+					if(undefined === jSQL.tables[tablename]){
+						var cols = [];
+						for(var c in rowdata)
+							if(rowdata.hasOwnProperty(c))
+								cols.push(c);
+						jSQL.createTable(tablename, cols, []);
+					}
+					// Check for and parse functions
+					for(var c in rowdata)
+						if(rowdata.hasOwnProperty(c))
+							if("string" == typeof rowdata[c] && rowdata[c].indexOf("#jSQLFunct#")===0)
+								rowdata[c] = exec(rowdata[c].substr(11));
+					jSQL.tables[tablename].insertRow(rowdata)
+					callback();
+				}
+			});
 		};
 		
-		self.init();
-	}
+		// Initialize the database
+		(function init(){
+			try{
+				self.api = new indexedDBAPI();
+				self.api.init([{name: "jSQL_data_schema", rows:[]}]);
+			}catch(e){
+				try{
+					self.api = new WebSQLAPI();
+					self.api.init([{name: "jSQL_data_schema", rows:[]}]);
+				}catch(ex){
+					self.error = "Browser doesn't support Web SQL or IndexedDB";
+				}
+			}
+		})();
+	})();
 	
 	return {
 		tables: {},
@@ -580,7 +777,8 @@
 		createTable: createTable,
 		select: select,
 		insertInto: insertInto,
-		persist: (new persistanceManager()).persist
+		persist: persistenceManager.persist,
+		load: persistenceManager.load
 	};
 	
 }());
