@@ -6,7 +6,8 @@
  */
 
 ;window.jSQL = (function(){
-
+	"use strict";
+	
 	// Main table constructor
 	function jSQLTable(name, columns, data){
 		var self = this;	
