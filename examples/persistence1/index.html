@@ -8,16 +8,10 @@
 		<script src="../../jSQL.js"></script>
 		<script>
 			
-			// Create the table
-			jSQL.load(function(){
-				if(undefined === jSQL.tables.randomStrings)
-					jSQL.createTable("randomStrings", ["time", "str"], []);
-				resetView();
-			});
+			// Create the database
+			loadData();
 			
-			// http://labs.ft.com/2012/09/ft-style-web-app-on-firefox-and-ie6-to-ie10/
-			drawButtons();
-			
+			// Add a record
 			function addRecord(){
 				var time = Math.floor(Date.now() / 1000); 
 				var str = prompt("Enter an arbitrary string: ");
@@ -25,32 +19,46 @@
 				resetView();
 			}
 			
+			// reset the page
 			function resetView(){
 				clear(); echo("<h3>Persistance Test</h3>");
 				echo(makeTable(jSQL.query("SELECT * FROM randomStrings").execute().fetchAll()));
 				drawButtons();
 			}
 			
+			// Draw the buttons
 			function drawButtons(){
 				echo('<button onclick="addRecord();">Add</button>');
 				echo('<button onclick="loadData();">Reset (to last save)</button>');
+				// If the table exists and has records in it
 				if(undefined !== jSQL.tables.randomStrings && jSQL.tables.randomStrings.data.length > 0){
 					echo('<button onclick="jSQL.persist();">Save</button>');
 				}
 			}
 			
+			// Load data if there is any
 			function loadData(){
-				jSQL.load(resetView);
+				// Load the data from internal storage
+				jSQL.load(function(){
+					// Create the table if there wasn't one already in internal storage
+					if(undefined === jSQL.tables.randomStrings)
+						jSQL.createTable("randomStrings", ["time", "str"], []);
+					// Show the page
+					resetView();
+				});
 			}
 			
+			// print to page
 			function echo(text){
 				document.getElementsByTagName('body')[0].insertAdjacentHTML('beforeend', text);
 			}
 			
+			// clear page
 			function clear(){
 				document.getElementsByTagName('body')[0].innerHTML = "";
 			}
 			
+			// create table markup
 			function makeTable(res){
 				var html = ["<table><thead><tr>"];
 				if('object' != typeof res[0]) 

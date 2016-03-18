@@ -6,7 +6,7 @@
     </head>
     <body>
 		<script src="../../jSQL.js"></script>
-		<h1 id="loading">Loading</h1>
+		<h1 id="loading">Loading<br><img src="./loading.gif" /></h1>
 		<div id="hidden" style="display:none;">
 			<b>Enter your query: </b>
 			<textarea id="textarea" style="display:block; width:100%;">SELECT * FROM `zips` WHERE `TERR` = 'FL03' ORDER BY city, zip DESC LIMIT 25</textarea>
@@ -14,18 +14,32 @@
 			<div id="res"></div>
 		</div>
 		<script>
-
-			var xhttp = new XMLHttpRequest();
-			xhttp.onreadystatechange = function() {
-				if (xhttp.readyState == 4 && xhttp.status == 200) {
-					var data = JSON.parse(xhttp.responseText);
-					jSQL.createTable("zips", data);
+			
+				
+			
+			// Load data from persistence manager
+			jSQL.load(function(){				
+				console.log(jSQL);
+				// If there's no data in the persistence manager, load from ajax
+				if(undefined === jSQL.tables.zips){
+					var xhttp = new XMLHttpRequest();
+					xhttp.onreadystatechange = function() {
+						if (xhttp.readyState == 4 && xhttp.status == 200) {
+							var data = JSON.parse(xhttp.responseText);
+							jSQL.createTable("zips", data);
+							jSQL.persist();
+							document.getElementById('loading').style.display = "none";
+							document.getElementById('hidden').style.display = "block";
+						}
+					};
+					xhttp.open("GET", "zips.data.json", true);
+					xhttp.send();
+				}else{
 					document.getElementById('loading').style.display = "none";
 					document.getElementById('hidden').style.display = "block";
 				}
-			};
-			xhttp.open("GET", "zips.data.json", true);
-			xhttp.send();
+			});
+			
 			
 			function doQuery(){
 				var sql = document.getElementById('textarea').value;

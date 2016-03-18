@@ -197,10 +197,23 @@
 							query = query.doesNotEqual(removeQuotes(words.shift()));
 							break;
 						case "LIKE":
-							var substr = words.shift();
+							var substr = words.shift(); 
 							if(substr.substr(0,1)=="%" && substr.substr(substr.length-1,1)=="%"){
+								alert("poop0");
 								query = query.contains(removeQuotes(substr.substr(1,substr.length-2)));
-							}else alert("to do, other like queries");
+							}else if(substr.substr(0,1)=="%"){
+								alert("poop1");
+								query = query.endsWith(removeQuotes(substr.substr(1,substr.length-1)));
+							}else if(substr.substr(substr.length-1,1)=="%"){
+								alert("poop2");
+								query = query.beginsWith(removeQuotes(substr.substr(0,substr.length-1)));
+							}else{
+								alert("poop3");
+								// no "%" on either side. jSQL only supports % when 
+								// the string begins or ends with it, so treat it like an equal
+								query = query.equals(removeQuotes(words.shift()));
+							}
+							alert("ends");
 							break;
 						case "OR":
 							query = query.or(convertToCol(words.shift()));
@@ -315,7 +328,14 @@
 
 		self.contains = function(value){
 			if(self.pendingColumn == "") throw "Must add a 'where' clause before the 'contains' call.";
-			self.conditions.push({col: self.pendingColumn, type: '%', value: value});
+			self.conditions.push({col: self.pendingColumn, type: '%%', value: value});
+			self.pendingColumn = "";
+			return self;
+		};
+		
+		self.endsWith = function(value){
+			if(self.pendingColumn == "") throw "Must add a 'where' clause before the 'endsWith' call.";
+			self.conditions.push({col: self.pendingColumn, type: '%-', value: value});
 			self.pendingColumn = "";
 			return self;
 		};
@@ -386,8 +406,16 @@
 									if(self.table.data[i][self.table.colmap[condition.col]] == condition.value)
 										safeCondition = false;
 									break;
-								case "%": 
+								case "%%": 
 									if(self.table.data[i][self.table.colmap[condition.col]].indexOf(condition.value) < 0)
+										safeCondition = false;
+									break;
+								case "%-": 
+									if(self.table.data[i][self.table.colmap[condition.col]].indexOf(condition.value) != self.table.data[i][self.table.colmap[condition.col]].length - condition.value.length)
+										safeCondition = false;
+									break;
+								case "-%": 
+									if(self.table.data[i][self.table.colmap[condition.col]].indexOf(condition.value) != 0)
 										safeCondition = false;
 									break;
 							}
@@ -684,20 +712,23 @@
 		// Get all data from the datastore
 		self.select = function(model, successCallback) {
 			if("function" !== typeof successCallback) successCallback = function(){};
-
 			var transaction = self.db.transaction([model], IDBTransaction.READ_ONLY || 'readonly'), store, request, results = [];
 			transaction.onerror = function(){ throw "Could not initiate a transaction"; };;
 			store = transaction.objectStore(model);
 			request = store.openCursor();
 			request.onerror = function(){ throw "Could not initiate a request"; };
+			var successCBCalled = false;
 			request.onsuccess = function (event) {
+				if(successCBCalled) return;
 				var result = event.target.result;
 				if (!result) {
+					successCBCalled = true;
 					successCallback(results);
 					return;
+				}else{
+					results.push(result.value);
+					result['continue']();
 				}
-				results.push(result.value);
-				result['continue']();
 			};
 		};
 	}
@@ -729,19 +760,17 @@
 			}
 		};
 		
-		self.load = function(callback){	
-			if("function" !== typeof callback) callback = function(){};
+		self.load = function(LoadCallback){	
+			if("function" !== typeof LoadCallback) LoadCallback = function(){};
 			// Wait for the schema to be set up
-			var waiting = false;
-			var intvl = setInterval(function(){
-				if(waiting) return;
-				waiting = true;
+			(function waitForSchema(tries){
 				try{
 					self.api.select("jSQL_data_schema", function(r){
 						jSQL.tables = {};
+						if(r.length === 0) return LoadCallback();
 						for(var i=r.length; i--;){
 							var tablename = r[i].table;
-							var rowdata = JSON.parse(r[i].data)
+							var rowdata = JSON.parse(r[i].data);
 							// Create the table in memory if it doesn't exist yet
 							if(undefined === jSQL.tables[tablename]){
 								var cols = [];
@@ -751,19 +780,22 @@
 								jSQL.createTable(tablename, cols, []);
 							}
 							// Check for and parse functions
-							for(var c in rowdata)
+							for(var c in rowdata){
 								if(rowdata.hasOwnProperty(c))
 									if("string" == typeof rowdata[c] && rowdata[c].indexOf("#jSQLFunct#")===0)
 										rowdata[c] = exec(rowdata[c].substr(11));
+							}
 							jSQL.tables[tablename].insertRow(rowdata);
-							callback();
 						}
+						return LoadCallback();
 					});
-					clearInterval(intvl);
+				
 				}catch(e){
-					waiting = false;
+					if(tries > 500) return LoadCallback();
+					else setTimeout(function(){waitForSchema(tries+1);}, 10);
 				}
-			}, 10);
+				
+			})(0);
 		};
 		
 		// Initialize the database
