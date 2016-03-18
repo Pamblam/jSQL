@@ -134,10 +134,56 @@
 		
 		// Break words into uppercase array
 		var words = query.split(" ");
-
+		
+		// Remove surrounding quotes from a string
+		var removeQuotes = function(str){
+			var quotes = ['"', "'", "`"];
+			for (var i = quotes.length; i--; )
+				if (str.substr(0, 1) == quotes[i] && str.substr(str.length - 1, 1) == quotes[i])
+					return str.substr(1, str.length - 2);
+			return str;
+		};
+		
 		switch(words.shift().toUpperCase()){
 			case "INSERT": console.log("@todo parse INSERT statement"); break;
-			case "CREATE": console.log("@todo parse CREATE statement"); break;
+			case "CREATE": 
+				var table, c, cols = [];
+				// Next Word should be "TABLE"
+				if(words.shift().toUpperCase() !== "TABLE") throw "Unintelligible query. Expected 'TABLE'";
+				
+				// Remove a few chars and re-split
+				words = words.join(" ")
+					.split("(").join(" ")
+					.split(")").join(" ")
+					.split(",").join(" ")
+					.split("  ").join(" ").trim()
+					.split(" ");
+				
+				// Check for "IF NOT EXISTS" clause
+				table = removeQuotes(words.shift());				
+				if(table.toUpperCase() === "IF"){
+					if(words.shift().toUpperCase() !== "NOT") throw "Unintelligible query. Expected 'NOT'";
+					if(words.shift().toUpperCase() !== "EXISTS") throw "Unintelligible query. Expected 'EXISTS'";
+					table = removeQuotes(words.shift());
+					if(jSQL.tables.hasOwnProperty(table)) return;
+				} 
+				
+				// Get column names
+				while(words.length > 0){
+					cols.push(removeQuotes(words.shift()));
+				}
+				
+				jSQL.createTable(table, cols, []);
+				
+				// To keep things congruent with the other types of queries, 
+				// let's return an object with some filler methods
+				return new (function(){
+					this.execute = function(){ return this; };
+					this.fetch = function(){ return null; };
+					this.fetchAll = function(){ return []; };
+				})();
+				
+				break;
 			case "SELECT":
 				var table, columns, query, orderColumns = [];
 				var upperWords = query.toUpperCase().split(" "); upperWords.shift();
@@ -149,15 +195,6 @@
 						columns[i] = columns[i].substr(0, columns[i].length-1);
 				words.shift(); // pop the FROM off
 				table = words.shift();
-
-				// Remove surrounding quotes from a string
-				var removeQuotes = function(str){
-					var quotes = ['"', "'", "`"];
-					for (var i = quotes.length; i--; )
-						if (str.substr(0, 1) == quotes[i] && str.substr(str.length - 1, 1) == quotes[i])
-							return str.substr(1, str.length - 2);
-					return str;
-				};
 
 				for(var name in jSQL.tables){
 					if(!jSQL.tables.hasOwnProperty(name)) continue;
@@ -192,28 +229,32 @@
 						case "=":
 							query = query.equals(removeQuotes(words.shift()));
 							break;
+						case ">":
+							query = query.greaterThan(removeQuotes(words.shift()));
+							break;
+						case "<":
+							query = query.lessThan(removeQuotes(words.shift()));
+							break;
 						case "!=":
 						case "<>":
 							query = query.doesNotEqual(removeQuotes(words.shift()));
 							break;
 						case "LIKE":
-							var substr = words.shift(); 
+							var substr = removeQuotes(words.shift());
+							// "%text%" - Contains text
 							if(substr.substr(0,1)=="%" && substr.substr(substr.length-1,1)=="%"){
-								alert("poop0");
-								query = query.contains(removeQuotes(substr.substr(1,substr.length-2)));
+								query = query.contains(substr.substr(1,substr.length-2));
+							// "%text" - Ends with text
 							}else if(substr.substr(0,1)=="%"){
-								alert("poop1");
-								query = query.endsWith(removeQuotes(substr.substr(1,substr.length-1)));
+								query = query.endsWith(substr.substr(1,substr.length-1));
+							// "text%" - Begins with text
 							}else if(substr.substr(substr.length-1,1)=="%"){
-								alert("poop2");
-								query = query.beginsWith(removeQuotes(substr.substr(0,substr.length-1)));
+								query = query.beginsWith(substr.substr(0,substr.length-1));
 							}else{
-								alert("poop3");
 								// no "%" on either side. jSQL only supports % when 
 								// the string begins or ends with it, so treat it like an equal
-								query = query.equals(removeQuotes(words.shift()));
+								query = query.equals(substr);
 							}
-							alert("ends");
 							break;
 						case "OR":
 							query = query.or(convertToCol(words.shift()));
@@ -326,6 +367,20 @@
 			return self;
 		};
 
+		self.lessThan = function(value){
+			if(self.pendingColumn == "") throw "Must add a 'where' clause before the 'lessThan' call.";
+			self.conditions.push({col: self.pendingColumn, type: '<', value: value});
+			self.pendingColumn = "";
+			return self;
+		};
+		
+		self.greaterThan = function(value){
+			if(self.pendingColumn == "") throw "Must add a 'where' clause before the 'greaterThan' call.";
+			self.conditions.push({col: self.pendingColumn, type: '>', value: value});
+			self.pendingColumn = "";
+			return self;
+		};
+		
 		self.contains = function(value){
 			if(self.pendingColumn == "") throw "Must add a 'where' clause before the 'contains' call.";
 			self.conditions.push({col: self.pendingColumn, type: '%%', value: value});
@@ -339,7 +394,14 @@
 			self.pendingColumn = "";
 			return self;
 		};
-
+		
+		self.beginsWith = function(value){
+			if(self.pendingColumn == "") throw "Must add a 'where' clause before the 'beginsWith' call.";
+			self.conditions.push({col: self.pendingColumn, type: '-%', value: value});
+			self.pendingColumn = "";
+			return self;
+		},
+		
 		self.and = function(column){ return self.where(column); };
 
 		self.or = function(column){
@@ -398,6 +460,14 @@
 							// LOOP THROUGH EACH CONDITION IN THE SET
 							var condition = conditions[ii];
 							switch(condition.type){
+								case ">": 
+									if(isNaN(parseFloat(self.table.data[i][self.table.colmap[condition.col]])) || self.table.data[i][self.table.colmap[condition.col]] < condition.value)
+										safeCondition = false;
+									break;
+								case "<": 
+									if(isNaN(parseFloat(self.table.data[i][self.table.colmap[condition.col]])) || self.table.data[i][self.table.colmap[condition.col]] > condition.value)
+										safeCondition = false;
+									break;
 								case "=": 
 									if(self.table.data[i][self.table.colmap[condition.col]] != condition.value)
 										safeCondition = false;

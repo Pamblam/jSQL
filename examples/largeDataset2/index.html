@@ -9,7 +9,7 @@
 		<h1 id="loading">Loading<br><img src="./loading.gif" /></h1>
 		<div id="hidden" style="display:none;">
 			<b>Enter your query: </b>
-			<textarea id="textarea" style="display:block; width:100%;">SELECT * FROM `zips` WHERE `TERR` = 'FL03' ORDER BY city, zip DESC LIMIT 25</textarea>
+			<textarea id="textarea" style="display:block; width:100%;">SELECT * FROM `zips` WHERE `STATE` LIKE '%I'</textarea>
 			<button onclick="doQuery()">Run Query</button>
 			<div id="res"></div>
 		</div>
@@ -18,8 +18,7 @@
 				
 			
 			// Load data from persistence manager
-			jSQL.load(function(){				
-				console.log(jSQL);
+			jSQL.load(function(){
 				// If there's no data in the persistence manager, load from ajax
 				if(undefined === jSQL.tables.zips){
 					var xhttp = new XMLHttpRequest();
@@ -49,6 +48,7 @@
 					document.getElementById('res').innerHTML = makeTable(results);
 				}catch(e){
 					document.getElementById('res').innerHTML = "<b>"+e+"</b>";
+					console.log(e);
 				}
 			}
 			
