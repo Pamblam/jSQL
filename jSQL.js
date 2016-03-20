@@ -146,7 +146,60 @@
 		};
 		
 		switch(words.shift().toUpperCase()){
-			case "INSERT": console.log("@todo parse INSERT statement"); break;
+			case "INSERT": 
+				var table, cols=[], values=[];
+				
+				// Next Word should be "INTO"
+				if(words.shift().toUpperCase() !== "INTO") throw "Unintelligible query. Expected 'TABLE'";
+				
+				// Next word should be the table name
+				table = words.shift();
+				if(undefined === jSQL.tables[table]) throw "Table "+table+" does not exist.";
+				
+				// Remove a few chars and re-split
+				words = words.join(" ")
+					.split("(").join(" ")
+					.split(")").join(" ")
+					.split(",").join(" ")
+					.split("  ").join(" ").trim()
+					.split(" ");
+			
+				var next = words.shift();
+				while(words.length && next.toUpperCase() !== "VALUES"){
+					cols.push(removeQuotes(next));
+					next = words.shift();
+				}
+				
+				if(next.toUpperCase() !== "VALUES") 
+					throw "Unintelligible query. Expected 'VALUES' near '"+next+"'";
+				
+				while(words.length) values.push(removeQuotes(words.shift()));
+				
+				if(!cols.length){
+					for(var i=0;  i<values.length; i++){
+						if(undefined === jSQL.tables[table].columns[i]) throw "Error: too many values.";
+						cols.push(jSQL.tables[table].columns[i]);
+					}
+				}
+				
+				if(values.length !== cols.length) throw "Error: Columns mismatch.";
+				
+				var data = {};
+				for(var i=0; i<cols.length; i++){
+					data[cols[i]] = values[i];
+				}
+				
+				jSQL.tables[table].insertRow(data);
+				
+				// To keep things congruent with the other types of queries, 
+				// let's return an object with some filler methods
+				return new (function(){
+					this.execute = function(){ return this; };
+					this.fetch = function(){ return null; };
+					this.fetchAll = function(){ return []; };
+				})();
+				
+				break;
 			case "CREATE": 
 				var table, c, cols = [];
 				// Next Word should be "TABLE"
