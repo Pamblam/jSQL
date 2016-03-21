@@ -150,7 +150,7 @@
 				var table, cols=[], values=[];
 				
 				// Next Word should be "INTO"
-				if(words.shift().toUpperCase() !== "INTO") throw "Unintelligible query. Expected 'TABLE'";
+				if(words.shift().toUpperCase() !== "INTO") throw "Unintelligible query. Expected 'INTO'";
 				
 				// Next word should be the table name
 				table = words.shift();
@@ -865,10 +865,10 @@
 		self.persist = function(callback){
 			if("function" === typeof callback) callback = function(){};
 			if(self.error!==false) throw self.error;
+			var rows = [];
 			for(var tbl in jSQL.tables){
 				if(!jSQL.tables.hasOwnProperty(tbl)) continue;
 				var data = jSQL.select("*").from(tbl).execute().fetchAll();
-				var rows = [];
 				for(var i=data.length; i--;){
 					var row = data[i];
 					for(var n in row){
@@ -878,10 +878,10 @@
 					}
 					rows.push({table: tbl, data:JSON.stringify(row)});
 				}
-				self.api.delete("jSQL_data_schema", function(){
-					self.api.insert("jSQL_data_schema", rows, callback);
-				});
 			}
+			self.api.delete("jSQL_data_schema", function(){
+				self.api.insert("jSQL_data_schema", rows, callback);
+			});
 		};
 		
 		self.load = function(LoadCallback){	

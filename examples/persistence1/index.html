@@ -30,11 +30,17 @@
 			function drawButtons(){
 				echo('<button onclick="addRecord();">Add</button>');
 				echo('<button onclick="loadData();">Reset (to last save)</button>');
+				echo('<button onclick="jSQL.persist();">Save</button>');
 				// If the table exists and has records in it
 				if(undefined !== jSQL.tables.randomStrings && jSQL.tables.randomStrings.data.length > 0){
-					echo('<button onclick="jSQL.persist();">Save</button>');
+					echo('<button onclick="deleteAll();">Clear</button>');
 				}
 			}
+			
+			function deleteAll(){
+				jSQL.tables.randomStrings.data = [];
+				resetView();
+			};
 			
 			// Load data if there is any
 			function loadData(){
