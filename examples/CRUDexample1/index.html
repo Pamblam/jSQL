@@ -131,7 +131,6 @@
 		</style>
     </head>
     <body>
-		<h2>My Phonebook</h2>
 		<div class="datagrid">
 			<table>
 				<thead>
@@ -162,8 +161,8 @@
 				// create it and add some sample data
 				if(undefined === jSQL.tables.PhoneNumbers){
 					var data = [
-						{ID: 0, Name: "Donald Trump", Phone: "(813) 818-8420"},
-						{ID: 1, Name: "Hillary Clinton", Phone: "(888) 812-8357"}
+						{ID: 0, Name: "Donald Trump", Phone: "(813) 818 - 8420"},
+						{ID: 1, Name: "Hillary Clinton", Phone: "(888) 812 - 8357"}
 					];
 					jSQL.createTable("PhoneNumbers", data);
 					jSQL.persist();
@@ -179,20 +178,29 @@
 				var sBtn = document.getElementById('search');
 				addEventHandler(aBtn, 'click', function(){
 					var name = prompt("Enter a name");
+					name = formatName(name);
+					if(name === false) return alert("Please enter a name.");
 					var phone = prompt("Enter a Phone Number for "+name);
+					phone = formatPhone(phone);
+					if(phone === false) return alert("Please enter a valid 10 digit phone number.");
 					var id = lastID+1;
-					jSQL.query("INSERT INTO `PhoneNumbers` VALUES ('"+id+"', '"+name+"', '"+phone+"')").execute();
+					var exe = [id, name, phone];
+					jSQL.query("INSERT INTO `PhoneNumbers` VALUES (?, ?, ?)").execute(exe);
 					jSQL.persist();
-					addRecordToUI({ID:id,Name:name,Phone:phone});
+					addRecordToUI(getRecordByID(id));
 				});
 				addEventHandler(sBtn, 'click', function(){
-					
+					var term = prompt("Enter a name to search for");
+					var q = jSQL.query("SELECT * FROM `PhoneNumbers` WHERE `ID` LIKE ?").execute(['%'+term+'%']);
+					var res = q.fetch("ASSOC");
+					alert(!!res.length?"Found record for "+res.Name+"\n"+res.Phone:"No records found like '"+term+"'");
 				});
 			}
 			
 			function drawHTMLTable(){
 				var PhoneNumbers = getAllRecords();
-				for(var i=PhoneNumbers.length; i--;) addRecordToUI(PhoneNumbers[i]);
+				for(var i=0; i<PhoneNumbers.length; i++) 
+					addRecordToUI(PhoneNumbers[i]);
 			}
 			
 			// Get all records from teh database
@@ -238,6 +246,34 @@
 			// Edit a record by it's ID
 			function editRecordByID(id){
 				console.log("Do stuff here to edit record #"+id);
+			}
+			
+			// Get a record from teh database by it's ID
+			function getRecordByID(id){
+				var query = jSQL.query("SELECT * FROM `PhoneNumbers` WHERE `ID` = ?").execute([id]);
+				return query.fetch("ASSOC");
+			}
+			
+			// Format & validate a phone number
+			function formatPhone(ph) {
+				var numbers = ph.replace(/\D/g, ''),
+					char = {
+						0: '(',
+						3: ') ',
+						6: ' - '
+					};
+				if (numbers.length !== 10) return false;
+				var ret = '';
+				for (var i = 0; i < numbers.length; i++) {
+					ret += (char[i] || '') + numbers[i];
+				}
+				return ret;
+			}
+			
+			// Format and validate a name
+			function formatName(str){
+				if(undefined === str || str === '') return false;
+				return str.replace(/\w\S*/g, function(txt){return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();});
 			}
 		</script>
     </body>

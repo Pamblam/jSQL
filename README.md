@@ -8,6 +8,7 @@ A work in progress, jSQL (or, javaScript Query Language,) is a Javascript based,
  - Method chaining alternative to SQL syntax
  - Support for cross-browser persistent storage
  - Able to store JS functions!
+ - Support for prepared statements
  
 ### Goals
  - Support for UPDATE statements

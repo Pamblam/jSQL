@@ -222,8 +222,9 @@
 				// To keep things congruent with the other types of queries, 
 				// let's return an object with some filler methods
 				return new (function(){
-					this.execute = function(){ 
-						var table, cols=[];
+					this.execute = function(preparedVals){ 
+						console.log(preparedVals);
+						var table, cols=[], values = [];
 
 						// Next Word should be "INTO"
 						if(words.shift().toUpperCase() !== "INTO") throw "Unintelligible query. Expected 'INTO'";
@@ -249,7 +250,10 @@
 						if(next.toUpperCase() !== "VALUES") 
 							throw "Unintelligible query. Expected 'VALUES' near '"+next+"'";
 						
-						var values = getNextQueryVals(words.join(''));
+						if(preparedVals !== undefined && Array.isArray(preparedVals) && preparedVals.length>0)
+							values = (words.join(' ').match(/\?/g) || []).length === preparedVals.length && preparedVals.length ?
+								preparedVals : getNextQueryVals(words.join(' '));
+						else values = getNextQueryVals(words.join(' '));
 
 						if(!cols.length){
 							for(var i=0;  i<values.length; i++){
@@ -302,9 +306,8 @@
 						} 
 
 						// Get column names
-						while(words.length > 0){
+						while(words.length > 0) 
 							cols.push(removeQuotes(words.shift()));
-						}
 
 						jSQL.createTable(table, cols, []);
 						return this; 
@@ -600,9 +603,18 @@
 			return self;
 		};
 
-		self.execute = function(){
+		self.execute = function(preparedVals){
 			var results = [];
+			if(undefined === preparedVals) preparedVals = [];
 			if(self.conditions.length > 0) self.finalConditions.push(self.conditions);
+			
+			if(preparedVals.length > 0){
+				for(var i = self.finalConditions.length; i--;)
+					for(var n = self.finalConditions[i].length; n--;)
+						if(self.finalConditions[i][n].value === "?" && preparedVals.length > 0)
+							self.finalConditions[i][n].value = preparedVals.pop();
+			}
+			
 			for(var i=0; i<self.table.data.length; i++){
 				if(self.LIMIT > 0 && results.length == self.LIMIT) break;
 				// LOOPING ROWS
