@@ -129,15 +129,10 @@
 
 	// Parse the query string and return the query object
 	function jSQLParseQuery(query){
-
-		// Remove excess whitespace, linebreaks
-		query = query.replace(/(\r\n|\n|\r)/gm," ").replace(/ +(?= )/g,'').trim();
-		
-		// Break words into uppercase array
-		var words = query.split(" ");
 		
 		// Remove surrounding quotes from a string
 		var removeQuotes = function(str){
+			if(undefined === str) console.log((new Error).stack);
 			var quotes = ['"', "'", "`"];
 			for (var i = quotes.length; i--; )
 				if (str.substr(0, 1) == quotes[i] && str.substr(str.length - 1, 1) == quotes[i])
@@ -145,94 +140,175 @@
 			return str;
 		};
 		
-		switch(words.shift().toUpperCase()){
-			case "INSERT": 
-				var table, cols=[], values=[];
+		// Predcit the correct casing for column and table names
+		var convertToCol = function(c){
+			for(var i=0; i<jSQL.tables[table].columns.length; i++)
+				if(removeQuotes(c.toUpperCase()) == jSQL.tables[table].columns[i].toUpperCase())
+					return jSQL.tables[table].columns[i];
+			throw c+" column not found in "+table+" table";
+		};
 				
-				// Next Word should be "INTO"
-				if(words.shift().toUpperCase() !== "INTO") throw "Unintelligible query. Expected 'INTO'";
-				
-				// Next word should be the table name
-				table = words.shift();
-				if(undefined === jSQL.tables[table]) throw "Table "+table+" does not exist.";
-				
-				// Remove a few chars and re-split
-				words = words.join(" ")
-					.split("(").join(" ")
-					.split(")").join(" ")
-					.split(",").join(" ")
-					.split("  ").join(" ").trim()
-					.split(" ");
-			
-				var next = words.shift();
-				while(words.length && next.toUpperCase() !== "VALUES"){
-					cols.push(removeQuotes(next));
-					next = words.shift();
-				}
-				
-				if(next.toUpperCase() !== "VALUES") 
-					throw "Unintelligible query. Expected 'VALUES' near '"+next+"'";
-				
-				while(words.length) values.push(removeQuotes(words.shift()));
-				
-				if(!cols.length){
-					for(var i=0;  i<values.length; i++){
-						if(undefined === jSQL.tables[table].columns[i]) throw "Error: too many values.";
-						cols.push(jSQL.tables[table].columns[i]);
+		// A helper function that extracts values from a string of
+		// quoted, comma separated values, taking into account escaped chars
+		var getNextQueryVals = function(str) {
+			var vals = [];
+			var inQuote = false;
+			var currentVal = [];
+			var quoteType;
+			for (var i = 0; i < str.length; i++) {
+				if (str[i] === "'" || str[i] === '"') {
+					if (!inQuote) {
+						quoteType = str[i];
+						inQuote = true;
+					} else if (str[i] !== quoteType) {
+						currentVal.push(str[i]);
+					} else {
+						if (i > 0 && str[i - 1] === "\\") {
+							if (i > 1 && str[i - 2] === "\\") {
+								inQuote = false;
+								vals.push(currentVal.join(''));
+								var currentVal = [];
+							} else {
+								currentVal[currentVal.length - 1] = str[i];
+							}
+						} else {
+							inQuote = false;
+							vals.push(currentVal.join(''));
+							var currentVal = [];
+						}
+
 					}
+				} else if (inQuote) {
+					if (str[i] === "\\" && i > 0 && str[i - 1] === "\\")
+						continue;
+					currentVal.push(str[i]);
+				} else if (str[i] !== " " && str[i] !== ",") {
+					return vals;
 				}
+			}
+			return vals;
+		};
+
+		// Remove excess whitespace, linebreaks
+		query = query.replace(/(\r\n|\n|\r)/gm," ").replace(/ +(?= )/g,'').trim();
+		
+		// Break words into uppercase array
+		var words = query.split(" ");
+		
+		switch(words.shift().toUpperCase()){
+			case "DROP":				
+				// To keep things congruent with the other types of queries, 
+				// let's return an object with some filler methods
+				return new (function(){				
+					this.execute = function(){ 
+						// Next Word should be "TABLE"
+						if(words.shift().toUpperCase() !== "TABLE") throw "Unintelligible query. Expected 'TABLE'";
+
+						// Next word should be the table name
+						table = removeQuotes(words.shift());
+						if(undefined === jSQL.tables[table]) throw "Table "+table+" does not exist.";
+					
+						// Delete the table
+						delete jSQL.tables[table];
+						return this; 
+					};
+					this.fetch = function(){ return null; };
+					this.fetchAll = function(){ return []; };
+				})();
 				
-				if(values.length !== cols.length) throw "Error: Columns mismatch.";
-				
-				var data = {};
-				for(var i=0; i<cols.length; i++){
-					data[cols[i]] = values[i];
-				}
-				
-				jSQL.tables[table].insertRow(data);
+				break;
+			case "INSERT": 
 				
 				// To keep things congruent with the other types of queries, 
 				// let's return an object with some filler methods
 				return new (function(){
-					this.execute = function(){ return this; };
+					this.execute = function(){ 
+						var table, cols=[];
+
+						// Next Word should be "INTO"
+						if(words.shift().toUpperCase() !== "INTO") throw "Unintelligible query. Expected 'INTO'";
+
+						// Next word should be the table name
+						table = removeQuotes(words.shift());
+						if(undefined === jSQL.tables[table]) throw "Table "+table+" does not exist.";
+
+						// Remove a few chars and re-split
+						words = words.join(" ")
+							.split("(").join(" ")
+							.split(")").join(" ")
+							.split(",").join(" ")
+							.split("  ").join(" ").trim()
+							.split(" ");
+
+						var next = words.shift();
+						while(words.length && next.toUpperCase() !== "VALUES"){
+							cols.push(removeQuotes(next));
+							next = words.shift();
+						}
+
+						if(next.toUpperCase() !== "VALUES") 
+							throw "Unintelligible query. Expected 'VALUES' near '"+next+"'";
+						
+						var values = getNextQueryVals(words.join(''));
+
+						if(!cols.length){
+							for(var i=0;  i<values.length; i++){
+								if(undefined === jSQL.tables[table].columns[i]) throw "Error: too many values.";
+								cols.push(jSQL.tables[table].columns[i]);
+							}
+						}
+
+						if(values.length !== cols.length) throw "Error: Columns mismatch.";
+
+						var data = {};
+						for(var i=0; i<cols.length; i++){
+							data[cols[i]] = values[i];
+						}
+
+						jSQL.tables[table].insertRow(data);
+						
+						return this; 
+					};
 					this.fetch = function(){ return null; };
 					this.fetchAll = function(){ return []; };
 				})();
 				
 				break;
 			case "CREATE": 
-				var table, c, cols = [];
-				// Next Word should be "TABLE"
-				if(words.shift().toUpperCase() !== "TABLE") throw "Unintelligible query. Expected 'TABLE'";
-				
-				// Remove a few chars and re-split
-				words = words.join(" ")
-					.split("(").join(" ")
-					.split(")").join(" ")
-					.split(",").join(" ")
-					.split("  ").join(" ").trim()
-					.split(" ");
-				
-				// Check for "IF NOT EXISTS" clause
-				table = removeQuotes(words.shift());				
-				if(table.toUpperCase() === "IF"){
-					if(words.shift().toUpperCase() !== "NOT") throw "Unintelligible query. Expected 'NOT'";
-					if(words.shift().toUpperCase() !== "EXISTS") throw "Unintelligible query. Expected 'EXISTS'";
-					table = removeQuotes(words.shift());
-					if(jSQL.tables.hasOwnProperty(table)) return;
-				} 
-				
-				// Get column names
-				while(words.length > 0){
-					cols.push(removeQuotes(words.shift()));
-				}
-				
-				jSQL.createTable(table, cols, []);
 				
 				// To keep things congruent with the other types of queries, 
 				// let's return an object with some filler methods
 				return new (function(){
-					this.execute = function(){ return this; };
+					this.execute = function(){ 
+						var table, c, cols = [];
+						// Next Word should be "TABLE"
+						if(words.shift().toUpperCase() !== "TABLE") throw "Unintelligible query. Expected 'TABLE'";
+
+						// Remove a few chars and re-split
+						words = words.join(" ")
+							.split("(").join(" ")
+							.split(")").join(" ")
+							.split(",").join(" ")
+							.split("  ").join(" ").trim()
+							.split(" ");
+
+						// Check for "IF NOT EXISTS" clause
+						table = removeQuotes(words.shift());				
+						if(table.toUpperCase() === "IF"){
+							if(words.shift().toUpperCase() !== "NOT") throw "Unintelligible query. Expected 'NOT'";
+							if(words.shift().toUpperCase() !== "EXISTS") throw "Unintelligible query. Expected 'EXISTS'";
+							table = removeQuotes(words.shift());
+							if(jSQL.tables.hasOwnProperty(table)) return;
+						} 
+
+						// Get column names
+						while(words.length > 0){
+							cols.push(removeQuotes(words.shift()));
+						}
+
+						jSQL.createTable(table, cols, []);
+						return this; 
+					};
 					this.fetch = function(){ return null; };
 					this.fetchAll = function(){ return []; };
 				})();
@@ -242,7 +318,13 @@
 				var table, columns, query, orderColumns = [];
 				var upperWords = query.toUpperCase().split(" "); upperWords.shift();
 				var fromIndex = upperWords.indexOf("FROM");
-				if(fromIndex < 0) throw "Unintelligible query. Expected 'FROM'";
+				
+				if(fromIndex < 0) return new (function(error){
+					this.execute = function(){ throw error; };
+					this.fetch = function(){ throw error; };
+					this.fetchAll = function(){ throw error; };
+				})("Unintelligible query. Expected 'FROM'");
+				
 				columns = words.splice(0, fromIndex);
 				for(var i=columns.length; i--;)
 					while(columns[i].indexOf(",") == columns[i].length-1)
@@ -257,19 +339,24 @@
 						break;
 					}
 				}
-				if(undefined === jSQL.tables[table]) 
-					throw "Table: "+table+" does not exist.";
-
-				// Predcit the correct casing for column and table names
-				var convertToCol = function(c){
-					for(var i=0; i<jSQL.tables[table].columns.length; i++)
-						if(removeQuotes(c.toUpperCase()) == jSQL.tables[table].columns[i].toUpperCase())
-							return jSQL.tables[table].columns[i];
-					throw c+" column not found in "+table+" table";
-				};
+				if(undefined === jSQL.tables[table]) return new (function(error){
+					this.execute = function(){ throw error; };
+					this.fetch = function(){ throw error; };
+					this.fetchAll = function(){ throw error; };
+				})("Table: "+table+" does not exist.");
 
 				if(columns.length == 1 && columns[0] == "*") columns = '*';
-				else for(var i=0;i<columns.length;i++) columns[i] = convertToCol(columns[i]);
+				else for(var i=0;i<columns.length;i++){
+					try{
+						columns[i] = convertToCol(columns[i]);
+					}catch(ex){
+						return new (function(error){
+							this.execute = function(){ throw error; };
+							this.fetch = function(){ throw error; };
+							this.fetchAll = function(){ throw error; };
+						})(ex.message);
+					}
+				}
 
 				// Generate the query object
 				query = jSQL.select(columns).from(table);
@@ -278,7 +365,17 @@
 					switch(piece.toUpperCase()){
 						case "WHERE":
 						case "AND":
-							query = query.where(convertToCol(words.shift()));
+							var ccc;
+							try{
+								ccc = convertToCol(words.shift());
+							}catch(ex){
+								return new (function(error){
+									this.execute = function(){ throw error; };
+									this.fetch = function(){ throw error; };
+									this.fetchAll = function(){ throw error; };
+								})(ex.message);
+							}
+							query = query.where(ccc);
 							break;
 						case "=":
 							query = query.equals(removeQuotes(words.shift()));
@@ -311,7 +408,17 @@
 							}
 							break;
 						case "OR":
-							query = query.or(convertToCol(words.shift()));
+							var ccc;
+							try{
+								ccc = convertToCol(words.shift());
+							}catch(ex){
+								return new (function(error){
+									this.execute = function(){ throw error; };
+									this.fetch = function(){ throw error; };
+									this.fetchAll = function(){ throw error; };
+								})(ex.message);
+							}
+							query = query.or(ccc);
 							break;
 						case "LIMIT":
 							query = query.limit(words.shift());
@@ -348,7 +455,11 @@
 				return query;
 				break;
 			default:
-				throw "Unintelligible query. Error near: "+words[0];
+				return new (function(error){
+					this.execute = function(){ throw error; };
+					this.fetch = function(){ throw error; };
+					this.fetchAll = function(){ throw error; };
+				})("Unintelligible query. Error near: "+words[0]);
 		}
 	}
 
