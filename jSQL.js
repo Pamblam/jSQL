@@ -223,7 +223,6 @@
 				// let's return an object with some filler methods
 				return new (function(){
 					this.execute = function(preparedVals){ 
-						console.log(preparedVals);
 						var table, cols=[], values = [];
 
 						// Next Word should be "INTO"
@@ -404,6 +403,9 @@
 							// "text%" - Begins with text
 							}else if(substr.substr(substr.length-1,1)=="%"){
 								query = query.beginsWith(substr.substr(0,substr.length-1));
+							}else if(substr === "?"){
+								// Is a pepared statement, no value available at this time
+								query = query.preparedLike();
 							}else{
 								// no "%" on either side. jSQL only supports % when 
 								// the string begins or ends with it, so treat it like an equal
@@ -527,6 +529,13 @@
 			self.pendingColumn = "";
 			return self;
 		};
+		
+		self.preparedLike = function(){
+			if(self.pendingColumn == "") throw "Must add a 'where' clause before the 'preparedLike' call.";
+			self.conditions.push({col: self.pendingColumn, type: 'pl', value: "?"});
+			self.pendingColumn = "";
+			return self;
+		};
 
 		self.doesNotEqual = function(value){
 			if(self.pendingColumn == "") throw "Must add a 'where' clause before the 'doesNotEqual' call.";
@@ -609,10 +618,34 @@
 			if(self.conditions.length > 0) self.finalConditions.push(self.conditions);
 			
 			if(preparedVals.length > 0){
-				for(var i = self.finalConditions.length; i--;)
-					for(var n = self.finalConditions[i].length; n--;)
-						if(self.finalConditions[i][n].value === "?" && preparedVals.length > 0)
+				for(var i = self.finalConditions.length; i--;){
+					for(var n = self.finalConditions[i].length; n--;){
+						if(self.finalConditions[i][n].value === "?" && self.finalConditions[i][n].type === "pl"){
+							var substr = preparedVals.pop();
+							// "%text%" - Contains text
+							if(substr.substr(0,1)=="%" && substr.substr(substr.length-1,1)=="%"){
+								self.finalConditions[i][n].value = substr.substr(1,substr.length-2);
+								self.finalConditions[i][n].type = "%%";
+							// "%text" - Ends with text
+							}else if(substr.substr(0,1)=="%"){
+								self.finalConditions[i][n].value = substr.substr(1,substr.length-1);
+								self.finalConditions[i][n].type = "%-";
+							// "text%" - Begins with text
+							}else if(substr.substr(substr.length-1,1)=="%"){
+								self.finalConditions[i][n].value = substr.substr(0,substr.length-1);
+								self.finalConditions[i][n].type = "-%";
+							}else{
+								// no "%" on either side. jSQL only supports % when 
+								// the string begins or ends with it, so treat it like an equal
+								self.finalConditions[i][n].value = substr;
+								self.finalConditions[i][n].type = "=";
+							}
+							
+						}else if(self.finalConditions[i][n].value === "?" && preparedVals.length > 0){
 							self.finalConditions[i][n].value = preparedVals.pop();
+						}
+					}
+				}
 			}
 			
 			for(var i=0; i<self.table.data.length; i++){

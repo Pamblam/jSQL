@@ -190,10 +190,11 @@
 					addRecordToUI(getRecordByID(id));
 				});
 				addEventHandler(sBtn, 'click', function(){
-					var term = prompt("Enter a name to search for");
-					var q = jSQL.query("SELECT * FROM `PhoneNumbers` WHERE `ID` LIKE ?").execute(['%'+term+'%']);
+					var term = prompt("Enter a name to search for.");
+					if(term === false) return alert("Please enter a name to search for.");
+					var q = jSQL.query("SELECT * FROM `PhoneNumbers` WHERE `Name` LIKE ?").execute(["%"+term+"%"]);
 					var res = q.fetch("ASSOC");
-					alert(!!res.length?"Found record for "+res.Name+"\n"+res.Phone:"No records found like '"+term+"'");
+					alert(undefined!==res.Name?"Found record for "+res.Name+"\n"+res.Phone:"No records found like '"+term+"'");
 				});
 			}
 			
