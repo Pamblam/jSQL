@@ -1100,7 +1100,7 @@ jSQL.deleteFrom('table').where('column').equals('?').execute(['value']);
 #### DROP Queries
 Each of the following queries are identical
 ```javascript
-jSQL.query('DROP TABLE `Users`).execute();
+jSQL.query('DROP TABLE `Users`').execute();
 jSQL.dropTable('Users').execute();
 ```
 
