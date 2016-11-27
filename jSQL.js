@@ -8,7 +8,10 @@
 ;window.jSQL = (function(){
 	"use strict";
 	
-	// Main table constructor
+	////////////////////////////////////////////////////////////////////////////
+	// jSQL Table constructor //////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////////////
+	
 	function jSQLTable(name, columns, data){
 		var self = this;	
 		self.name = "";		// Table name
@@ -127,12 +130,547 @@
 		self.init(name, columns, data);
 	}
 
-	// Parse the query string and return the query object
+	////////////////////////////////////////////////////////////////////////////
+	// jSQL Query constructor //////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////////////
+	
+	function jSQLQuery(type){
+		var self = this;
+		self.type = type.toUpperCase();
+		
+		self.tablename = null;
+		self.columns = [];
+		self.data = [];
+		self.INEFlag= false;
+		
+		self.table = null;
+		self.newvals = {};
+		self.whereClause = new jSQLWhereClause(self);
+		self.resultSet = [];
+		
+		self.init = function(){
+			switch(self.type){
+				case "CREATE": return (new jSQLCreateQuery).init.apply(self, arguments); break;
+				case "UPDATE": return (new jSQLUpdateQuery).init.apply(self, arguments); break;
+				case "SELECT": return (new jSQLSelectQuery).init.apply(self, arguments); break;
+				case "INSERT": return (new jSQLInsertQuery).init.apply(self, arguments); break;
+				case "DROP": return (new jSQLDropQuery).init.apply(self, arguments); break;
+				case "DELETE": return (new jSQLDeleteQuery).init.apply(self, arguments); break;
+			}
+		};
+		
+		self.ifNotExists = function(){
+			switch(self.type){
+				case "CREATE": return (new jSQLCreateQuery).ifNotExists.apply(self, arguments); break;
+				case "UPDATE": return (new jSQLUpdateQuery).ifNotExists.apply(self, arguments); break;
+				case "SELECT": return (new jSQLSelectQuery).ifNotExists.apply(self, arguments); break;
+				case "INSERT": return (new jSQLInsertQuery).ifNotExists.apply(self, arguments); break;
+				case "DROP": return (new jSQLDropQuery).ifNotExists.apply(self, arguments); break;
+				case "DELETE": return (new jSQLDeleteQuery).ifNotExists.apply(self, arguments); break;
+			}
+		};
+		
+		self.execute = function(){
+			switch(self.type){
+				case "CREATE": return (new jSQLCreateQuery).execute.apply(self, arguments); break;
+				case "UPDATE": return (new jSQLUpdateQuery).execute.apply(self, arguments); break;
+				case "SELECT": return (new jSQLSelectQuery).execute.apply(self, arguments); break;
+				case "INSERT": return (new jSQLInsertQuery).execute.apply(self, arguments); break;
+				case "DROP": return (new jSQLDropQuery).execute.apply(self, arguments); break;
+				case "DELETE": return (new jSQLDeleteQuery).execute.apply(self, arguments); break;
+			}
+		};
+		
+		self.fetch = function(){
+			switch(self.type){
+				case "CREATE": return (new jSQLCreateQuery).fetch.apply(self, arguments); break;
+				case "UPDATE": return (new jSQLUpdateQuery).fetch.apply(self, arguments); break;
+				case "SELECT": return (new jSQLSelectQuery).fetch.apply(self, arguments); break;
+				case "INSERT": return (new jSQLInsertQuery).fetch.apply(self, arguments); break;
+				case "DROP": return (new jSQLDropQuery).fetch.apply(self, arguments); break;
+				case "DELETE": return (new jSQLDeleteQuery).fetch.apply(self, arguments); break;
+			}
+		};
+		
+		self.fetchAll = function(){
+			switch(self.type){
+				case "CREATE": return (new jSQLCreateQuery).fetchAll.apply(self, arguments); break;
+				case "UPDATE": return (new jSQLUpdateQuery).fetchAll.apply(self, arguments); break;
+				case "SELECT": return (new jSQLSelectQuery).fetchAll.apply(self, arguments); break;
+				case "INSERT": return (new jSQLInsertQuery).fetchAll.apply(self, arguments); break;
+				case "DROP": return (new jSQLDropQuery).fetchAll.apply(self, arguments); break;
+				case "DELETE": return (new jSQLDeleteQuery).fetchAll.apply(self, arguments); break;
+			}
+		};
+		
+		self.values = function(){
+			switch(self.type){
+				case "CREATE": return (new jSQLCreateQuery).values.apply(self, arguments); break;
+				case "UPDATE": return (new jSQLUpdateQuery).values.apply(self, arguments); break;
+				case "SELECT": return (new jSQLSelectQuery).values.apply(self, arguments); break;
+				case "INSERT": return (new jSQLInsertQuery).values.apply(self, arguments); break;
+				case "DROP": return (new jSQLDropQuery).values.apply(self, arguments); break;
+				case "DELETE": return (new jSQLDeleteQuery).values.apply(self, arguments); break;
+			}
+		};
+		
+		self.set = function(){
+			switch(self.type){
+				case "CREATE": return (new jSQLCreateQuery).set.apply(self, arguments); break;
+				case "UPDATE": return (new jSQLUpdateQuery).set.apply(self, arguments); break;
+				case "SELECT": return (new jSQLSelectQuery).set.apply(self, arguments); break;
+				case "INSERT": return (new jSQLInsertQuery).set.apply(self, arguments); break;
+				case "DROP": return (new jSQLDropQuery).set.apply(self, arguments); break;
+				case "DELETE": return (new jSQLDeleteQuery).set.apply(self, arguments); break;
+			}
+		};
+		
+		self.where = function(){
+			switch(self.type){
+				case "CREATE": return (new jSQLCreateQuery).where.apply(self, arguments); break;
+				case "UPDATE": return (new jSQLUpdateQuery).where.apply(self, arguments); break;
+				case "SELECT": return (new jSQLSelectQuery).where.apply(self, arguments); break;
+				case "INSERT": return (new jSQLInsertQuery).where.apply(self, arguments); break;
+				case "DROP": return (new jSQLDropQuery).where.apply(self, arguments); break;
+				case "DELETE": return (new jSQLDeleteQuery).where.apply(self, arguments); break;
+			}
+		};
+		
+		self.from = function(){
+			switch(self.type){
+				case "CREATE": return (new jSQLCreateQuery).from.apply(self, arguments); break;
+				case "UPDATE": return (new jSQLUpdateQuery).from.apply(self, arguments); break;
+				case "SELECT": return (new jSQLSelectQuery).from.apply(self, arguments); break;
+				case "INSERT": return (new jSQLInsertQuery).from.apply(self, arguments); break;
+				case "DROP": return (new jSQLDropQuery).from.apply(self, arguments); break;
+				case "DELETE": return (new jSQLDeleteQuery).from.apply(self, arguments); break;
+			}
+		};
+	}
+	
+	////////////////////////////////////////////////////////////////////////////
+	// jSQL Query Type constructors ////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////////////
+	
+	function jSQLDeleteQuery(){
+		this.init = function(tablename){
+			if(undefined === jSQL.tables[tablename])
+				throw "Table: "+tablename+" doesn't exist.";
+			this.table = this.table = jSQL.tables[tablename];
+			return this;
+		};
+		this.execute = function(){ 
+			var results = [];
+			for(var i=0; i<this.table.data.length; i++){
+				if(this.whereClause.LIMIT > 0 && results.length == this.whereClause.LIMIT) break;
+				// LOOPING ROWS
+				if(this.whereClause.finalConditions.length < 1){
+					results.push(i);
+				}else{
+					var addToResults = false;
+					var x = this.whereClause.finalConditions.length;
+					while(x--){
+						// LOOP THROUGH CONDITION SETS
+						var conditions = this.whereClause.finalConditions[x];
+						var safeCondition = true;
+						var ii = conditions.length;
+						while(ii--){
+							// LOOP THROUGH EACH CONDITION IN THE SET
+							var condition = conditions[ii];
+							switch(condition.type){
+								case ">": 
+									if(isNaN(parseFloat(this.table.data[i][this.table.colmap[condition.col]])) || this.table.data[i][this.table.colmap[condition.col]] < condition.value)
+										safeCondition = false;
+									break;
+								case "<": 
+									if(isNaN(parseFloat(this.table.data[i][this.table.colmap[condition.col]])) || this.table.data[i][this.table.colmap[condition.col]] > condition.value)
+										safeCondition = false;
+									break;
+								case "=": 
+									if(this.table.data[i][this.table.colmap[condition.col]] != condition.value)
+										safeCondition = false;
+									break;
+								case "!=": break;
+									if(this.table.data[i][this.table.colmap[condition.col]] == condition.value)
+										safeCondition = false;
+									break;
+								case "%%": 
+									if(this.table.data[i][this.table.colmap[condition.col]].indexOf(condition.value) < 0)
+										safeCondition = false;
+									break;
+								case "%-": 
+									if(this.table.data[i][this.table.colmap[condition.col]].indexOf(condition.value) != this.table.data[i][this.table.colmap[condition.col]].length - condition.value.length)
+										safeCondition = false;
+									break;
+								case "-%": 
+									if(this.table.data[i][this.table.colmap[condition.col]].indexOf(condition.value) != 0)
+										safeCondition = false;
+									break;
+							}
+							if(!safeCondition) break;
+						}
+						if(safeCondition){
+							addToResults = true;
+							break;
+						}
+					}
+					if(addToResults){
+						results.push(i);
+					}
+				}
+			}
+			
+			// this.table.data[i]
+			var newData = []; var newResults=[];
+			for(var r=results.length; r--;){
+				var index = results[r];
+				for(var i=this.table.data.length; i--;){
+					if(i===index) newResults.push(this.table.data[i]);
+					else newData.push(this.table.data[i]);
+				}
+			}
+			this.table.data = newData;
+			this.resultSet = results;
+			return this;
+		};
+		this.where = function(column){
+			return this.whereClause.where(column);
+		};
+		this.fetch = function(){ return null; };
+		this.fetchAll = function(){ return []; };
+		this.values = function(){ throw "values() is not a valid method for a delete query"; };
+		this.ifNotExists = function(){ throw "ifNotExists() is not a valid method for a delete query"; };
+		this.set = function(){ throw "set() is not a valid method for a delete query"; };
+		this.from = function(){ throw "from() is not a valid method for a delete query"; };
+	}
+	
+	function jSQLDropQuery(){
+		this.init = function(tablename){
+			this.tablename = tablename;
+			return this;
+		};
+		this.execute = function(){ 
+			if(undefined === jSQL.tables[this.tablename]) throw "Table "+this.tablename+" does not exist.";
+			// Delete the table
+			delete jSQL.tables[this.tablename];
+			return this; 
+		};
+		this.fetch = function(){ return null; };
+		this.fetchAll = function(){ return []; };
+		this.values = function(){ throw "values() is not a valid method for a drop query"; };
+		this.ifNotExists = function(){ throw "ifNotExists() is not a valid method for a drop query"; };
+		this.set = function(){ throw "set() is not a valid method for a drop query"; };
+		this.where = function(){ throw "where() is not a valid method for a drop query"; };
+		this.from = function(){ throw "from() is not a valid method for a drop query"; };
+	}
+	
+	function jSQLInsertQuery(){
+		
+		this.init = function(table){
+			this.table = table;
+			return this;
+		};
+		
+		this.values = function(data){
+			if(undefined === jSQL.tables[this.table])
+				throw "Table: "+this.table+" doesn't exist.";
+			this.data = data;
+			return this;
+		};
+		this.execute = function(preparedVals){
+			if(preparedVals !== undefined && Array.isArray(preparedVals) && preparedVals.length>0){
+				if(Array.isArray(this.data)){
+					for(var i=this.data.length; i-- && preparedVals.length;)
+						if(this.data[i]=="?") this.data[i]=preparedVals.shift();
+				}else{
+					for(var i in this.data)
+						if(this.data.hasOwnProperty(i) && preparedVals.length && this.data[i] == "?")
+							this.data[i] = preparedVals.shift();
+				}
+			}
+			jSQL.tables[this.table].insertRow(this.data);
+		};
+		this.fetch = function(){ return null; };
+		this.fetchAll = function(){ return []; };
+		this.ifNotExists = function(){ throw "ifNotExists() is not a valid method for an insert query"; };
+		this.set = function(){ throw "set() is not a valid method for an insert query"; };
+		this.where = function(){ throw "where() is not a valid method for an insert query"; };
+		this.from = function(){ throw "from() is not a valid method for an insert query"; };
+	}
+	
+	function jSQLSelectQuery(){
+
+		this.init = function(columns){
+			this.columns = Array.isArray(columns) ? columns : [columns];
+			return this;
+		};
+		
+		this.from = function(table){
+			if(undefined === jSQL.tables[table])
+				throw "Table: "+table+" doesn't exist.";
+			this.table = jSQL.tables[table];
+			if(this.columns[0] == "*") this.columns = this.table.columns;
+			return this;
+		};
+		
+		this.where = function(column){
+			return this.whereClause.where(column);
+		};
+		
+		this.execute = function(){
+			var results = [];
+			for(var i=0; i<this.table.data.length; i++){
+				if(this.whereClause.LIMIT > 0 && results.length == this.whereClause.LIMIT) break;
+				// LOOPING ROWS
+				if(this.whereClause.finalConditions.length < 1){
+					// IF THERE ARE NO CONDITIONS, ADD ROW TO RESULT SET
+					var row = {};
+					for(var n=0; n<this.columns.length; n++){
+						row[this.columns[n]] = this.table.data[i][this.table.colmap[this.columns[n]]];
+					}
+					results.push(row);
+				}else{
+					var addToResults = false;
+					var x = this.whereClause.finalConditions.length;
+					while(x--){
+						// LOOP THROUGH CONDITION SETS
+						var conditions = this.whereClause.finalConditions[x];
+						var safeCondition = true;
+						var ii = conditions.length;
+						while(ii--){
+							// LOOP THROUGH EACH CONDITION IN THE SET
+							var condition = conditions[ii];
+							switch(condition.type){
+								case ">": 
+									if(isNaN(parseFloat(this.table.data[i][this.table.colmap[condition.col]])) || this.table.data[i][this.table.colmap[condition.col]] < condition.value)
+										safeCondition = false;
+									break;
+								case "<": 
+									if(isNaN(parseFloat(this.table.data[i][this.table.colmap[condition.col]])) || this.table.data[i][this.table.colmap[condition.col]] > condition.value)
+										safeCondition = false;
+									break;
+								case "=": 
+									if(this.table.data[i][this.table.colmap[condition.col]] != condition.value)
+										safeCondition = false;
+									break;
+								case "!=": break;
+									if(this.table.data[i][this.table.colmap[condition.col]] == condition.value)
+										safeCondition = false;
+									break;
+								case "%%": 
+									if(this.table.data[i][this.table.colmap[condition.col]].indexOf(condition.value) < 0)
+										safeCondition = false;
+									break;
+								case "%-": 
+									if(this.table.data[i][this.table.colmap[condition.col]].indexOf(condition.value) != this.table.data[i][this.table.colmap[condition.col]].length - condition.value.length)
+										safeCondition = false;
+									break;
+								case "-%": 
+									if(this.table.data[i][this.table.colmap[condition.col]].indexOf(condition.value) != 0)
+										safeCondition = false;
+									break;
+							}
+							if(!safeCondition) break;
+						}
+						if(safeCondition){
+							addToResults = true;
+							break;
+						}
+					}
+					if(addToResults){
+						var row = {};
+						for(var n=0; n<this.columns.length; n++){
+							row[this.columns[n]] = this.table.data[i][this.table.colmap[this.columns[n]]];
+						}
+						results.push(row);
+					}
+				}
+			}
+			if(this.whereClause.sortColumn.length > 0){
+				results.sort(function(a, b){
+
+					return (function srrrrt(i){
+						if(undefined === this.whereClause.sortColumn[i]) return 0;
+						if(a[this.whereClause.sortColumn[i]] < b[this.whereClause.sortColumn[i]]) return -1;
+						if(a[this.whereClause.sortColumn[i]] > b[this.whereClause.sortColumn[i]]) return 1;
+						return srrrrt(i+1);
+					}(0));
+
+				});
+				if(this.whereClause.sortDirection == "DESC") results.reverse();
+			}
+			this.resultSet = results;
+			return this;
+		};
+		
+		this.fetch = function(Mode){
+			if(undefined === Mode) Mode = "ASSOC";
+			Mode = Mode.toUpperCase();
+			if(Mode !== "ASSOC" && Mode !== "ARRAY") throw "Fetch expects paramter one to be 'ASSOC', 'ARRAY', or blank";
+			if(!this.resultSet.length) return false;
+			var row = this.resultSet.shift();
+			if(Mode == "ARRAY"){
+				var r = [];
+				for(var name in row) if(row.hasOwnProperty(name)) r.push(row[name]);
+				row = r;
+			}
+			return row;
+		};
+
+		this.fetchAll = function(Mode){
+			if(undefined === Mode) Mode = "ASSOC";
+			Mode = Mode.toUpperCase();
+			if(Mode !== "ASSOC" && Mode !== "ARRAY") throw "Fetch expects paramter one to be 'ASSOC', 'ARRAY', or blank";
+			if(!this.resultSet.length) return false;
+
+			var res = [];
+			while(this.resultSet.length > 0){
+				res.push(this.fetch(Mode));
+			}
+			return res;
+		};
+		
+		this.values = function(){ throw "values() is not a valid method for a select query"; };
+		this.ifNotExists = function(){ throw "ifNotExists() is not a valid method for a select query"; };
+		this.set = function(){ throw "set() is not a valid method for a select query"; };
+	}
+	
+	function jSQLUpdateQuery(){
+		
+		this.init = function(table){
+			if(undefined === jSQL.tables[table])
+				throw "Table: "+table+" doesn't exist.";
+			this.table = this.table = jSQL.tables[table];
+			return this;
+		};
+		
+		this.set = function(newvals){
+			this.newvals = newvals;
+			for(var c in newvals) if(newvals.hasOwnProperty(c)) this.columns.push(c);
+			return this;
+		};
+		
+		this.where = function(column){
+			return this.whereClause.where(column);
+		};
+		
+		this.execute = function(preparedVals){
+			
+			if(undefined !== preparedVals && Array.isArray(preparedVals))
+				for(var i in this.newvals)
+					if(this.newvals.hasOwnProperty(i) && this.newvals[i] == '?' && preparedVals.length)
+						this.newvals[i] = preparedVals.shift();
+			
+			var results = [];
+			for(var i=0; i<this.table.data.length; i++){
+				if(this.whereClause.LIMIT > 0 && results.length == this.whereClause.LIMIT) break;
+				// LOOPING ROWS
+				if(this.whereClause.finalConditions.length < 1){
+					// IF THERE ARE NO CONDITIONS, ADD ROW TO RESULT SET
+					var row = {};
+					for(var n=0; n<this.columns.length; n++){
+						this.table.data[i][this.table.colmap[this.columns[n]]] = this.newvals[this.columns[n]];
+						row[this.columns[n]] = this.table.data[i][this.table.colmap[this.columns[n]]];
+					}
+					results.push(row);
+				}else{
+					var addToResults = false;
+					var x = this.whereClause.finalConditions.length;
+					while(x--){
+						// LOOP THROUGH CONDITION SETS
+						var conditions = this.whereClause.finalConditions[x];
+						var safeCondition = true;
+						var ii = conditions.length;
+						while(ii--){
+							// LOOP THROUGH EACH CONDITION IN THE SET
+							var condition = conditions[ii];
+							switch(condition.type){
+								case ">": 
+									if(isNaN(parseFloat(this.table.data[i][this.table.colmap[condition.col]])) || this.table.data[i][this.table.colmap[condition.col]] < condition.value)
+										safeCondition = false;
+									break;
+								case "<": 
+									if(isNaN(parseFloat(this.table.data[i][this.table.colmap[condition.col]])) || this.table.data[i][this.table.colmap[condition.col]] > condition.value)
+										safeCondition = false;
+									break;
+								case "=": 
+									if(this.table.data[i][this.table.colmap[condition.col]] != condition.value)
+										safeCondition = false;
+									break;
+								case "!=": break;
+									if(this.table.data[i][this.table.colmap[condition.col]] == condition.value)
+										safeCondition = false;
+									break;
+								case "%%": 
+									if(this.table.data[i][this.table.colmap[condition.col]].indexOf(condition.value) < 0)
+										safeCondition = false;
+									break;
+								case "%-": 
+									if(this.table.data[i][this.table.colmap[condition.col]].indexOf(condition.value) != this.table.data[i][this.table.colmap[condition.col]].length - condition.value.length)
+										safeCondition = false;
+									break;
+								case "-%": 
+									if(this.table.data[i][this.table.colmap[condition.col]].indexOf(condition.value) != 0)
+										safeCondition = false;
+									break;
+							}
+							if(!safeCondition) break;
+						}
+						if(safeCondition){
+							addToResults = true;
+							break;
+						}
+					}
+					if(addToResults){
+						var row = {};
+						for(var n=0; n<this.columns.length; n++){
+							this.table.data[i][this.table.colmap[this.columns[n]]] = this.newvals[this.columns[n]];
+							row[this.columns[n]] = this.table.data[i][this.table.colmap[this.columns[n]]];
+						}
+						results.push(row);
+					}
+				}
+			}
+			this.resultSet = results;
+			return this;
+		};
+		
+		this.fetch = function(){ return null; };
+		this.fetchAll = function(){ return []; };
+		this.values = function(){ throw "values() is not a valid method for an update query"; };
+		this.ifNotExists = function(){ throw "ifNotExists() is not a valid method for an update query"; };
+		this.from = function(){ throw "from() is not a valid method for an update query"; };
+	}
+	
+	function jSQLCreateQuery(){
+		this.init = function(tablename, columns){
+			this.tablename = tablename;
+			this.columns = columns;
+			return this;
+		};
+		this.ifNotExists = function(){ this.INEFlag=true; };
+		this.execute = function(data){ 
+			if(undefined !== data) this.data = data; 
+			if(!(this.INEFlag && jSQL.tables.hasOwnProperty(this.tablename)))
+				window.jSQL.tables[this.tablename] = new jSQLTable(this.tablename, this.columns, this.data);
+			return this;
+		};
+		this.fetch = function(){ return null; };
+		this.fetchAll = function(){ return []; };
+		this.values = function(){ throw "values() is not a valid method for a create query"; };
+		this.set = function(){ throw "set() is not a valid method for a create query"; };
+		this.where = function(){ throw "where() is not a valid method for a create query"; };
+		this.from = function(){ throw "from() is not a valid method for a create query"; };
+	}
+	
+	////////////////////////////////////////////////////////////////////////////
+	// Parse String Query //////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////////////
+	
 	function jSQLParseQuery(query){
 		
 		// Remove surrounding quotes from a string
 		var removeQuotes = function(str){
-			if(undefined === str) console.log((new Error).stack);
 			var quotes = ['"', "'", "`"];
 			for (var i = quotes.length; i--; )
 				if (str.substr(0, 1) == quotes[i] && str.substr(str.length - 1, 1) == quotes[i])
@@ -182,11 +720,187 @@
 					if (str[i] === "\\" && i > 0 && str[i - 1] === "\\")
 						continue;
 					currentVal.push(str[i]);
-				} else if (str[i] !== " " && str[i] !== ",") {
+				} else if(str[i] === "?"){
+					vals.push('?');
+				}else if (str[i] !== " " && str[i] !== ",") {
 					return vals;
 				}
 			}
 			return vals;
+		};
+		
+		// A helper function that gets column/value pairs from an update query
+		var getColValPairs = function(str){
+			var parts = str.split(',');
+
+			var newVals = {};
+			var whereClause = "";
+
+			var state = 0;
+			for(var i=0; i<parts.length; i++){
+				var keyvals = parts[i].trim();
+				var col = '', val = '', quoteType=null, isNum = false;
+				var chars = keyvals.split('');
+				if(state !== 4) state = 0; 
+							// 0 = looking for col, 
+							// 1 = looking for val in quote, 
+							// 2 = looking for numeric val
+							// 3 = checking for string after end of value
+							// 4 = found string at end of value
+				for(var n=0; n<chars.length; n++){
+					var char = chars[n];
+					switch(state){
+						case 0:
+								if(char !== '=' && char !== ' ') col += char;
+								else if(char === '='){
+									// check for a space
+									if(chars[n+1] == ' '){ n++; char=chars[n];}
+									// expect next char either a quote or a number
+									if(!isNaN(chars[n+1])){
+										state = 2;
+										isNum = true;
+									}else if(chars[n+1]=='"' || chars[n+1]=="'"){
+										quoteType = chars[n+1];
+										state = 1;
+										n++; // skip the first quote
+									}else if(chars[n+1]=='?'){
+										n++; char=chars[n];
+										newVals[removeQuotes(col)] = '?';
+										state = 3;
+									}else{
+										throw 'Expected number or quoted string';
+									}
+								}
+							break;
+						case 1:
+							if(char === quoteType){
+								// is it escaped?
+								if(chars[n-1]=="\\") val += char;
+								else{
+									newVals[removeQuotes(col)] = val;
+									state = 3;
+								}
+							}else val += char;
+							break;
+						case 2:
+							if(char == ' '){n++; char = chars[n];}
+							if(!isNaN(char) || char == '.') val += "" + char;
+							else{
+								newVals[removeQuotes(col)] = parseFloat(val);
+								whereClause += char; 
+								state = 3;
+							}
+							break;
+						case 3:
+							if(char == ' '){ n++; char = chars[n]; }
+							if(undefined === char) break;
+							state = 4;
+							whereClause += char; 
+							break;
+						case 4:
+							whereClause += char;
+					}
+				}
+				if(val !== '') newVals[removeQuotes(col)] = isNum ? parseFloat(val) : val;
+			}
+			return {
+				newVals: newVals,
+				whereClause: whereClause
+			};
+		};
+		
+		var parseWhereClause = function(query, words){
+			while(words.length){
+				var piece = words.shift();
+				switch(piece.toUpperCase()){
+					case "WHERE":
+					case "AND":
+						var ccc;
+						try{
+							ccc = convertToCol(words.shift());
+						}catch(ex){
+							return new (function(error){
+								this.execute = function(){ throw error; };
+								this.fetch = function(){ throw error; };
+								this.fetchAll = function(){ throw error; };
+							})(ex.message);
+						}
+						query = query.where(ccc);
+						break;
+					case "=":
+						query = query.equals(removeQuotes(words.shift()));
+						break;
+					case ">":
+						query = query.greaterThan(removeQuotes(words.shift()));
+						break;
+					case "<":
+						query = query.lessThan(removeQuotes(words.shift()));
+						break;
+					case "!=":
+					case "<>":
+						query = query.doesNotEqual(removeQuotes(words.shift()));
+						break;
+					case "LIKE":
+						var substr = removeQuotes(words.shift());
+						// "%text%" - Contains text
+						if(substr.substr(0,1)=="%" && substr.substr(substr.length-1,1)=="%"){
+							query = query.contains(substr.substr(1,substr.length-2));
+						// "%text" - Ends with text
+						}else if(substr.substr(0,1)=="%"){
+							query = query.endsWith(substr.substr(1,substr.length-1));
+						// "text%" - Begins with text
+						}else if(substr.substr(substr.length-1,1)=="%"){
+							query = query.beginsWith(substr.substr(0,substr.length-1));
+						}else if(substr === "?"){
+							// Is a pepared statement, no value available at this time
+							query = query.preparedLike();
+						}else{
+							// no "%" on either side. jSQL only supports % when 
+							// the string begins or ends with it, so treat it like an equal
+							query = query.equals(substr);
+						}
+						break;
+					case "OR":
+						var ccc;
+						try{
+							ccc = convertToCol(words.shift());
+						}catch(ex){
+							throw ex.message;
+						}
+						query = query.or(ccc);
+						break;
+					case "LIMIT":
+						query = query.limit(words.shift());
+						break;
+					case "ORDER":
+						if(words.shift().toUpperCase() != "BY") throw "Expected 'ORDER BY', got something else.";
+						while(words.length > 0){
+							var nextWord = words.shift();
+							try{
+								// Remove the comma if there is one
+								while(nextWord.indexOf(",") == nextWord.length-1)
+									nextWord = nextWord.substr(0, nextWord.length-1);
+
+								nextWord = convertToCol(nextWord);
+								orderColumns.push(nextWord);
+							}catch(e){
+								words.unshift(nextWord); 
+								break;
+							}
+						}
+						query = query.orderBy(orderColumns);
+						break;
+					case "ASC":
+						if(!orderColumns.length) throw "Must call ORDER BY before using ASC.";
+						query = query.asc();
+						break;
+					case "DESC":
+						if(!orderColumns.length) throw "Must call ORDER BY before using DESC.";
+						query = query.desc();
+						break;
+				}
+			}
+			return query;
 		};
 
 		// Remove excess whitespace, linebreaks
@@ -196,136 +910,137 @@
 		var words = query.split(" ");
 		
 		switch(words.shift().toUpperCase()){
-			case "DROP":				
-				// To keep things congruent with the other types of queries, 
-				// let's return an object with some filler methods
-				return new (function(){				
-					this.execute = function(){ 
-						// Next Word should be "TABLE"
-						if(words.shift().toUpperCase() !== "TABLE") throw "Unintelligible query. Expected 'TABLE'";
-
-						// Next word should be the table name
-						table = removeQuotes(words.shift());
-						if(undefined === jSQL.tables[table]) throw "Table "+table+" does not exist.";
-					
-						// Delete the table
-						delete jSQL.tables[table];
-						return this; 
-					};
-					this.fetch = function(){ return null; };
-					this.fetchAll = function(){ return []; };
-				})();
+			case "DELETE":
+				// Next Word should be "TABLE"
+				if(words.shift().toUpperCase() !== "FROM") throw "Unintelligible query. Expected 'TABLE'";
+				
+				// Next word should be the table name
+				var table = removeQuotes(words.shift());
+				if(undefined === jSQL.tables[table]) throw "Table "+table+" does not exist.";
+				
+				var query = jSQL.deleteFrom(table);
+				query = parseWhereClause(query, words);
+				
+				return query;
 				
 				break;
+			
+			case "DROP":				
+				
+				// Next Word should be "TABLE"
+				if(words.shift().toUpperCase() !== "TABLE") throw "Unintelligible query. Expected 'TABLE'";
+
+				// Next word should be the table name
+				var table = removeQuotes(words.shift());
+				if(undefined === jSQL.tables[table]) throw "Table "+table+" does not exist.";
+				
+				return jSQL.dropTable(table);
+				
+				break;
+				
 			case "INSERT": 
 				
-				// To keep things congruent with the other types of queries, 
-				// let's return an object with some filler methods
-				return new (function(){
-					this.execute = function(preparedVals){ 
-						var table, cols=[], values = [];
+				var table, cols=[], values = [];
 
-						// Next Word should be "INTO"
-						if(words.shift().toUpperCase() !== "INTO") throw "Unintelligible query. Expected 'INTO'";
+				// Next Word should be "INTO"
+				if(words.shift().toUpperCase() !== "INTO") throw "Unintelligible query. Expected 'INTO'";
 
-						// Next word should be the table name
-						table = removeQuotes(words.shift());
-						if(undefined === jSQL.tables[table]) throw "Table "+table+" does not exist.";
+				// Next word should be the table name
+				table = removeQuotes(words.shift());
+				if(undefined === jSQL.tables[table]) throw "Table "+table+" does not exist.";
 
-						// Remove a few chars and re-split
-						words = words.join(" ")
-							.split("(").join(" ")
-							.split(")").join(" ")
-							.split(",").join(" ")
-							.split("  ").join(" ").trim()
-							.split(" ");
+				// Remove a few chars and re-split
+				words = words.join(" ")
+					.split("(").join(" ")
+					.split(")").join(" ")
+					.split(",").join(" ")
+					.split("  ").join(" ").trim()
+					.split(" ");
 
-						var next = words.shift();
-						while(words.length && next.toUpperCase() !== "VALUES"){
-							cols.push(removeQuotes(next));
-							next = words.shift();
-						}
+				var next = words.shift();
+				while(words.length && next.toUpperCase() !== "VALUES"){
+					cols.push(removeQuotes(next));
+					next = words.shift();
+				}
 
-						if(next.toUpperCase() !== "VALUES") 
-							throw "Unintelligible query. Expected 'VALUES' near '"+next+"'";
-						
-						if(preparedVals !== undefined && Array.isArray(preparedVals) && preparedVals.length>0)
-							values = (words.join(' ').match(/\?/g) || []).length === preparedVals.length && preparedVals.length ?
-								preparedVals : getNextQueryVals(words.join(' '));
-						else values = getNextQueryVals(words.join(' '));
+				if(next.toUpperCase() !== "VALUES") 
+					throw "Unintelligible query. Expected 'VALUES' near '"+next+"'";
+				
+				var w = words.join(' ');
+				values = getNextQueryVals(w);
 
-						if(!cols.length){
-							for(var i=0;  i<values.length; i++){
-								if(undefined === jSQL.tables[table].columns[i]) throw "Error: too many values.";
-								cols.push(jSQL.tables[table].columns[i]);
-							}
-						}
+				if(!cols.length){
+					for(var i=0;  i<values.length; i++){
+						if(undefined === jSQL.tables[table].columns[i]) throw "Error: too many values.";
+						cols.push(jSQL.tables[table].columns[i]);
+					}
+				}
 
-						if(values.length !== cols.length) throw "Error: Columns mismatch.";
+				if(values.length !== cols.length) throw "Error: Columns mismatch.";
 
-						var data = {};
-						for(var i=0; i<cols.length; i++){
-							data[cols[i]] = values[i];
-						}
+				var data = {};
+				for(var i=0; i<cols.length; i++){
+					data[cols[i]] = values[i];
+				}
 
-						jSQL.tables[table].insertRow(data);
-						
-						return this; 
-					};
-					this.fetch = function(){ return null; };
-					this.fetchAll = function(){ return []; };
-				})();
+				//jSQL.tables[table].insertRow(data);
+				return jSQL.insertInto(table).values(data);
 				
 				break;
 			case "CREATE": 
 				
-				// To keep things congruent with the other types of queries, 
-				// let's return an object with some filler methods
-				return new (function(){
-					this.execute = function(){ 
-						var table, c, cols = [];
-						// Next Word should be "TABLE"
-						if(words.shift().toUpperCase() !== "TABLE") throw "Unintelligible query. Expected 'TABLE'";
+				var table, c, cols = [],ine=false;
+				// Next Word should be "TABLE"
+				if(words.shift().toUpperCase() !== "TABLE") throw "Unintelligible query. Expected 'TABLE'";
 
-						// Remove a few chars and re-split
-						words = words.join(" ")
-							.split("(").join(" ")
-							.split(")").join(" ")
-							.split(",").join(" ")
-							.split("  ").join(" ").trim()
-							.split(" ");
+				// Remove a few chars and re-split
+				words = words.join(" ")
+					.split("(").join(" ")
+					.split(")").join(" ")
+					.split(",").join(" ")
+					.split("  ").join(" ").trim()
+					.split(" ");
 
-						// Check for "IF NOT EXISTS" clause
-						table = removeQuotes(words.shift());				
-						if(table.toUpperCase() === "IF"){
-							if(words.shift().toUpperCase() !== "NOT") throw "Unintelligible query. Expected 'NOT'";
-							if(words.shift().toUpperCase() !== "EXISTS") throw "Unintelligible query. Expected 'EXISTS'";
-							table = removeQuotes(words.shift());
-							if(jSQL.tables.hasOwnProperty(table)) return;
-						} 
+				// Check for "IF NOT EXISTS" clause
+				table = removeQuotes(words.shift());
+				
+				if(table.toUpperCase() === "IF"){
+					if(words.shift().toUpperCase() !== "NOT") throw "Unintelligible query. Expected 'NOT'";
+					if(words.shift().toUpperCase() !== "EXISTS") throw "Unintelligible query. Expected 'EXISTS'";
+					table = removeQuotes(words.shift());
+					ine=true;
+				} 
 
-						// Get column names
-						while(words.length > 0) 
-							cols.push(removeQuotes(words.shift()));
-
-						jSQL.createTable(table, cols, []);
-						return this; 
-					};
-					this.fetch = function(){ return null; };
-					this.fetchAll = function(){ return []; };
-				})();
+				// Get column names
+				while(words.length > 0) 
+					cols.push(removeQuotes(words.shift()));
+				
+				var query = jSQL.createTable(table, cols);
+				if(ine) query.ifNotExists();
+				return query;
 				
 				break;
+			case "UPDATE":
+				// Do stuff to parse update query
+				var table, colValPairs, query, orderColumns = [];
+				table = removeQuotes(words.shift());
+				
+				var set = words.shift().toUpperCase();
+				if (set !== "SET")
+					throw "Unintelligible query. Expected 'SET.'";
+				
+				var parts = getColValPairs(words.join(' '));
+				query = jSQL.update(table).set(parts.newVals);
+				query = parseWhereClause(query, parts.whereClause.split(' '));
+				return query;
+				break;
+				
 			case "SELECT":
 				var table, columns, query, orderColumns = [];
 				var upperWords = query.toUpperCase().split(" "); upperWords.shift();
 				var fromIndex = upperWords.indexOf("FROM");
 				
-				if(fromIndex < 0) return new (function(error){
-					this.execute = function(){ throw error; };
-					this.fetch = function(){ throw error; };
-					this.fetchAll = function(){ throw error; };
-				})("Unintelligible query. Expected 'FROM'");
+				if(fromIndex < 0) throw "Unintelligible query. Expected 'FROM'";
 				
 				columns = words.splice(0, fromIndex);
 				for(var i=columns.length; i--;)
@@ -352,173 +1067,39 @@
 					try{
 						columns[i] = convertToCol(columns[i]);
 					}catch(ex){
-						return new (function(error){
-							this.execute = function(){ throw error; };
-							this.fetch = function(){ throw error; };
-							this.fetchAll = function(){ throw error; };
-						})(ex.message);
+						throw ex.message;
 					}
 				}
 
 				// Generate the query object
 				query = jSQL.select(columns).from(table);
-				while(words.length){
-					var piece = words.shift();
-					switch(piece.toUpperCase()){
-						case "WHERE":
-						case "AND":
-							var ccc;
-							try{
-								ccc = convertToCol(words.shift());
-							}catch(ex){
-								return new (function(error){
-									this.execute = function(){ throw error; };
-									this.fetch = function(){ throw error; };
-									this.fetchAll = function(){ throw error; };
-								})(ex.message);
-							}
-							query = query.where(ccc);
-							break;
-						case "=":
-							query = query.equals(removeQuotes(words.shift()));
-							break;
-						case ">":
-							query = query.greaterThan(removeQuotes(words.shift()));
-							break;
-						case "<":
-							query = query.lessThan(removeQuotes(words.shift()));
-							break;
-						case "!=":
-						case "<>":
-							query = query.doesNotEqual(removeQuotes(words.shift()));
-							break;
-						case "LIKE":
-							var substr = removeQuotes(words.shift());
-							// "%text%" - Contains text
-							if(substr.substr(0,1)=="%" && substr.substr(substr.length-1,1)=="%"){
-								query = query.contains(substr.substr(1,substr.length-2));
-							// "%text" - Ends with text
-							}else if(substr.substr(0,1)=="%"){
-								query = query.endsWith(substr.substr(1,substr.length-1));
-							// "text%" - Begins with text
-							}else if(substr.substr(substr.length-1,1)=="%"){
-								query = query.beginsWith(substr.substr(0,substr.length-1));
-							}else if(substr === "?"){
-								// Is a pepared statement, no value available at this time
-								query = query.preparedLike();
-							}else{
-								// no "%" on either side. jSQL only supports % when 
-								// the string begins or ends with it, so treat it like an equal
-								query = query.equals(substr);
-							}
-							break;
-						case "OR":
-							var ccc;
-							try{
-								ccc = convertToCol(words.shift());
-							}catch(ex){
-								return new (function(error){
-									this.execute = function(){ throw error; };
-									this.fetch = function(){ throw error; };
-									this.fetchAll = function(){ throw error; };
-								})(ex.message);
-							}
-							query = query.or(ccc);
-							break;
-						case "LIMIT":
-							query = query.limit(words.shift());
-							break;
-						case "ORDER":
-							if(words.shift().toUpperCase() != "BY") throw "Expected 'ORDER BY', got something else.";
-							while(words.length > 0){
-								var nextWord = words.shift();
-								try{
-									// Remove the comma if there is one
-									while(nextWord.indexOf(",") == nextWord.length-1)
-										nextWord = nextWord.substr(0, nextWord.length-1);
-
-									nextWord = convertToCol(nextWord);
-									orderColumns.push(nextWord);
-								}catch(e){
-									words.unshift(nextWord); 
-									break;
-								}
-							}
-							query = query.orderBy(orderColumns);
-							break;
-						case "ASC":
-							if(!orderColumns.length) throw "Must call ORDER BY before using ASC.";
-							query = query.asc();
-							break;
-						case "DESC":
-							if(!orderColumns.length) throw "Must call ORDER BY before using DESC.";
-							query = query.desc();
-							break;
-						default: throw "Unintelligible query. Near: "+piece;
-					}
-				}
+				query = parseWhereClause(query, words);
+				
 				return query;
 				break;
+				
 			default:
-				return new (function(error){
-					this.execute = function(){ throw error; };
-					this.fetch = function(){ throw error; };
-					this.fetchAll = function(){ throw error; };
-				})("Unintelligible query. Error near: "+words[0]);
+				throw "Unintelligible query. Error near: "+words[0];
 		}
 	}
-
-	// Insert data constructor
-	function jSQLTableInsert(table){
+	
+	////////////////////////////////////////////////////////////////////////////
+	// Where caluse ////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////////////
+	
+	function jSQLWhereClause(context){
 		var self = this;
-		self.table = table;
-		self.values = function(data){
-			if(undefined === jSQL.tables[table])
-				throw "Table: "+self.table+" doesn't exist.";
-			jSQL.tables[table].insertRow(data);
-			return true;
-		};
-	}
-
-	// Select query constructor
-	function jSQLBuildSelectQuery(columns){
-		var self = this;
-		self.columns = columns;
-		self.from = function(table){
-			if(undefined === jSQL.tables[table])
-				throw "Table: "+table+" doesn't exist.";
-			return new jSQLTableSelect(jSQL.tables[table], self.columns);
-		};
-	}
-
-	// Builds and executes the select query
-	function jSQLTableSelect(table, columns){
-		var self = this;
-		self.table = null;
-		self.columns = [];
+		self.context = context;
 		self.pendingColumn = "";
 		self.conditions = [];
 		self.LIMIT = 0;
 		self.finalConditions = [];
 		self.sortColumn = [];
 		self.sortDirection = "ASC";
-		self.resultSet = [];
-
-		self.init = function(table, columns){
-			self.table = table;
-			if(typeof columns == 'string') columns = [columns];
-			if(!Array.isArray(columns)) throw "Select requires a string or an array of column names.";
-			if(columns[0] == "*") columns = self.table.columns;
-			for(var i=0; i<columns.length; i++){
-				if(self.table.columns.indexOf(columns[i]) < 0) throw "There is no "+columns[i]+" column in the "+self.table.name+" table.";
-				else self.columns.push(columns[i]);
-			}
-		};
 
 		self.where = function(column){
 			if(self.pendingColumn !== "") throw "Must add a conditional before adding another 'Where' condition.";
 			if('string' != typeof column) throw "Column name must be a string.";
-			if(self.table.columns.indexOf(column) < 0) throw "There is no "+column+" column in the "+self.table.name+" table.";
 			self.pendingColumn = column;
 			return self;
 		};
@@ -594,8 +1175,6 @@
 
 		self.orderBy = function(columns){
 			if(!Array.isArray(columns)) columns = [columns];
-			for(var i=columns.length; i--;)
-				if(self.table.columns.indexOf(columns[i]) < 0) throw "There is no "+columns[i]+" column in the "+self.table.name+" table.";
 			self.sortColumn = columns;
 			return self;
 		};
@@ -613,7 +1192,6 @@
 		};
 
 		self.execute = function(preparedVals){
-			var results = [];
 			if(undefined === preparedVals) preparedVals = [];
 			if(self.conditions.length > 0) self.finalConditions.push(self.conditions);
 			
@@ -647,135 +1225,21 @@
 					}
 				}
 			}
-			
-			for(var i=0; i<self.table.data.length; i++){
-				if(self.LIMIT > 0 && results.length == self.LIMIT) break;
-				// LOOPING ROWS
-				if(self.finalConditions.length < 1){
-					// IF THERE ARE NO CONDITIONS, ADD ROW TO RESULT SET
-					var row = {};
-					for(var n=0; n<self.columns.length; n++){
-						row[self.columns[n]] = self.table.data[i][n];
-					}
-					results.push(row);
-				}else{
-					var addToResults = false;
-					var x = self.finalConditions.length;
-					while(x--){
-						// LOOP THROUGH CONDITION SETS
-						var conditions = self.finalConditions[x];
-						var safeCondition = true;
-						var ii = conditions.length;
-						while(ii--){
-							// LOOP THROUGH EACH CONDITION IN THE SET
-							var condition = conditions[ii];
-							switch(condition.type){
-								case ">": 
-									if(isNaN(parseFloat(self.table.data[i][self.table.colmap[condition.col]])) || self.table.data[i][self.table.colmap[condition.col]] < condition.value)
-										safeCondition = false;
-									break;
-								case "<": 
-									if(isNaN(parseFloat(self.table.data[i][self.table.colmap[condition.col]])) || self.table.data[i][self.table.colmap[condition.col]] > condition.value)
-										safeCondition = false;
-									break;
-								case "=": 
-									if(self.table.data[i][self.table.colmap[condition.col]] != condition.value)
-										safeCondition = false;
-									break;
-								case "!=": break;
-									if(self.table.data[i][self.table.colmap[condition.col]] == condition.value)
-										safeCondition = false;
-									break;
-								case "%%": 
-									if(self.table.data[i][self.table.colmap[condition.col]].indexOf(condition.value) < 0)
-										safeCondition = false;
-									break;
-								case "%-": 
-									if(self.table.data[i][self.table.colmap[condition.col]].indexOf(condition.value) != self.table.data[i][self.table.colmap[condition.col]].length - condition.value.length)
-										safeCondition = false;
-									break;
-								case "-%": 
-									if(self.table.data[i][self.table.colmap[condition.col]].indexOf(condition.value) != 0)
-										safeCondition = false;
-									break;
-							}
-							if(!safeCondition) break;
-						}
-						if(safeCondition){
-							addToResults = true;
-							break;
-						}
-					}
-					if(addToResults){
-						var row = {};
-						for(var n=0; n<self.columns.length; n++){
-							row[self.columns[n]] = self.table.data[i][n];
-						}
-						results.push(row);
-					}
-				}
-			}
-			if(self.sortColumn.length > 0){
-				results.sort(function(a, b){
-
-					return (function srrrrt(i){
-						if(undefined === self.sortColumn[i]) return 0;
-						if(a[self.sortColumn[i]] < b[self.sortColumn[i]]) return -1;
-						if(a[self.sortColumn[i]] > b[self.sortColumn[i]]) return 1;
-						return srrrrt(i+1);
-					}(0));
-
-				});
-				if(self.sortDirection == "DESC") results.reverse();
-			}
-			self.resultSet = results;
-			return self;
+			return self.context.execute(preparedVals);
 		};
-
-
+		
 		self.fetch = function(Mode){
-			if(undefined === Mode) Mode = "ASSOC";
-			Mode = Mode.toUpperCase();
-			if(Mode !== "ASSOC" && Mode !== "ARRAY") throw "Fetch expects paramter one to be 'ASSOC', 'ARRAY', or blank";
-			if(!self.resultSet.length) return false;
-			var row = self.resultSet.shift();
-			if(Mode == "ARRAY"){
-				var r = [];
-				for(var name in row) if(row.hasOwnProperty(name)) r.push(row[name]);
-				row = r;
-			}
-			return row;
+			return self.context.fetch(Mode);
 		};
 
 		self.fetchAll = function(Mode){
-			if(undefined === Mode) Mode = "ASSOC";
-			Mode = Mode.toUpperCase();
-			if(Mode !== "ASSOC" && Mode !== "ARRAY") throw "Fetch expects paramter one to be 'ASSOC', 'ARRAY', or blank";
-			if(!self.resultSet.length) return false;
-
-			var res = [];
-			while(self.resultSet.length > 0){
-				res.push(self.fetch(Mode));
-			}
-
-			return res;
+			return self.context.fetchAll(Mode);
 		};
-
-		self.init(table, columns);
-	}
-
-	function createTable(name, columns, data){
-		window.jSQL.tables[name] = new jSQLTable(name, columns, data);
-		return true;
 	}
 	
-	function select(cols){
-		return new jSQLBuildSelectQuery(cols);
-	}
-	
-	function insertInto(tablename){
-		return new jSQLTableInsert(tablename);
-	}
+	////////////////////////////////////////////////////////////////////////////
+	// Data Storage APIs ///////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////////////
 	
 	function WebSQLAPI() {
 		var self = this;
@@ -1013,6 +1477,10 @@
 		};
 	}
 	
+	////////////////////////////////////////////////////////////////////////////
+	// Persistence Manager /////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////////////
+	
 	var persistenceManager = new (function(){
 		var self = this;
 		self.api = null;
@@ -1057,7 +1525,7 @@
 								for(var c in rowdata)
 									if(rowdata.hasOwnProperty(c))
 										cols.push(c);
-								jSQL.createTable(tablename, cols, []);
+								jSQL.createTable(tablename, cols).execute();
 							}
 							// Check for and parse functions
 							for(var c in rowdata){
@@ -1094,11 +1562,48 @@
 		})();
 	})();
 	
+	////////////////////////////////////////////////////////////////////////////
+	// Syntactic sugar /////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////////////
+	
+	function createTable(name, columns){
+		if(!Array.isArray(columns)) columns=[columns];
+		return new jSQLQuery("CREATE").init(name, columns);
+	}
+	
+	function select(cols){
+		if(!Array.isArray(cols)) cols=[cols];
+		return new jSQLQuery("SELECT").init(cols);
+	}
+	
+	function update(table){
+		return new jSQLQuery("UPDATE").init(table);
+	}
+	
+	function insertInto(tablename){
+		return new jSQLQuery("INSERT").init(tablename);
+	}
+	
+	function dropTable(tablename){
+		return new jSQLQuery("DROP").init(tablename);
+	}
+	
+	function deleteFrom(tablename){
+		return new jSQLQuery("DELETE").init(tablename);
+	}
+	
+	////////////////////////////////////////////////////////////////////////////
+	// Exposed Methods /////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////////////
+	
 	return {
 		tables: {},
 		query: jSQLParseQuery,
 		createTable: createTable,
+		dropTable: dropTable,
 		select: select,
+		update: update,
+		deleteFrom: deleteFrom,
 		insertInto: insertInto,
 		persist: persistenceManager.persist,
 		load: persistenceManager.load

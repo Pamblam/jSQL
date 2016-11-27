@@ -14,7 +14,8 @@
 			xhttp.onreadystatechange = function() {
 				if (xhttp.readyState == 4 && xhttp.status == 200) {
 					var data = JSON.parse(xhttp.responseText);
-					jSQL.createTable("zips", data);
+					console.log(data);
+					jSQL.createTable("zips", data).execute();
 					
 					clear();
 					echo("<h1>Example 1</h1><p>Created `zips` from JSON via AJAX</p>");

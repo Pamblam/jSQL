@@ -5,9 +5,9 @@
         <title>jSQL test</title>
     </head>
     <body>
-		<script src="../../jSQL.min.js"></script>
+		<script src="../../jSQL.js"></script>
 		<script>
-			
+
 			// Create the database
 			loadData();
 			
@@ -48,7 +48,7 @@
 				jSQL.load(function(){
 					// Create the table if there wasn't one already in internal storage
 					if(undefined === jSQL.tables.randomStrings)
-						jSQL.createTable("randomStrings", ["time", "str"], []);
+						jSQL.createTable("randomStrings", ["time", "str"]).execute();
 					// Show the page
 					resetView();
 				});

@@ -164,7 +164,7 @@
 						{ID: 0, Name: "Donald Trump", Phone: "(813) 818 - 8420"},
 						{ID: 1, Name: "Hillary Clinton", Phone: "(888) 812 - 8357"}
 					];
-					jSQL.createTable("PhoneNumbers", data);
+					jSQL.createTable("PhoneNumbers", data).execute();
 					jSQL.persist();
 				}
 				
@@ -185,7 +185,7 @@
 					if(phone === false) return alert("Please enter a valid 10 digit phone number.");
 					var id = lastID+1;
 					var exe = [id, name, phone];
-					jSQL.query("INSERT INTO `PhoneNumbers` VALUES (?, ?, ?)").execute(exe);
+					var q = jSQL.query("INSERT INTO `PhoneNumbers` VALUES (?, ?, ?)").execute(exe);
 					jSQL.persist();
 					addRecordToUI(getRecordByID(id));
 				});
@@ -199,6 +199,7 @@
 			}
 			
 			function drawHTMLTable(){
+				document.getElementById('displayBody').innerHTML = "";
 				var PhoneNumbers = getAllRecords();
 				for(var i=0; i<PhoneNumbers.length; i++) 
 					addRecordToUI(PhoneNumbers[i]);
@@ -246,7 +247,13 @@
 			
 			// Edit a record by it's ID
 			function editRecordByID(id){
-				console.log("Do stuff here to edit record #"+id);
+				var row = jSQL.select(['Name','Phone']).from("PhoneNumbers").where("ID").equals(id).execute().fetch("ASSOC");
+				var newName = prompt("Enter a new name: ",row.Name);
+				var newPhone = prompt("Enter a new phone ",row.Phone);
+				jSQL.query('update PhoneNumbers set Name = ?, Phone = ? where ID = ?').execute([newName,newPhone,id]);
+				//jSQL.update("PhoneNumbers").set({Name:newName,Phone:newPhone}).where("ID").equals(id).execute();
+				jSQL.persist();
+				drawHTMLTable();
 			}
 			
 			// Get a record from teh database by it's ID

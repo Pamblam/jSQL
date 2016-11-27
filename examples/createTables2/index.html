@@ -13,30 +13,22 @@
 				{a:1, b:2, c:3, d:4, e:5, f:6, g:7},
 				{a:2, b:3, c:3, d:54, e:7, f:6},
 				{a:2, b:3, c:3, d:54, e:7, f:6, g:7, h:"d"}
-			]);
+			]).execute();
 			
 			// Using arrays
-			jSQL.createTable("aTable", ["a", "b", "c"], [
+			jSQL.createTable("aTable", ["a", "b", "c"]).execute([
 				[12,34,56,78],
 				[23,45,67,89,78,78],
 				[7]
 			]);
 			
 			// Using a combination, explicit column names
-			jSQL.createTable("ceTable", ['a', 'b', 'c', 'd', 'e', 'f', 'g'], [
+			jSQL.createTable("ceTable", ['a', 'b', 'c', 'd', 'e', 'f', 'g']).execute([
 				[12,34,56,78],
 				[23,45,67,89,78,78],
 				[7], {"a":1, "b":2, "g":3}
 			]);
 			
-			// Using a combination, implicit column names
-			jSQL.createTable("ciTable", [
-				[12,34,56,78],
-				[23,45,67,89,78,78],
-				[23,45,67,89,78,78,"sdfasdf"],
-				[7], {"a":1, "b":2, "c":3},
-				{"d":1, "e":2, "f":3}
-			]);
 			echo("<h1>Example - Creating Tables</h1>");
 			
 			echo("<h3>Example 1</h3><p>Created `oTable` from objects</p>");
@@ -52,11 +44,6 @@
 			echo("<h3>Example 3</h3><p>Created `ceTable` from arrays and objects, with explicit column names</p>");
 			echo("<p>There are "+jSQL.tables.ceTable.data.length+" total rows in `ceTable`</p>");
 			var results = jSQL.query('SELECT * FROM `ceTable`').execute().fetchAll();
-			echo(makeTable(results));
-			
-			echo("<h3>Example 4</h3><p>Created `ciTable` from arrays and objects, with implicit column names</p>");
-			echo("<p>There are "+jSQL.tables.ciTable.data.length+" total rows in `ciTable`</p>");
-			var results = jSQL.query('SELECT * FROM `ciTable`').execute().fetchAll();
 			echo(makeTable(results));
 
 			// Some helper functions
