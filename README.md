@@ -17,7 +17,7 @@ jSQL is a persistent client-side database and SQL engine. It uses various method
      - [`jSQL.tables`](#jsqltables)
  - [Querying the Database](#querying-the-database)
      - [`jSQL.query`](#jsqlquerysqlquery) 
-     - [`jSQL.createTable`](#jsqlcreatetablename-columns-data)
+     - [`jSQL.createTable`](#jsqlcreatetablename-columns)
      - [`jSQL.select`](#jsqlselectcolumns)
      - [`jSQL.insertInto`](#jsqlinsertintotablename)
      - [`jSQL.dropTable`](#jsqldroptabletablename)
@@ -58,6 +58,12 @@ jSQL is a persistent client-side database and SQL engine. It uses various method
      - [`jSQLWhereClause.desc`](#jsqlwhereclausedesc)
      - [`jSQLWhereClause.execute`](#jsqlwhereclauseexecute)
  - [jSQL Syntax](#jsql-syntax)
+     - [SELECT Query syntax](#select-query-syntax)
+     - [CREATE Query syntax](#create-query-syntax)
+     - [UPDATE Query syntax](#update-query-syntax)
+     - [INSERT Query syntax](#insert-query-syntax)
+     - [DROP Query syntax](#drop-query-syntax)
+     - [DELETE Query syntax](#delete-query-syntax)
  - [Examples](#examples)
  - [License](#license)
 
@@ -65,7 +71,7 @@ jSQL is a persistent client-side database and SQL engine. It uses various method
 
 ### Persistence Management
 
-jSQL databases are stored on the user's hard drive but are loaded into memory when jSQL is loaded. For query speed, all database operations are made in memory and are not saved to the user's hard drive until `jSQL.persist()` is called.
+jSQL databases are stored on the user's hard drive but are loaded into memory when jSQL is loaded. For query speed, all database operations are made in memory and are not saved to the user's hard drive until [`jSQL.persist()`](#jsqlpersist) is called.
 
 [Back to Top](#jsql)
 
@@ -121,12 +127,12 @@ An object containing a [`jSQLTable`](#jsqltable-class) object for each of your t
 
 ### Querying the Database
 
-All queries are executed by a `jSQLQuery` object. This object allows you to refine a query, provide values to a prepared statement, get the results of a query, etc. 
+All queries are executed by a [`jSQLQuery`](#jsqlquery-interface) object. This object allows you to refine a query, provide values to a prepared statement, get the results of a query, etc. 
 
 There are two ways to create any given query:
 
- 1. Using the query constructor for the required query type (`jSQL.createTable`, `jSQL.dropTable`, `jSQL.select`,  `jSQL.update`,  `jSQL.deleteFrom`, or `jSQL.insertInto`)
- 2. Using the SQL Parser (`jSQL.query`) Which will parse an SQL statement and return the `jSQLQuery` object of the correct type. 
+ 1. Using the query constructor for the required query type ([`jSQL.createTable`](#jsqlcreatetablename-columns), [`jSQL.dropTable`](#jsqldroptabletablename), [`jSQL.select`](#jsqlselectcolumns),  [`jSQL.update`](#jsqlupdatetablename),  [`jSQL.deleteFrom`](#jsqldeletefromtablename), or [`jSQL.insertInto`](#jsqlinsertintotablename))
+ 2. Using the SQL Parser ([`jSQL.query`](#jsqlquerysqlquery)) Which will parse an SQL statement and return the [`jSQLQuery`](#jsqlquery-interface) object of the correct type. 
 
 [Back to Top](#jsql)
 
@@ -143,7 +149,7 @@ Parse a raw query or prepared statement from an SQL string. This method understa
 
 ##### Returns
 
- - A `jSQLQuery` object of the appropriate type: "CREATE", "UPDATE", "SELECT", "INSERT", "DROP", or "DELETE".
+ - A [`jSQLQuery`](#jsqlquery-interface) object of the appropriate type: "CREATE", "UPDATE", "SELECT", "INSERT", "DROP", or "DELETE".
 
 ##### Example
 
@@ -167,7 +173,7 @@ Create a query that can create and populate a table new table in the database.
 
 ##### Returns
 
- - A `jSQLQuery` object of type "CREATE".
+ - A [`jSQLQuery`](#jsqlquery-interface) object of type "CREATE".
 
 ##### Example
 
@@ -192,7 +198,7 @@ Create a query that will gather a result set from a table to be fetched.
 
 ##### Returns
 
- - A `jSQLQuery` object of type "SELECT".
+ - A [`jSQLQuery`](#jsqlquery-interface) object of type "SELECT".
 
 ##### Example
 
@@ -215,7 +221,7 @@ Create a query that will insert rows into a table.
 
 ##### Returns
 
- - A `jSQLQuery` object of type "INSERT".
+ - A [`jSQLQuery`](#jsqlquery-interface) object of type "INSERT".
 
 ##### Example
 
@@ -237,7 +243,7 @@ Create a query that will delete a table.
 
 ##### Returns
 
- - A `jSQLQuery` object of type "DROP".
+ - A [`jSQLQuery`](#jsqlquery-interface) object of type "DROP".
 
 ##### Example
 
@@ -260,7 +266,7 @@ Create a query that will alter records in a table.
 
 ##### Returns
 
- - A `jSQLQuery` object of type "UPDATE".
+ - A [`jSQLQuery`](#jsqlquery-interface) object of type "UPDATE".
 
 ##### Example
 
@@ -287,7 +293,7 @@ Create a query that will delete records in a table.
 
 ##### Returns
 
- - A `jSQLQuery` object of type "DELETE".
+ - A [`jSQLQuery`](#jsqlquery-interface) object of type "DELETE".
 
 ##### Example
 
@@ -303,7 +309,7 @@ jSQL.deleteFrom(`Users`).execute();
 
 ### `jSQLTable` class
 
-This class represents a table in the database. The database is located in `jSQL.tables` and is an object whos keys are table names and values are their respective `jSQLTable` classes. 
+This class represents a table in the database. The database is located in [`jSQL.tables`](#jsqltables) and is an object whos keys are table names and values are their respective [`jSQLTable`](#jsqltable-class) classes. 
 
 These tables are altered and queried by [`jSQLQuery`](#jsqlquery-interface) objects, but may be interacted with directly if desired.
 
@@ -451,7 +457,7 @@ Used for "CREATE" queries to set a flag that will prevent overwriting this table
 
 ##### Returns
 
- - The `jSQLQuery` object.
+ - The [`jSQLQuery`](#jsqlquery-interface) object.
 
 ##### Example
 
@@ -473,7 +479,7 @@ Used for ALL query types. This function executes the query, setting the result s
 
 ##### Returns
 
- - The `jSQLQuery` object.
+ - The [`jSQLQuery`](#jsqlquery-interface) object.
 
 ##### Example
 
@@ -548,7 +554,7 @@ Used for "INSERT" queries to set the values to be inserted into the newly create
 
 ##### Returns
 
- - The `jSQLQuery` object.
+ - The [`jSQLQuery`](#jsqlquery-interface) object.
 
 ##### Example
 
@@ -571,7 +577,7 @@ Used for "UPDATE" queries to set the columns and values to be altered.
 
 ##### Returns
 
- - The `jSQLQuery` object.
+ - The [`jSQLQuery`](#jsqlquery-interface) object.
 
 ##### Example
 
@@ -594,7 +600,7 @@ Used for "DELETE", "SELECT", and "UPDATE" queries to refine the result set, or t
 
 ##### Returns
 
- - The `jSQLWhereClause` object that belongs to the current `jSQLQuery` object.
+ - The [`jSQLWhereClause`](#jsqlwhereclause-class) object that belongs to the current [`jSQLQuery`](#jsqlquery-interface) object.
 
 ##### Example
 
@@ -616,7 +622,7 @@ Used for ""SELECT" queries to define the table from which to pull the results.
 
 ##### Returns
 
- - The `jSQLQuery` object.
+ - The [`jSQLQuery`](#jsqlquery-interface) object.
 
 ##### Example
 
@@ -630,7 +636,7 @@ var allUsers = jSQL.select('*').from('Users').execute().fetchAll();
 
 ### `jSQLWhereClause` class
 
-For query types that have a where clause ("DELETE", "SELECT", and "UPDATE"), this method is accessed via the query's `where()` method. This is used to filter and sort results in a "SELECT" query or the results to be edited or delete with "DELETE" and "UPDATE" queries.
+For query types that have a where clause ("DELETE", "SELECT", and "UPDATE"), this method is accessed via the query's [`where()`](#jsqlwhereclausewherecolumn) method. This is used to filter and sort results in a "SELECT" query or the results to be edited or delete with "DELETE" and "UPDATE" queries.
 
 [Back to Top](#jsql)
 
@@ -646,7 +652,7 @@ Set a column to add a filter to.
 
 ##### Returns
 
- - The `jSQLWhereClause` object.
+ - The [`jSQLWhereClause`](#jsqlwhereclause-class) object.
 
 ##### Example
 
@@ -674,7 +680,7 @@ Filter results to ones where the filtered column matches the given value
 
 ##### Returns
 
- - The `jSQLWhereClause` object.
+ - The [`jSQLWhereClause`](#jsqlwhereclause-class) object.
 
 ##### Example
 
@@ -698,7 +704,7 @@ For use with "LIKE" modifiers which are used with a prepared query.
 
 ##### Returns
 
- - The `jSQLWhereClause` object.
+ - The [`jSQLWhereClause`](#jsqlwhereclause-class) object.
 
 ##### Example
 
@@ -726,7 +732,7 @@ Filter results to ones where the filtered column does not match the given value
 
 ##### Returns
 
- - The `jSQLWhereClause` object.
+ - The [`jSQLWhereClause`](#jsqlwhereclause-class) object.
 
 ##### Example
 
@@ -754,7 +760,7 @@ Filter results to ones where the filtered column is less than the given value
 
 ##### Returns
 
- - The `jSQLWhereClause` object.
+ - The [`jSQLWhereClause`](#jsqlwhereclause-class) object.
 
 ##### Example
 
@@ -782,7 +788,7 @@ Filter results to ones where the filtered column contains the given substring.
 
 ##### Returns
 
- - The `jSQLWhereClause` object.
+ - The [`jSQLWhereClause`](#jsqlwhereclause-class) object.
 
 ##### Example
 
@@ -810,7 +816,7 @@ Filter results to ones where the filtered column ends with the given substring.
 
 ##### Returns
 
- - The `jSQLWhereClause` object.
+ - The [`jSQLWhereClause`](#jsqlwhereclause-class) object.
 
 ##### Example
 
@@ -838,7 +844,7 @@ Filter results to ones where the filtered column begins with the given substring
 
 ##### Returns
 
- - The `jSQLWhereClause` object.
+ - The [`jSQLWhereClause`](#jsqlwhereclause-class) object.
 
 ##### Example
 
@@ -866,7 +872,7 @@ Begin an additional condition. Results must match both this condition and the pr
 
 ##### Returns
 
- - The `jSQLWhereClause` object.
+ - The [`jSQLWhereClause`](#jsqlwhereclause-class) object.
 
 ##### Example
 
@@ -896,7 +902,7 @@ Begin an additional condition. Results must match either this condition or the p
 
 ##### Returns
 
- - The `jSQLWhereClause` object.
+ - The [`jSQLWhereClause`](#jsqlwhereclause-class) object.
 
 ##### Example
 
@@ -926,7 +932,7 @@ Limit the rows returned, deleted, or updated.
 
 ##### Returns
 
- - The `jSQLWhereClause` object.
+ - The [`jSQLWhereClause`](#jsqlwhereclause-class) object.
 
 ##### Example
 
@@ -953,7 +959,7 @@ Sort the result set. Only useful for "SELECT" queries.
 
 ##### Returns
 
- - The `jSQLWhereClause` object.
+ - The [`jSQLWhereClause`](#jsqlwhereclause-class) object.
 
 ##### Example
 
@@ -978,7 +984,7 @@ Sort the result set ASCENDING. Only useful for "SELECT" queries.
 
 ##### Returns
 
- - The `jSQLWhereClause` object.
+ - The [`jSQLWhereClause`](#jsqlwhereclause-class) object.
 
 ##### Example
 
@@ -1003,7 +1009,7 @@ Sort the result set DESCENDING. Only useful for "SELECT" queries.
 
 ##### Returns
 
- - The `jSQLWhereClause` object.
+ - The [`jSQLWhereClause`](#jsqlwhereclause-class) object.
 
 ##### Example
 
@@ -1024,11 +1030,11 @@ var first3Users =
 
 #### `jSQLWhereClause.execute()`
 
-Builds the result set based on conditions and prepared values provided and then executes the query's `execute` method and returns the query itself rather than the query's where clause.
+Builds the result set based on conditions and prepared values provided and then executes the query's [`execute`](#jsqlqueryexecutepreparedvals) method and returns the query itself rather than the query's where clause.
 
 ##### Returns
 
- - The `jSQLQuery` object.
+ - The [`jSQLQuery`](#jsqlquery-interface) object.
 
 ##### Example
 
@@ -1046,17 +1052,86 @@ var allUsers =
 
 ### jSQL Syntax
 
-The `jSQL.query` method understands a subset of mySQL. It can parse and execute basic CRUD queries as well as DROP table queries.
-
-jSQL does not understand JOINs.
+The [`jSQL.query`](#jsqlquerysqlquery) method understands a subset of mySQL. It can parse and execute basic CRUD queries as well as DROP table queries.
 
 jSQL ignores whitespace.
 
-jSQL handles Prepared Statements and will replace question marks with values passed to the query's `execute` method.
+jSQL handles Prepared Statements and will replace question marks with values passed to the query's [`execute`](#jsqlqueryexecutepreparedvals) method.
 
 jSQL ignores case except when dealing with table or column names or values.
 
 jSQL permits the use of backticks (`) around table and column names, but they are not required.
+
+
+----------
+
+####SELECT Query syntax
+```
+SELECT
+    column_name [, column_name ...]
+    FROM table
+    [WHERE where_condition]
+    [ORDER BY col_name [ASC | DESC], ...]
+    [LIMIT row_count]
+```
+
+
+----------
+
+
+####CREATE Query syntax
+```
+CREATE TABLE [IF NOT EXISTS] tbl_name
+    (column name,...)
+```
+
+[Back to Top](#jsql)
+
+----------
+
+
+####UPDATE Query syntax
+```
+UPDATE table_name
+    SET col_name1={expr1} [, col_name2={expr2] ...
+    [WHERE where_condition]
+    [ORDER BY ...]
+    [LIMIT row_count]
+```
+
+[Back to Top](#jsql)
+
+----------
+
+
+####INSERT Query syntax
+```
+INSERT INTO tbl_name
+    [(col_name,...)]
+    VALUES (value,...)
+```
+
+[Back to Top](#jsql)
+
+----------
+
+
+####DROP Query syntax
+```
+DROP TABLE tbl_name
+```
+
+[Back to Top](#jsql)
+
+----------
+
+####DELETE Query syntax
+```
+DELETE FROM tbl_name
+    [WHERE where_condition]
+    [ORDER BY ...]
+    [LIMIT row_count]
+```
 
 [Back to Top](#jsql)
 
@@ -1126,3 +1201,5 @@ See the License for the specific language governing permissions and
 limitations under the License.
 
 [Back to Top](#jsql)
+
+

@@ -242,7 +242,9 @@
 			
 			// Delete a record by it's ID
 			function deleteRecordByID(id){
-				console.log("Do stuff here to delete record #"+id);
+				jSQL.deleteFrom('PhoneNumbers').where('ID').equals(id).execute();
+				jSQL.persist();
+				drawHTMLTable();
 			}
 			
 			// Edit a record by it's ID
@@ -251,7 +253,6 @@
 				var newName = prompt("Enter a new name: ",row.Name);
 				var newPhone = prompt("Enter a new phone ",row.Phone);
 				jSQL.query('update PhoneNumbers set Name = ?, Phone = ? where ID = ?').execute([newName,newPhone,id]);
-				//jSQL.update("PhoneNumbers").set({Name:newName,Phone:newPhone}).where("ID").equals(id).execute();
 				jSQL.persist();
 				drawHTMLTable();
 			}
