@@ -648,7 +648,7 @@
 			this.columns = columns;
 			return this;
 		};
-		this.ifNotExists = function(){ this.INEFlag=true; };
+		this.ifNotExists = function(){ this.INEFlag=true; return this; };
 		this.execute = function(data){ 
 			if(undefined !== data) this.data = data; 
 			if(!(this.INEFlag && jSQL.tables.hasOwnProperty(this.tablename)))
