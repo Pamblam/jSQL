@@ -8,43 +8,73 @@
 		<script src="../../jSQL.js"></script>
 		<script>
 			
-			// Using objects
-			jSQL.createTable("oTable", [
-				{a:1, b:2, c:3, d:4, e:5, f:6, g:7},
-				{a:2, b:3, c:3, d:54, e:7, f:6},
-				{a:2, b:3, c:3, d:54, e:7, f:6, g:7, h:"d"}
-			]).execute();
+			// our custom datatype will hold an instance of this class
+			function hat(type,color){
+				this.type = type;
+				this.color = color;
+				this.getName = function(){
+					return "a "+this.color+" "+this.type;
+				};
+			}
 			
-			// Using arrays
-			jSQL.createTable("aTable", ["a", "b", "c"]).execute([
-				[12,34,56,78],
-				[23,45,67,89,78,78],
-				[7]
-			]);
+			jSQL.types.add({
+				type: "HAT",
+				serialize: function(value, args){
+					return JSON.stringify(value);
+				},
+				unserialize: function(value, args){
+					var o = JSON.parse(value);
+					return new hat(o.type, o.color);
+				}
+			});
+				
+			jSQL.load(function(){
+
+				// create the table and populate it, 
+				// if it does not already exist
+				var query = jSQL.query("Create table if not exists oTable "+
+					"(name varchar(50,5), age int, created date, greet function, favorite_hat hat)");
 			
-			// Using a combination, explicit column names
-			jSQL.createTable("ceTable", ['a', 'b', 'c', 'd', 'e', 'f', 'g']).execute([
-				[12,34,56,78],
-				[23,45,67,89,78,78],
-				[7], {"a":1, "b":2, "g":3}
-			]);
+				// Alternative syntax
+//				var query = jSQL.createTable({oTable: {
+//					name: {type:"VARCHAR"},
+//					age: {type:"INT"},
+//					created: {type:"DATE"},
+//					greet: {type:"FUNCTION"},
+//					favorite_hat: {type:"HAT"}
+//				}}).ifNotExists();
+					
+				// execute the query and insert the data 
+				// (if the table doesn't already exist)
+				query.execute([{
+					name: "bob",
+					age: 27,
+					created: new Date(),
+					greet: function(){alert("hi!");},
+					favorite_hat: new hat("cowboy hat","blue")
+				},{
+					name: "ned",
+					age: 29,
+					created: new Date(),
+					greet: function(){alert("hello!");},
+					favorite_hat: new hat("baseball cap","green")
+				},{
+					name: "Fred",
+					age: 34,
+					created: new Date(),
+					greet: function(){alert("sup dawg!");},
+					favorite_hat: new hat("tophat","purple")
+				}]);
+				jSQL.persist();
+				
+				echo("<p>There are "+jSQL.tables.oTable.data.length+" total rows in `oTable`</p>");
+				var results = jSQL.query('SELECT * FROM `oTable`').execute().fetchAll();
+				echo(makeTable(results));
+			});
 			
 			echo("<h1>Example - Creating Tables</h1>");
 			
-			echo("<h3>Example 1</h3><p>Created `oTable` from objects</p>");
-			echo("<p>There are "+jSQL.tables.oTable.data.length+" total rows in `oTable`</p>");
-			var results = jSQL.query('SELECT * FROM `oTable`').execute().fetchAll();
-			echo(makeTable(results));
-			
-			echo("<h3>Example 2</h3><p>Created `aTable` from arrays</p>");
-			echo("<p>There are "+jSQL.tables.aTable.data.length+" total rows in `aTable`</p>");
-			var results = jSQL.query('SELECT * FROM `aTable`').execute().fetchAll();
-			echo(makeTable(results));
-			
-			echo("<h3>Example 3</h3><p>Created `ceTable` from arrays and objects, with explicit column names</p>");
-			echo("<p>There are "+jSQL.tables.ceTable.data.length+" total rows in `ceTable`</p>");
-			var results = jSQL.query('SELECT * FROM `ceTable`').execute().fetchAll();
-			echo(makeTable(results));
+			echo("<h3>Example</h3><p>Tables with various dataTypes</p>");
 
 			// Some helper functions
 			function echo(text){
@@ -55,6 +85,7 @@
 				document.getElementsByTagName('body')[0].innerHTML = "";
 			}
 			
+			var functs = [];
 			function makeTable(res){
 				var html = ["<table><thead><tr>"];
 				if('object' != typeof res[0]) 
@@ -66,8 +97,20 @@
 				for(var i=0; i<res.length; i++){
 					html.push("<tr>");
 					for(var name in res[i])
-						if(res[0].hasOwnProperty(name))
+						if(res[0].hasOwnProperty(name)){
+							if(typeof res[i][name] === "function"){
+								console.log(name+i);
+								functs[name+i] = res[i][name];
+								res[i][name] = "<button onclick='functs."+name+i+"()'>"+name+"</button>";
+							}
+							if(res[i][name] instanceof Date){
+								res[i][name] = res[i][name].toDateString();
+							}
+							if(res[i][name] instanceof hat){
+								res[i][name] = res[i][name].getName();
+							}
 							html.push("<td>"+res[i][name]+"</td>");
+						}
 					html.push("</tr>");
 				}
 				html.push("</tbody></table><hr>");

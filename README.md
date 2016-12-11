@@ -2,9 +2,9 @@
 
 
 # jSQL 
-v1.0
+v1.1
 
-jSQL is a persistent client-side database and SQL engine. It uses various methods to save a database to the user's hard drive for cross-browser persistence.
+jSQL (javascript Query Language) is a persistent client-side database and SQL engine that uses various methods to save a database to the user's hard drive for cross-browser persistence. jSQL can store nearly any type of data, from strings and numbers to functions and complex instances of custom objects. jSQL uses shims and low level APIs to support a wide range of browsers while maintaining efficiency without requiring any 3rds party libraries like jQuery.
 
 ----------
 
@@ -64,6 +64,9 @@ jSQL is a persistent client-side database and SQL engine. It uses various method
      - [INSERT Query syntax](#insert-query-syntax)
      - [DROP Query syntax](#drop-query-syntax)
      - [DELETE Query syntax](#delete-query-syntax)
+ - [Fun with DataTypes](#fun-with-datatypes)
+   - [Supported Types](#supported-types)
+   - [Creating custom DataTypes](#creating-custom-datatypes)
  - [Examples](#examples)
  - [License](#license)
 
@@ -162,14 +165,41 @@ jSQL.query('UPDATE `Users` SET Age = 0 WHERE Age <= 18').execute();
 ----------
 
 
-#### `jSQL.createTable(name, columns)`
+#### `jSQL.createTable(params)`
+
+Create a query that can create and populate a table new table in the database.
+
+##### Parameters
+
+ - **params**: An object containing one property, it's name is the name of the table being created, it's value is an object that represent the column definitions. The column definition object contains a property for each column, it's name is the column type and it's value is the definition for that column, including a "type" parameter and an "args" parameter. See the Fun with DataTypes section for more info about types.
+
+##### Returns
+
+ - A [`jSQLQuery`](#jsqlquery-interface) object of type "CREATE".
+
+##### Example
+
+```
+jSQL.createTable({Users:{
+    Name: {"VARCHAR", args:[30]},
+    Age: {"INT", args:[]},
+}}).ifNotExists().execute();
+```
+
+[Back to Top](#jsql)
+
+----------
+
+
+#### `jSQL.createTable(name, columnsOrData, columnTypes)`
 
 Create a query that can create and populate a table new table in the database.
 
 ##### Parameters
 
  - **name**: The name of the new table (string).
- - **columns**: An array of column names for the new table.
+ - **columnsOrData**: Can be either 1) An array of column names for the new table. or 2) An array of objects whos properties represent table column names and their values are values to be inserted.
+ - **columnTypes**: (optional) An array of objects, one for each column, each containing a "type" property, for the column type, and an "args" property as an array of column type arguments.
 
 ##### Returns
 
@@ -309,7 +339,7 @@ jSQL.deleteFrom(`Users`).execute();
 
 ### `jSQLTable` class
 
-This class represents a table in the database. The database is located in [`jSQL.tables`](#jsqltables) and is an object whos keys are table names and values are their respective [`jSQLTable`](#jsqltable-class) classes. 
+This class represents a table in the database. The database is located in [`jSQL.tables`](#jsqltables) and is an object whose keys are table names and values are their respective [`jSQLTable`](#jsqltable-class) classes. 
 
 These tables are altered and queried by [`jSQLQuery`](#jsqlquery-interface) objects, but may be interacted with directly if desired.
 
@@ -1137,13 +1167,90 @@ DELETE FROM tbl_name
 
 ----------
 
+###Fun with DataTypes
+
+Javascript Query Language supports a  handful of built-in data types for all sorts of data, strings, numbers, dates, even executable functions. The default dataType, for tables that do not specify datatypes for their columns, is "AMBI", which stores strings, numbers, functions and Date objects, anything else is converted to a string. 
+
+jSQL does provide an API for adding your own data type definitions, which is useful for storing instances of your own custom objects.
+
+[Back to Top](#jsql)
+
+----------
+
+#### Supported Types
+
+ - NUMERIC
+   - Aliases: NUMBER, DECIMAL, FLOAT
+   - Stores types as numbers
+   - Will store 0 if a non number is stored.
+   - The current version of jSQL ignores all arguments for this data type.
+ - FUNCTION
+   - Stores functions. 
+   - Will throw an error is non functions are stored.
+ - BOOLEAN
+   - Alias: BOOL 
+   - Store boolean values
+ - INT
+   - Store an integer
+   - The current version of jSQL ignores all arguments for this data type.
+ - CHAR
+   - Aliases: VARCHAR, LONGTEXT, MEDIUMTEXT
+   - Stores a string
+   - The current version of jSQL ignores all arguments for this data type.
+ - DATE
+   - Stores a Javascript [Date object](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date)
+   - The current version of jSQL ignores all arguments for this data type.
+ - AMBI
+   - Stores functions and JS Date objects, everything else is converted to a string.
+   
+[Back to Top](#jsql)
+
+----------
+
+#### Creating custom DataTypes
+
+Custom datatypes are useful for storing instances of custom objects, or otherwise filtering your data in your columns.
+
+To create a new data type, use the `jSQL.types.add()` method to add a new dataType. It takes an object with 4 properties: 
+
+ - **type**: The datatype name
+ - **aliases**: An array of aliases (alternative names for this datatype)
+ - **serialize**: A function that receives the value to be stored, and an array containing any arguments passed into the table definition. This function must return a string serialization of the object.
+ - **unserialize**: A function that takes the serialized value to be returned and any arguments passed from the table definition and should return the unserialized version of the stored object.
+
+When using custom data types, it is important to defin them before the database is loaded into memory (before `jSQL.load()` is called), so that any items stored in memory can be properly interpreted by the API.
+
+##### Example
+
+    jSQL.types.add({
+    	type: "ENUM",
+    	serialize: function(value, args){
+	    	if(args.indexOf(value) < -1) value = args[0];
+		    return value;
+    	},
+    	unserialize: function(value, args){
+    		return value;
+    	}
+    });
+
+[Back to Top](#jsql)
+
+----------
+
 ### Examples
 
 #### CREATE Queries
 Each of the following queries are identical
 ```javascript
-jSQL.query('CREATE TABLE IF NOT EXISTS table (column1, column2)').execute();
-jSQL.createTable('table', ['column1','column2']).ifNotExists().execute(); 
+jSQL.query("Create table if not exists oTable "+
+	"(name varchar(50,5), age int, created date, greet function, favorite_hat hat)").execute();
+jSQL.createTable({oTable: {
+	name: {type:"VARCHAR": args:[50,5]},
+	age: {type:"INT"},
+	created: {type:"DATE"},
+	greet: {type:"FUNCTION"},
+	favorite_hat: {type:"HAT"}
+}}).ifNotExists().execute(); 
 ```
 
 #### SELECT Queries

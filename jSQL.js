@@ -1,28 +1,149 @@
 /**
- * jSQL - javaScript Query Language
- * A Javascript based, user hosted database alternative (or accessory)
+ * jSQL.js
+ * A Javascript Query Language Database Engine
  * @author Robert Parham
- * @license - WTFPL v2 wtfpl.net
+ * @website https://github.com/Pamblam/jSQL#jsql
+ * @license http://www.apache.org/licenses/LICENSE-2.0
  */
 
 ;window.jSQL = (function(){
 	"use strict";
 	
 	////////////////////////////////////////////////////////////////////////////
+	// jSQLDataTypeList ////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////////////
+	
+	function jSQLDataTypeList(){
+		this.list = [{
+			type: "NUMERIC",
+			aliases: ["NUMBER", "DECIMAL", "FLOAT"],
+			serialize: function(value, args){
+				return !isNaN(parseFloat(value)) && isFinite(value) ?
+					parseFloat(value) : 0;
+			},
+			unserialize: function(value, args){
+				return !isNaN(parseFloat(value)) && isFinite(value) ?
+						parseFloat(value) : 0;
+			}
+		},{
+			type: "FUNCTION",
+			serialize: function(value, args){
+				if(typeof value !== "function") value=function(){};
+					return "jSQLFunct-"+value.toString();
+			},
+			unserialize: function(value, args){
+				var p = value.split("-");
+				if(p.shift() !== "jSQLFunct") throw "Corrupted function stored in data";
+				p = value.split("-");
+				p.shift();
+				var f = null;
+				try{
+					eval("f = "+p.join("-"));
+				}catch(e){};
+				if("function" === typeof f) return f;
+				throw "Corrupted function stored in data";
+			}
+		},{
+			type: "BOOLEAN",
+			aliases: ['BOOL'],
+			serialize: function(value, args){ return !!value; },
+			unserialize: function(value, args){ return !!value; }
+		},{
+			type: "INT",
+			serialize: function(value, args){ 
+				return !isNaN(parseInt(value)) && isFinite(value) ?
+					parseInt(value) : 0; 
+			},
+			unserialize: function(value, args){ 
+				return !isNaN(parseInt(value)) && isFinite(value) ?
+					parseInt(value) : 0; 
+			}
+		},{
+			type: "CHAR",
+			aliases: ["VARCHAR", "LONGTEXT", "MEDIUMTEXT"],
+			serialize: function(value, args){ return ""+value; },
+			unserialize: function(value, args){ return ""+value; }
+		},{
+			type: "DATE",
+			serialize: function(value, args){ 
+				return value instanceof Date ? value.getTime() : new Date(0).now(); 
+			},
+			unserialize: function(value, args){ 
+				return new Date(value);
+			}
+		},{
+			type: "AMBI",
+			serialize: function(value, args){ 
+				if(value instanceof Date) return value.getTime();
+				if(typeof value === "function") return "jSQLFunct-"+value.toString();
+				if(!isNaN(parseFloat(value)) && isFinite(value)) return value;
+				return ""+value;
+			},
+			unserialize: function(value, args){ 
+				if(typeof value === "string"){ 
+					if(value.split("-")[0] === "jSQLFunct"){
+						var p = value.split("-");
+						p.shift();
+						var f = null;
+						try{
+							eval("f = "+p.join("-"));
+						}catch(e){};
+						if("function" === typeof f) return f;
+					}
+				}
+				return value;
+			}
+		}];
+		this.add = function(type){
+			if(typeof type !== "object") throw "Invalid datatype definition";
+			if(undefined === type.type) throw "DataType must have a `type` property.";
+			if("function" !== typeof type.serialize) throw "DataType must have a `serialize` function.";
+			if("function" !== typeof type.unserialize) throw "DataType must have an `unserialize` function.";
+			this.list.push({
+				type: type.type.toUpperCase(),
+				aliases: Array.isArray(type.aliases) ? type.aliases : [],
+				serialize: type.serialize,
+				unserialize: type.unserialize
+			});
+		};
+		this.exists = function(type){
+			type = type.toUpperCase();
+			for(var i=this.list.length;i--;)
+				if(this.list[i].type===type || 
+					(this.list[i].aliases !== undefined && this.list[i].aliases.indexOf(type) > -1)) 
+					return true;
+			return false;
+		};
+		this.getByType = function(type){
+			type = type.toUpperCase();
+			for(var i=this.list.length;i--;)
+				if(this.list[i].type===type || 
+					(this.list[i].aliases !== undefined && this.list[i].aliases.indexOf(type) > -1)) 
+					return this.list[i];
+			throw type+" is not a supported datatype";
+		};
+	}
+	
+	////////////////////////////////////////////////////////////////////////////
 	// jSQL Table constructor //////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////////////////
 	
-	function jSQLTable(name, columns, data){
+	function jSQLTable(name, columns, data, types){
 		var self = this;	
 		self.name = "";		// Table name
 		self.columns = [];	// Array of column names
 		self.data = [];		// Array of arrays
 		self.colmap = {};	// Colmap
-
+		self.types = [];    // array of data types for each column [{type:"",args:[]}..}
+			
 		// Create the table and load the data, if there is any
-		self.init = function(name, columns, data){
+		self.init = function(name, columns, data, types){
 			self.name = name;
 
+			// If the types array does not exist, create it
+			if(undefined === types) types = [];
+			if(!Array.isArray(types)) throw "Invalid table types array";
+			
 			// If first param is array, no third param
 			if(Array.isArray(columns) && undefined === data)
 				// Create the data parameter from column param
@@ -45,6 +166,20 @@
 			if(!Array.isArray(columns)) throw "Columns must be an array.";
 			self.columns = columns;
 
+			// Fill any missing holes in the types array 
+			// with "ambi" which means it can be any type
+			for(var i=0; i<columns.length; i++)
+				self.types[i] = undefined === types[i] || undefined === types[i].type ? 
+					{type:"ambi", args:[]} : types[i];
+			
+			// Validate & normalize each type
+			for(var i=self.types.length; i--;){
+				var type = self.types[i].type.toUpperCase();
+				if(!jSQL.types.exists(type))
+					throw type+" is not a supported data type";
+				self.types[i].type = type;
+			}
+			
 			// Create a column map
 			for(var i=0; i<columns.length; i++) self.colmap[columns[i]] = i;
 
@@ -58,7 +193,10 @@
 			self.columns.splice(self.columns.indexOf(oldname), 1, newname);
 		};
 		
-		self.addColumn = function(name, defaultVal){
+		self.addColumn = function(name, defaultVal, type){
+			if(undefined === type || undefined === type.type)
+				type = {type:"AMBI",args:[]};
+			type.type = type.type.toUpperCase();
 			if(undefined === defaultVal) defaultVal = null;
 			if('string' != typeof name) name = (function r(n){
 				for(var i=0; i<self.columns.length; i++)
@@ -67,16 +205,19 @@
 			}(0));
 			self.columns.push(name);
 			var i=self.data.length; while(i--) self.data[i].push(defaultVal);
-			self.colmap[name] =  self.columns.length -1;
+			self.colmap[name] = self.columns.length -1;
+			if(!jSQL.types.exists(type.type))
+				throw type.type+" is not a supported data type";
+			self.types.push(type);
 		};
 
 		// Load the dataset into the table
 		self.loadData = function(data){
 
-			// Dataset must be an Array
+			// Dataset must be an Array of rows
 			if(!Array.isArray(data)) throw "Data must be an array.";
 
-			// Loop columns and inset the data
+			// Loop columns and insert the data
 			var i = data.length;
 			var c  = self.columns.length;
 			while(i--) self.insertRow(data[i]);
@@ -109,6 +250,8 @@
 				
 				// Loop each column in the data row
 				for(var colname in data)
+					if(!data.hasOwnProperty(colname)) continue;
+				
 					// If the data row column doesn't exist in the table..
 					if(function(l){ while(l--) if(self.columns[l]==colname) return 0; return 1; }(self.columns.length)){
 						// ...and there is already an undefined row title...
@@ -124,10 +267,28 @@
 				for(var n=0; n<self.columns.length; n++)
 					row.push(data[self.columns[n]]);
 			}else throw "Data not structured properly.";
+			
+			// validate & cast each row type
+			for(var i=row.length; i--;)
+				row[i] = self.normalizeColumnStoreValue(self.columns[i], row[i]);
+			
 			self.data.push(row);
 		};
 
-		self.init(name, columns, data);
+		self.normalizeColumnStoreValue = function(colName, value){
+			var type = self.types[self.colmap[colName]];
+			var storeVal = jSQL.types.getByType(type.type.toUpperCase()).serialize(value, type.args)
+			if((!isNaN(parseFloat(storeVal)) && isFinite(storeVal)) || typeof storeVal === "string")
+				return storeVal;
+			throw type.type.toUpperCase()+".serialize() must return a number or a string.";
+		};
+		
+		self.normalizeColumnFetchValue = function(colName, value){
+			var type = self.types[self.colmap[colName]];
+			return jSQL.types.getByType(type.type.toUpperCase()).unserialize(value, type.args);
+		};
+		
+		self.init(name, columns, data, types);
 	}
 
 	////////////////////////////////////////////////////////////////////////////
@@ -142,7 +303,7 @@
 		self.columns = [];
 		self.data = [];
 		self.INEFlag= false;
-		
+		self.coltypes = [];
 		self.table = null;
 		self.newvals = {};
 		self.whereClause = new jSQLWhereClause(self);
@@ -509,6 +670,14 @@
 			if(Mode !== "ASSOC" && Mode !== "ARRAY") throw "Fetch expects paramter one to be 'ASSOC', 'ARRAY', or blank";
 			if(!this.resultSet.length) return false;
 			var row = this.resultSet.shift();
+			
+			for(var colName in row){
+				if(row.hasOwnProperty(colName)){ 
+					var r = this.table.normalizeColumnFetchValue(colName, row[colName]);
+					row[colName] = r;
+				}
+			}
+			
 			if(Mode == "ARRAY"){
 				var r = [];
 				for(var name in row) if(row.hasOwnProperty(name)) r.push(row[name]);
@@ -643,16 +812,17 @@
 	}
 	
 	function jSQLCreateQuery(){
-		this.init = function(tablename, columns){
+		this.init = function(tablename, columns, types){
 			this.tablename = tablename;
 			this.columns = columns;
+			this.coltypes = types;
 			return this;
 		};
 		this.ifNotExists = function(){ this.INEFlag=true; return this; };
 		this.execute = function(data){ 
 			if(undefined !== data) this.data = data; 
 			if(!(this.INEFlag && jSQL.tables.hasOwnProperty(this.tablename)))
-				window.jSQL.tables[this.tablename] = new jSQLTable(this.tablename, this.columns, this.data);
+				window.jSQL.tables[this.tablename] = new jSQLTable(this.tablename, this.columns, this.data, this.coltypes);
 			return this;
 		};
 		this.fetch = function(){ return null; };
@@ -948,9 +1118,9 @@
 				// Next word should be the table name
 				table = removeQuotes(words.shift());
 				if(undefined === jSQL.tables[table]) throw "Table "+table+" does not exist.";
-
+				
 				// Remove a few chars and re-split
-				words = words.join(" ")
+				words = str
 					.split("(").join(" ")
 					.split(")").join(" ")
 					.split(",").join(" ")
@@ -988,10 +1158,19 @@
 				
 				break;
 			case "CREATE": 
-				
+				var params = {};
 				var table, c, cols = [],ine=false;
 				// Next Word should be "TABLE"
 				if(words.shift().toUpperCase() !== "TABLE") throw "Unintelligible query. Expected 'TABLE'";
+
+				// get the column definition part of the table
+				var str = words.join(" ");
+				var conlumnDef = "";
+				var opencount = (str.match(/\(/g) || []).length;
+				var closecount = (str.match(/\)/g) || []).length;
+				if(opencount !== closecount) throw "Invalid Column definition.";
+				if(opencount > 0)
+					conlumnDef = str.substring(str.indexOf("(")+1, str.lastIndexOf(")"));
 
 				// Remove a few chars and re-split
 				words = words.join(" ")
@@ -1003,7 +1182,7 @@
 
 				// Check for "IF NOT EXISTS" clause
 				table = removeQuotes(words.shift());
-				
+
 				if(table.toUpperCase() === "IF"){
 					if(words.shift().toUpperCase() !== "NOT") throw "Unintelligible query. Expected 'NOT'";
 					if(words.shift().toUpperCase() !== "EXISTS") throw "Unintelligible query. Expected 'EXISTS'";
@@ -1011,11 +1190,66 @@
 					ine=true;
 				} 
 
-				// Get column names
-				while(words.length > 0) 
-					cols.push(removeQuotes(words.shift()));
-				
-				var query = jSQL.createTable(table, cols);
+				params[table] = {};
+
+				// Get column definitions
+				var parts = conlumnDef.split(",");
+				for(var i=0;i<parts.length;i++){
+					var str = parts[i];
+					while((str.match(/\(/g) || []).length !== (str.match(/\)/g) || []).length){
+						str += ","+parts[i+1];
+						parts[i+1] = "";
+						parts[i] = str;
+					}
+					if(str.trim()!=="") cols.push(str.trim());
+				}
+
+				// loop and apply column definitions to params object
+				for(var i=0; i<cols.length; i++){
+					var colparts = cols[i].split(" ");
+					var colname = colparts.shift();
+					params[table][colname] = {type:"AMBI",args:[]};
+					if(colparts.length){
+						var typename = colparts.shift().toUpperCase();
+						if((typename.match(/\(/g) || []).length){ // typename contains opening (
+							while(!(typename.match(/\)/g) || []).length){ // make sure it has a closing one
+								if(!colparts.length) throw "Invalid query, expected ')'";
+								typename += " "+colparts.shift();
+							}
+							// check if there is anything after the last ) and shift it back on to colparts array
+							if(typename.substring(typename.lastIndexOf(")")+1)!==""){
+								colparts.unshift(typename.substring(typename.lastIndexOf(")")+1));
+								typename.substring(0,typename.lastIndexOf(")"))
+							}
+						}
+
+						// if typename still does not include args,
+						// check for them at the begining of the next colpart
+						if(!(typename.match(/\(/g) || []).length && colparts.length && colparts[0].charAt(0)==="("){
+							typename += colparts[0].substring(0, colparts[0].indexOf(")")+1);
+							colparts[0] = colparts[0].substring(colparts[0].indexOf(")")+1);
+						}
+
+						// if a args were given for this column type 
+						// they should now be concatted to the typename
+						var argsDef = "";
+						if(typename.indexOf("(") > -1){ 
+							var opencount = (typename.match(/\(/g) || []).length;
+							var closecount = (typename.match(/\)/g) || []).length;
+							if(opencount !== closecount) throw "Invalid Arg definition: "+typename;
+							if(opencount > 0)
+								argsDef = typename.substring(typename.indexOf("(")+1, typename.lastIndexOf(")"));
+						}
+						if(argsDef.trim()!==""){  
+							var a = argsDef.split(","); 
+							for(var d=0;d<a.length; d++)
+								if(a[d].trim()!=="")
+								  params[table][colname].args.push(a[d].trim());
+						}
+						params[table][colname].type = typename.split("(")[0].trim().toUpperCase();
+					}
+				}		
+				var query = jSQL.createTable(params);
 				if(ine) query.ifNotExists();
 				return query;
 				
@@ -1497,10 +1731,9 @@
 					var row = data[i];
 					for(var n in row){
 						if(!row.hasOwnProperty(n)) continue;
-						if("function" === typeof row[n])
-							row[n] = "#jSQLFunct#"+(row[n].toString());
+						row[n] = jSQL.tables[tbl].normalizeColumnStoreValue(n, row[n]);
 					}
-					rows.push({table: tbl, data:JSON.stringify(row)});
+					rows.push({table: tbl, data:JSON.stringify(row), colTypes: JSON.stringify(jSQL.tables[tbl].types)});
 				}
 			}
 			self.api.delete("jSQL_data_schema", function(){
@@ -1519,20 +1752,21 @@
 						for(var i=r.length; i--;){
 							var tablename = r[i].table;
 							var rowdata = JSON.parse(r[i].data);
+							var colTypes = JSON.parse(r[i].colTypes);
 							// Create the table in memory if it doesn't exist yet
 							if(undefined === jSQL.tables[tablename]){
 								var cols = [];
 								for(var c in rowdata)
 									if(rowdata.hasOwnProperty(c))
 										cols.push(c);
-								jSQL.createTable(tablename, cols).execute();
+								jSQL.createTable(tablename, cols, colTypes).execute();
 							}
-							// Check for and parse functions
+							
 							for(var c in rowdata){
-								if(rowdata.hasOwnProperty(c))
-									if("string" == typeof rowdata[c] && rowdata[c].indexOf("#jSQLFunct#")===0)
-										rowdata[c] = exec(rowdata[c].substr(11));
+								if(!rowdata.hasOwnProperty(c)) continue;
+								rowdata[c] = jSQL.tables[tablename].normalizeColumnFetchValue(c, rowdata[c]);
 							}
+							
 							jSQL.tables[tablename].insertRow(rowdata);
 						}
 						return LoadCallback();
@@ -1566,9 +1800,36 @@
 	// Syntactic sugar /////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////////////////
 	
-	function createTable(name, columns){
-		if(!Array.isArray(columns)) columns=[columns];
-		return new jSQLQuery("CREATE").init(name, columns);
+	function createTable(name, columnsOrData, types){
+		
+		// allow for all params to be passed in a single object
+		// jSQL.createTable({myTable: {
+		//		ID: { type: "INT", args: [] }, 
+		//		Name: { type: "VARCHAR", args: [30] },
+		// }})
+		if(undefined === columnsOrData && undefined === types && "object" === typeof name){
+			columnsOrData = [];
+			types = [];
+			for(var tblname in name){
+				if(!name.hasOwnProperty(tblname))continue;
+				var columnDefs = name[tblname];
+				name = tblname;
+				for(var col in columnDefs){
+					if(!columnDefs.hasOwnProperty(col)) continue;
+					columnsOrData.push(col);
+					types.push({
+						type: columnDefs[col].type, 
+						args: (undefined===columnDefs[col].args ? []:columnDefs[col].args)
+					});
+				}
+				break;
+			}
+		}
+		
+		// if a single column was provided
+		if(!Array.isArray(columnsOrData)) columnsOrData=[columnsOrData];
+		
+		return new jSQLQuery("CREATE").init(name, columnsOrData, types);
 	}
 	
 	function select(cols){
@@ -1605,6 +1866,7 @@
 		update: update,
 		deleteFrom: deleteFrom,
 		insertInto: insertInto,
+		types: new jSQLDataTypeList(),
 		persist: persistenceManager.persist,
 		load: persistenceManager.load
 	};
