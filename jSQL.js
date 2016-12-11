@@ -1,5 +1,5 @@
 /**
- * jSQL.js
+ * jSQL.js v1.2
  * A Javascript Query Language Database Engine
  * @author Robert Parham
  * @website https://github.com/Pamblam/jSQL#jsql
@@ -1719,6 +1719,9 @@
 		var self = this;
 		self.api = null;
 		self.error = false;
+		self.loaded = false;
+		self.isLoading = false;
+		self.loadingCallbacks = [];
 		
 		self.persist = function(callback){
 			if("function" === typeof callback) callback = function(){};
@@ -1743,6 +1746,16 @@
 		
 		self.load = function(LoadCallback){	
 			if("function" !== typeof LoadCallback) LoadCallback = function(){};
+			self.loadingCallbacks.push(LoadCallback);
+			
+			if(self.loaded){
+				while(self.loadingCallbacks.length) self.loadingCallbacks.shift()();
+				return;
+			}
+			
+			if(self.isLoading) return;
+			self.isLoading = true;
+			
 			// Wait for the schema to be set up
 			(function waitForSchema(tries){
 				try{
@@ -1769,7 +1782,11 @@
 							
 							jSQL.tables[tablename].insertRow(rowdata);
 						}
-						return LoadCallback();
+						
+						self.isLoading = false;
+						self.loaded = true;
+						while(self.loadingCallbacks.length) self.loadingCallbacks.shift()();
+						return;
 					});
 				
 				}catch(e){
@@ -1858,6 +1875,7 @@
 	////////////////////////////////////////////////////////////////////////////
 	
 	return {
+		version: 1.2,
 		tables: {},
 		query: jSQLParseQuery,
 		createTable: createTable,
