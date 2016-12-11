@@ -5,8 +5,37 @@
  * @website https://github.com/Pamblam/jSQL#jsql
  */;
 
-window.jSQL.xhrCache = (function(callback){
+window.jSQL.xhrCache = (function(callback){ 
 	jSQL.load(function(){
+		
+		// attempt to override the entire xhr definition
+		var xhrConstructor = XMLHttpRequest;
+		XMLHttpRequest = function(){
+			var self = this;
+			self._xhr = new (Function.prototype.bind.apply(xhrConstructor, arguments)); 
+			self.syncAll = function(doFuncts){
+				if(undefined === doFuncts) doFuncts = false;
+				for(var prop in self._xhr){
+					if(!self._xhr.hasOwnProperty(prop)) continue;
+					if(typeof self._xhr[prop] === "function"){
+						if('dispatchEvent' == prop) return;
+						if(doFuncts === true){
+							(function(){
+								self[prop] = function(){
+									var ret = (new xhrConstructor)[prop].apply(self._xhr, arguments);
+									self.syncAll();
+									return ret;
+								};
+							})(prop);
+						}
+					}else self[prop] = self._xhr[prop];
+				}
+			}
+			
+			self.syncAll(true);
+		};
+		
+		
 		// Make sure there's a table available
 		jSQL.createTable({
 			jSQLCache: {
@@ -19,12 +48,9 @@ window.jSQL.xhrCache = (function(callback){
 				password: {type:"varchar"},
 				cached_time: {type:"date"},
 				use_count: {type: "int"},
-				response: {type:"varchar"}
+				response: {type:"json"}
 			}
 		}).ifNotExists().execute();
-		jSQL.persist();
-		
-		console.log(jSQL.tables);
 		
 		// is array buffer view?
 		// http://stackoverflow.com/a/21799845/1444609
@@ -39,7 +65,7 @@ window.jSQL.xhrCache = (function(callback){
 		}
 
 		XMLHttpRequest.prototype.oldSend = XMLHttpRequest.prototype.send;
-		XMLHttpRequest.prototype.send = function(){
+		XMLHttpRequest.prototype.send = function(){ 
 			var args = arguments;
 			var self = this;
 			self._POST_DATA = "";
@@ -88,26 +114,53 @@ window.jSQL.xhrCache = (function(callback){
 						self._USERNAME, self._PASSWORD];
 				var results = query.execute(params).fetchAll("ASSOC");
 				if(results.length){
-					console.log('result is cached');
+					
+					for(var p in results[0].response){
+						self[p] = results[0].response[p];
+					}
+					
+					setTimeout(function(){
+						self.readyState = 4;
+						self.status = 200;
+						console.log("jSQL.xhrCache: Serving cached AJAX response");
+						self.onreadystatechange();
+					}, 50);
+					
 				}else{
-					var id = count(jSQL.query("select * from jSQLCache").execute().fetchAll("ARRAY"));
-					query = jSQL.query("insert into jSQLCache values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-					query.execute([id, self._METHOD, self._URL, self._POST_DATA, self._POST_DATA_TYPE,
-						self._USERNAME, self._PASSWORD, new Date(), 0, '']);
-					console.log("cached result");
+					
+					var rsc = self.onreadystatechange;
+					self.onreadystatechange = function(){
+						if (self._xhr.readyState == 4 && self._xhr.status == 200){ 
+							// serialize the request as best we can
+							var sreq = {};
+							for(var p in self._xhr){
+								if("function" !== typeof self._xhr[p])
+									sreq[p] = self._xhr[p];
+							}
+							var id = jSQL.query("select * from jSQLCache").execute().fetchAll("ARRAY").length;
+							query = jSQL.query("insert into jSQLCache values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+							query.execute([id, self._METHOD, self._URL, self._POST_DATA, self._POST_DATA_TYPE,
+								self._USERNAME, self._PASSWORD, new Date(), 0, sreq]);
+							jSQL.persist();
+							console.log("jSQL.xhrCache: Caching AJAX response");
+						}
+						
+						rsc.apply(self._xhr, arguments);
+					}
+					
+					self._xhr.onreadystatechange = self.onreadystatechange;
+					xhrConstructor.prototype.send.apply(self._xhr, args);
 				}
-
-				self.oldSend.apply(self, args);
+				
 			});
 		};
-		XMLHttpRequest.prototype.oldOpen = XMLHttpRequest.prototype.open;
+		
 		XMLHttpRequest.prototype.open = function(){
 			this._METHOD = arguments[0].toUpperCase();
 			this._URL = arguments[1];
 			this._USERNAME = undefined === arguments[3] ? "" :arguments[3];
 			this._PASSWORD = undefined === arguments[4] ? "" :arguments[4];
-			console.log(arguments, this);
-			this.oldOpen.apply(this, arguments);
+			xhrConstructor.prototype.open.apply(this._xhr, arguments);
 		};
 	});
 	

@@ -11,15 +11,18 @@ and open the template in the editor.
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	</head>
 	<body>
-		<script src="../../jSQL.min.js"></script>
+		<script src="../../jSQL.js"></script>
 		<script src="./jSQL.xhrCache.js"></script>
 		<script>
 			jSQL.load(function(){
-				
-				function loadDoc(cb) {
+				function loadDoc(cb) { 
 					var xhttp = window.XMLHttpRequest ? new XMLHttpRequest() : new ActiveXObject("Microsoft.XMLHTTP");
 					xhttp.onreadystatechange = function() {
-					  if (this.readyState == 4 && this.status == 200) cb(this.responseText);
+						
+					  if (this.readyState == 4 && this.status == 200){ 
+						  
+						  cb(this.responseText);
+					  }
 					};
 					xhttp.open("GET", "ajaxtext.txt", true);
 					xhttp.send();
@@ -29,7 +32,7 @@ and open the template in the editor.
 					loadDoc(function(resp){
 						print(resp);
 						setTimeout(function(){
-							if(i<3) recurse(++i);
+							if(i<2) recurse(++i);
 						}, 1500);
 					});
 				})(0);

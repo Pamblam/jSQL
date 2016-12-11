@@ -26,6 +26,15 @@
 						parseFloat(value) : 0;
 			}
 		},{
+			type: "JSON",
+			aliases: ["ARRAY","OBJECT"],
+			serialize: function(value, args){
+				return JSON.stringify(value);
+			},
+			unserialize: function(value, args){
+				return JSON.parse(value);
+			}
+		},{
 			type: "FUNCTION",
 			serialize: function(value, args){
 				if(typeof value !== "function") value=function(){};
@@ -66,7 +75,7 @@
 		},{
 			type: "DATE",
 			serialize: function(value, args){ 
-				return value instanceof Date ? value.getTime() : new Date(0).now(); 
+				return value instanceof Date ? value.getTime() : new Date(0).getTime(); 
 			},
 			unserialize: function(value, args){ 
 				return new Date(value);
@@ -1120,7 +1129,7 @@
 				if(undefined === jSQL.tables[table]) throw "Table "+table+" does not exist.";
 				
 				// Remove a few chars and re-split
-				words = str
+				words = words.join(" ")
 					.split("(").join(" ")
 					.split(")").join(" ")
 					.split(",").join(" ")
@@ -1173,7 +1182,7 @@
 					conlumnDef = str.substring(str.indexOf("(")+1, str.lastIndexOf(")"));
 
 				// Remove a few chars and re-split
-				words = words.join(" ")
+				words = str
 					.split("(").join(" ")
 					.split(")").join(" ")
 					.split(",").join(" ")
@@ -1748,10 +1757,9 @@
 			if("function" !== typeof LoadCallback) LoadCallback = function(){};
 			self.loadingCallbacks.push(LoadCallback);
 			
-			if(self.loaded){
-				while(self.loadingCallbacks.length) self.loadingCallbacks.shift()();
-				return;
-			}
+			if(self.loaded)
+				while(self.loadingCallbacks.length) 
+					self.loadingCallbacks.shift()();
 			
 			if(self.isLoading) return;
 			self.isLoading = true;
@@ -1761,7 +1769,13 @@
 				try{
 					self.api.select("jSQL_data_schema", function(r){
 						jSQL.tables = {};
-						if(r.length === 0) return LoadCallback();
+						if(r.length === 0){
+							self.isLoading = false;
+							self.loaded = true;
+							while(self.loadingCallbacks.length) 
+								self.loadingCallbacks.shift()();
+							return;
+						}
 						for(var i=r.length; i--;){
 							var tablename = r[i].table;
 							var rowdata = JSON.parse(r[i].data);
@@ -1785,12 +1799,19 @@
 						
 						self.isLoading = false;
 						self.loaded = true;
-						while(self.loadingCallbacks.length) self.loadingCallbacks.shift()();
+						while(self.loadingCallbacks.length) 
+							self.loadingCallbacks.shift()();
 						return;
 					});
 				
 				}catch(e){
-					if(tries > 500) return LoadCallback();
+					if(tries > 500){
+						self.isLoading = false;
+						self.loaded = true;
+						while(self.loadingCallbacks.length) 
+							self.loadingCallbacks.shift()();
+						return;
+					}
 					else setTimeout(function(){waitForSchema(tries+1);}, 10);
 				}
 				
