@@ -33,6 +33,7 @@ This project only has one contributor: me, Pamblam. I wrote this from the ground
 
   - December 11, 2016: Moved all documentation to the [Wiki Pages](https://github.com/Pamblam/jSQL/wiki#jsql-docs) as the readme was getting too long.
   - December 10, 2016: Implemented column typing with the release of version 1.1.
+  
 <hr>
 
 ## License & Legal
