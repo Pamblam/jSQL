@@ -9,13 +9,13 @@ Under the hood, jSQL has 3 layers:
  - **In the middle**, a set of methods are used to build [`jSQLQuery` objects](https://github.com/Pamblam/jSQL/wiki/jSQLquery-interface) which execute CRUD commands on the jSQL database and it's tables. *(See: [`jSQL.createTable()`](https://github.com/Pamblam/jSQL/wiki/Querying-the-Database#jsqlcreatetableparams), [`jSQL.select()`](https://github.com/Pamblam/jSQL/wiki/Querying-the-Database#jsqlselectcolumns), [`jSQL.insertInto()`](https://github.com/Pamblam/jSQL/wiki/Querying-the-Database#jsqlinsertintotablename), [`jSQL.dropTable()`](https://github.com/Pamblam/jSQL/wiki/Querying-the-Database#jsqldroptabletablename), [`jSQL.update()`](https://github.com/Pamblam/jSQL/wiki/Querying-the-Database#jsqlupdatetablename), and [`jSQL.deleteFrom()`](https://github.com/Pamblam/jSQL/wiki/Querying-the-Database#jsqldeletefromtablename))*
  - **At the highest level**, jSQL is an SQL engine (hence the name: Javascript Query Language) which understands a subset of standard SQL passed to the [`jSQL.query()`](https://github.com/Pamblam/jSQL/wiki/Querying-the-Database#jsqlquerysqlquery) method, which parses a [jSQL statement](https://github.com/Pamblam/jSQL/wiki/jSQL-Syntax) and uses the above methods to create [`jSQLQuery` objects](https://github.com/Pamblam/jSQL/wiki/jSQLquery-interface) to perform operations on the database.
 
-jSQL is written with flexibility, ease of use, and speed in mind. It supports prepared statements, column typing, and can store any kind of data you need it to, including functions and instances of custom objects. It's applications include caching server-sourced data, state persistence, data management and querying and more.
+jSQL is written with flexibility, ease of use, and efficiency in mind. It supports prepared statements, column typing, and can store any kind of data you need it to, including functions and instances of custom objects. It's applications include caching server-sourced data, state persistence, data management and querying and more.
 
 <hr>
 
 ## Quick Start
 
-jSQL is implemented in a single JavaScript file. Save the `jSQL.js` or the `jSQL.min.js` file to your project folder and include it.
+jSQL is implemented in a single JavaScript file. Save the [`jSQL.js`](https://github.com/Pamblam/jSQL/blob/master/jSQL.js) or the [`jSQL.min.js`](https://github.com/Pamblam/jSQL/blob/master/jSQL.min.js) file to your project folder and include it.
 
     <script src='jSQL.js'></script>
     
@@ -32,7 +32,7 @@ At some point, you might want to put some data in that table.
 
     jSQL.query("insert into users ('bob', 34)").execute();
     
-Alternatively, the low level syntax is...
+For a performance boost, you can use the low level syntax instead:
 
     jSQL.insertInto('users').values({name:'bob',  age:34}).execute();
     
@@ -61,12 +61,6 @@ For more information and to read about other query types, see the [jSQL Document
 ## Documentation & Examples
 
 Every aspect of jSQL is fully documented in the [jSQL Wiki](https://github.com/Pamblam/jSQL/wiki#jsql-docs), which includes [simple usage examples](https://github.com/Pamblam/jSQL/wiki/Examples) and anything else you would ever want to know about the library. The repository on GitHub also includes several more [complete and complex examples](https://github.com/Pamblam/jSQL/tree/master/examples).
-
-<hr>
-
-## Contributors
-
-This project only has one contributor: me. No 3rd party libraries or software are used in this project, except possibly in the examples.
 
 <hr>
 
