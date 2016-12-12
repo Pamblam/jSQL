@@ -69,6 +69,7 @@ and open the template in the editor.
 				var xhttp = window.XMLHttpRequest ? new XMLHttpRequest() : new ActiveXObject("Microsoft.XMLHTTP");
 				xhttp.onreadystatechange = function() {
 				  if (this.readyState == 4 && this.status == 200){ 
+					  console.log(this); alert("ASdf");
 					  cb(this.responseText);
 				  }
 				};
