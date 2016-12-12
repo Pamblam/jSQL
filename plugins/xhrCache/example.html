@@ -13,35 +13,92 @@ and open the template in the editor.
 	<body>
 		<script src="../../jSQL.js"></script>
 		<script src="./jSQL.xhrCache.js"></script>
+		<script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
 		<script>
-			jSQL.load(function(){
-				function loadDoc(cb) { 
-					var xhttp = window.XMLHttpRequest ? new XMLHttpRequest() : new ActiveXObject("Microsoft.XMLHTTP");
-					xhttp.onreadystatechange = function() {
-						
-					  if (this.readyState == 4 && this.status == 200){ 
-						  
-						  cb(this.responseText);
-					  }
-					};
-					xhttp.open("GET", "ajaxtext.txt", true);
-					xhttp.send();
-				}
-				
+			jSQL.xhrCache.logging = true;
+			
+			(function recurse(i){
+				nativeGet(function(resp){
+					print("GET using XMLHttpRequest: "+resp);
+					setTimeout(function(){
+						if(i<2) recurse(++i);
+					}, 2000);
+				});
+			})(0);
+			
+			setTimeout(function(){
 				(function recurse(i){
-					loadDoc(function(resp){
-						print(resp);
+					nativePost(function(resp){
+						print("POST using XMLHttpRequest: "+resp);
 						setTimeout(function(){
 							if(i<2) recurse(++i);
 						}, 1500);
 					});
 				})(0);
-				
-				function print(str){
-					document.getElementsByTagName("body")[0].innerHTML += str+"<br>";
-				}
-				
-			});
+
+				setTimeout(function(){
+					(function recurse(i){
+						jQueryGet(function(resp){
+							print("GET using jQuery "+resp);
+							setTimeout(function(){
+								if(i<2) recurse(++i);
+							}, 1500);
+						});
+					})(0);
+
+					setTimeout(function(){
+						(function recurse(i){
+							jQueryPost(function(resp){
+								print("POST using jQuery "+resp);
+								setTimeout(function(){
+									if(i<2) recurse(++i);
+								}, 1500);
+							});
+						})(0);
+					}, 500);
+
+				}, 500);
+
+			}, 500);
+
+			function print(str){
+				document.getElementsByTagName("body")[0].innerHTML += str+"<br>";
+			}
+
+			function nativeGet(cb) { 
+				var xhttp = window.XMLHttpRequest ? new XMLHttpRequest() : new ActiveXObject("Microsoft.XMLHTTP");
+				xhttp.onreadystatechange = function() {
+				  if (this.readyState == 4 && this.status == 200){ 
+					  cb(this.responseText);
+				  }
+				};
+				xhttp.open("GET", "ajaxtext.txt", true);
+				xhttp.send();
+			}
+			
+			function jQueryGet(cb) { 
+				$.ajax({url: "ajaxtext.txt"}).done(function(resp){
+					cb(resp);
+				});
+			}
+			
+			function jQueryPost(cb) { 
+				$.ajax({url: "ajaxtext.txt", type: "POST", data: {fname:'bob', lname:'dole'}}).done(function(resp){
+					cb(resp);
+				});
+			}
+			
+			function nativePost(cb) { 
+				var xhttp = window.XMLHttpRequest ? new XMLHttpRequest() : new ActiveXObject("Microsoft.XMLHTTP");
+				xhttp.onreadystatechange = function() {
+				  if (this.readyState == 4 && this.status == 200){ 
+					  cb(this.responseText);
+				  }
+				};
+				xhttp.open("POST", "ajaxtext.txt", true);
+				xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+				xhttp.send("fname=Bob&lname=Dole");
+			}
 		</script>
 	</body>
 </html>
