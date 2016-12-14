@@ -66,6 +66,16 @@ Every aspect of jSQL is fully documented in the [jSQL Wiki](https://github.com/P
 
 <hr>
 
+## Browser Support
+
+Works in all major browsers, even really old ones.
+
+| **FireFox** | **Android** | **Safari** | **Chrome** | **Samsung** | **Blackberry** | **IE** | **Opera** | **Edge** |
+|-------------|-------------|------------|------------|-------------|----------------|--------|-----------|----------|
+| 2+ | 2.1+ | 3.1+ | 4+ | 4+ | 7+ | 8+ | 11.5+ | 12+ |
+
+<hr>
+
 ## Change Log
 
   - December 11, 2016: Moved all documentation to the [Wiki Pages](https://github.com/Pamblam/jSQL/wiki#jsql-docs) as the readme was getting too long.
