@@ -12,11 +12,9 @@ and open the template in the editor.
 	</head>
 	<body>
 		<script src="../../jSQL.js"></script>
-		<script src="./XHRCreep.js"></script>
 		<script src="./jSQL.xhrCache.js"></script>
 		<script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
 		<script>
-			//jSQL.xhrCache.logging = true;
 			
 			(function recurse(i){
 				nativeGet(function(resp){
@@ -70,7 +68,6 @@ and open the template in the editor.
 				var xhttp = window.XMLHttpRequest ? new XMLHttpRequest() : new ActiveXObject("Microsoft.XMLHTTP");
 				xhttp.onreadystatechange = function() {
 				  if (this.readyState == 4 && this.status == 200){ 
-					  console.log(this);
 					  cb(this.responseText);
 				  }
 				};
