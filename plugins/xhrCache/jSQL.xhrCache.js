@@ -209,6 +209,7 @@ window.XHRCreep = (function(){
 	};
 })();
 
+
 window.jSQL.xhrCache = (function(callback){ 
 	jSQL.load(function(){
 		
@@ -278,16 +279,19 @@ window.jSQL.xhrCache = (function(callback){
 			var _this = this;
 			if(proceed){
 				
-				// make the request and intercept the response
-				var orsc = this.onreadystatechange;
-				this.onreadystatechange = function(){
+				this._xhr.onreadystatechange = function(){
+					_this.getMockProperties();
 					
 					if (_this.readyState === 4 && _this.status === 200){
 						// ony cache raw text and json responses
 						if(['', 'json', 'text'].indexOf(_this._xhr.responseType)>-1){
-							var response = _this._xhr.responseText;
-							if((_this._xhr.getResponseHeader("content-type") || "").indexOf('json') > -1){
-								response = ""+JSON.stringify(_this._xhr.response);
+							var response = _this._xhr.response;
+							var respType = _this._xhr.responseType;
+							if("object" === typeof response || (_this._xhr.getResponseHeader("content-type") || "").indexOf('json') > -1){
+								
+								if("object" === typeof response) response = ""+JSON.stringify(_this._xhr.response);
+								respType = 'json';
+								
 							}
 							
 							var responseText = "";
@@ -301,10 +305,10 @@ window.jSQL.xhrCache = (function(callback){
 							responseURL: _this._xhr.responseURL,
 							responseXML: responseXML,
 							status: _this._xhr.status,
-							responseType: _this._xhr.responseType,
+							responseType: respType,
 							responseText: responseText,
-							statusText: _this._xhr.statusText};
-							
+							statusText: _this._xhr.statusText,
+							headers: _this._xhr.getAllResponseHeaders()};
 							
 							var id = jSQL.query("select * from jSQLCache").execute().fetchAll("ARRAY").length;
 							query = jSQL.query("insert into jSQLCache values (?, ?, ?, ?, ?, ?, ?, ?, ?)");
@@ -317,34 +321,62 @@ window.jSQL.xhrCache = (function(callback){
 								console.log("jSQL.xhrCache: Caching AJAX response");
 						}
 					}
-					
+
 					// call the original onreadystatechange
-					orsc.apply(_this, arguments);
+					_this.onreadystatechange.apply(_this._xhr, arguments);
+					
 				};
 				// send the request
 				this._xhr.send.apply(this._xhr, arguments) ;
 				
 			}else{
-
-				this.response = results[0].response.response;
-				this.readyState = results[0].response.readyState;
-				this.responseURL = results[0].response.responseURL;
-				this.responseXML = results[0].response.responseXML;
-				this.status = results[0].response.status;
-				this.responseType = results[0].response.responseType;
-				this.responseText = results[0].response.responseText;
-				this.statusText = results[0].response.statusText;
-				if(jSQL.xhrCache.logging){
-					console.groupCollapsed("jSQL.xhrCache: "+this._METHOD.toUpperCase()+": "+this._URL);
-					console.log("METHOD: ", this._METHOD);
-					console.log("POSTDATA: ", this._POST_DATA);
-					console.log("RESPONSE TYPE: ", this.responseType);
-					console.log("RESPONSE: ", this.response);
-					console.log("Cached about "+minutes_old+" minutes ago.");
-					console.groupEnd();
-				}
-				this.onreadystatechange.apply(this, arguments);
-				this.onload.apply(this, arguments);
+				
+				setTimeout(function (){
+					
+					_this.response = results[0].response.responseType === 'json' ? 
+					JSON.parse(results[0].response.response) : results[0].response.response;
+					
+					_this.readyState = results[0].response.readyState;
+					_this.responseURL = results[0].response.responseURL;
+					_this.responseXML = results[0].response.responseXML;
+					_this.status = results[0].response.status;
+					_this.responseType = results[0].response.responseType;
+					_this.responseText = results[0].response.responseText;
+					_this.statusText = results[0].response.statusText;
+					
+					// override the getResponseHeader
+					_this.getResponseHeader = function(name){
+						name = name.toUpperCase().trim();
+						var s = results[0].response.headers.split("\n");
+						for(var i=s.length; i--;){
+							if(s[i]==="") continue;
+							var parts = s[i].split(":"); console.log(parts);
+							var n = (parts.shift()+"").toUpperCase().trim();
+							if(n === name) return parts.join(":").trim();
+						}
+						return null;
+					};
+					
+					_this.getAllResponseHeaders = function(){
+						return results[0].response.headers;
+					};
+					
+					
+					if(jSQL.xhrCache.logging){
+						console.groupCollapsed("jSQL.xhrCache: "+_this._METHOD.toUpperCase()+": "+_this._URL);
+						console.log("METHOD: ", _this._METHOD);
+						console.log("POSTDATA: ", _this._POST_DATA);
+						console.log("RESPONSE TYPE: ", _this.responseType);
+						console.log("RESPONSE: ", _this.response);
+						console.log("Cached about "+minutes_old+" minutes ago.");
+						console.groupEnd();
+					}
+					
+					_this.onreadystatechange.apply(_this, arguments);
+					_this.onload.apply(_this, arguments);
+				}, 50);
+				
+				
 				
 			}
 		};
