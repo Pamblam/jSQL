@@ -1701,7 +1701,7 @@
 		// Get all data from the datastore
 		self.select = function(model, successCallback) {
 			if("function" !== typeof successCallback) successCallback = function(){};
-			var transParam = undefined === IDBTransaction ? 'readwrite' : IDBTransaction.READ_WRITE;
+			var transParam = undefined === IDBTransaction ? 'readonly' : IDBTransaction.READ_ONLY ;
 			var transaction = self.db.transaction([model], transParam), store, request, results = [];
 			transaction.onerror = function(){ throw "Could not initiate a transaction"; };;
 			store = transaction.objectStore(model);
