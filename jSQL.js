@@ -1665,7 +1665,8 @@
 		// Insert a group of rows
 		self.insert = function(model, data, successCallback) {
 			if(typeof successCallback !== "function") successCallback = function(){};
-			var transaction = self.db.transaction([model], IDBTransaction.READ_WRITE || 'readwrite');
+			var transParam = undefined === IDBTransaction ? 'readwrite' : IDBTransaction.READ_WRITE;
+			var transaction = self.db.transaction([model], transParam);
 			var store, i, request;
 			var total = data.length;
 
@@ -1687,8 +1688,9 @@
 
 		// Delete all items from the database
 		self.delete = function(model, successCallback) {
-			if(typeof successCallback != "function") successCallback = function(){};
-			var transaction = self.db.transaction([model], IDBTransaction.READ_WRITE || 'readwrite'), store, request;
+			var transParam = undefined === IDBTransaction ? 'readwrite' : IDBTransaction.READ_WRITE;
+			if(typeof successCallback !== "function") successCallback = function(){};
+			var transaction = self.db.transaction([model], transParam), store, request;
 			transaction.onerror = function(){ throw "Could not initiate a transaction"; };;
 			store = transaction.objectStore(model);
 			request = store.clear();
@@ -1699,7 +1701,8 @@
 		// Get all data from the datastore
 		self.select = function(model, successCallback) {
 			if("function" !== typeof successCallback) successCallback = function(){};
-			var transaction = self.db.transaction([model], IDBTransaction.READ_ONLY || 'readonly'), store, request, results = [];
+			var transParam = undefined === IDBTransaction ? 'readwrite' : IDBTransaction.READ_WRITE;
+			var transaction = self.db.transaction([model], transParam), store, request, results = [];
 			transaction.onerror = function(){ throw "Could not initiate a transaction"; };;
 			store = transaction.objectStore(model);
 			request = store.openCursor();
