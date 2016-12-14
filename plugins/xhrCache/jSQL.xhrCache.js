@@ -8,113 +8,78 @@
 window.jSQL.xhrCache = (function(callback){ 
 	jSQL.load(function(){
 		
-		// save the native XHR method to xhrConstructor;
-		var xhrType = XMLHttpRequest ? "XMLHttpRequest" : "ActiveXObject";
-		var xhrConstructor = window[xhrType];
+		// Make sure there's a table available
+		jSQL.createTable({
+			jSQLCache: {
+				id: {type: "int"},
+				method: {type: "varchar"},
+				url: {type: "varchar"},
+				post_data: {type:"varchar"},
+				post_data_type: {type: "varchar"},
+				username: {type:"varchar"},
+				password: {type:"varchar"},
+				cached_time: {type:"date"},
+				use_count: {type: "int"},
+				response: {type:"json"}
+			}
+		}).ifNotExists().execute();
 		
-		// now override the native method
-		window[xhrType] = function(){
-			console.log("xhr: constructor");
+		XHRCreep.methods.notify.open = function(){
+			this._METHOD = arguments[0].toUpperCase();
+			this._URL = arguments[1];
+			this._USERNAME = undefined === arguments[3] ? "" :arguments[3];
+			this._PASSWORD = undefined === arguments[4] ? "" :arguments[4];
+		};
+		
+		XHRCreep.methods.override.send = function(){
+			this._POST_DATA = "";
+			this._POST_DATA_TYPE = "";
+			try{
+				this._POST_DATA = "JSON";
+				this._POST_DATA_TYPE = JSON.parse(arguments[0]);
+			}catch(e){
+				this._POST_DATA = "";
+				this._POST_DATA_TYPE = "";
+			}
 			
-			this._xhr = new (Function.prototype.bind.apply(xhrConstructor, arguments));
-			this.onreadystatechange = function(){};
-			this.response = "";
-			this.readyState = 0;
-			this.responseText = "";
-			this.responseType = 'text';
-			this.responseURL = "";
-			this.responseXML = null;
-			this.status = 0;
-			this.statusText = "";
-			this.timeout = 0;
-			this.withCredentials = false;
+			// check for an existing equivelent call
+			var query = jSQL.query("select * from jSQLCache where method = ? and"+
+					" url = ? and post_data = ? and post_data_type = ? and username = ?"+
+					" and password = ?");
+			var params = [this._METHOD, this._URL, this._POST_DATA, this._POST_DATA_TYPE,
+					this._USERNAME, this._PASSWORD];
+			var results = query.execute(params).fetchAll("ASSOC");
+
+			var proceed = true;
+			if(results.length) proceed = false;
 			
-			var _this = this;
-			this._xhr.onreadystatechange = function () {
-				_this.getMockProperties();
-				_this.onreadystatechange();
-			};
-		};
-		
-		window[xhrType].prototype.UNSENT = 0;
-		window[xhrType].prototype.OPENED = 1;
-		window[xhrType].prototype.HEADERS_RECEIVED = 2;
-		window[xhrType].prototype.LOADING = 3;
-		window[xhrType].prototype.DONE = 4;
-		
-		window[xhrType].prototype.getMockProperties = function(){
-			try{ this.response = this._xhr.response; }catch(e){}
-			try{ this.readyState = this._xhr.readyState; }catch(e){}
-			try{ this.responseText = this._xhr.responseText; }catch(e){}
-			try{ this.responseURL = this._xhr.responseURL; }catch(e){}
-			try{ this.responseXML = this._xhr.responseXML; }catch(e){}
-			try{ this.status = this._xhr.status }catch(e){}
-			try{ this.statusText = this._xhr.statusText; }catch(e){}
-		};
-		
-		window[xhrType].prototype.setMockProperties = function(){
-			this._xhr.responseType = this.responseType;
-			this._xhr.timeout = this.timeout;
-			this._xhr.withCredentials = this.withCredentials;
-		};
-		
-		window[xhrType].prototype.abort = function(){
-			console.log("xhr: abort");
-			this.setMockProperties();
-			var r = this._xhr.abort.apply(this._xhr, arguments);
-			this.getMockProperties();
-			return r;
-		};
+			if(proceed){
+				var rsc = this.onreadystatechange;
+				this._xhr.onreadystatechange = function(){
+					if (this._xhr.readyState === 4 && this._xhr.status === 200){ 
+						this.this.getMockProperties();
+						// serialize the request as best we can
+						var sreq = {};
+						for(var p in this){
+							if("function" !== typeof this[p])
+								try{sreq[p] = this[p];}catch(e){}
+						}
+						var id = jSQL.query("select * from jSQLCache").execute().fetchAll("ARRAY").length;
+						query = jSQL.query("insert into jSQLCache values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+						query.execute([id, this._METHOD, this._URL, this._POST_DATA, this._POST_DATA_TYPE,
+							this._USERNAME, this._PASSWORD, new Date(), 0, sreq]);
+						jSQL.persist();
+						console.log("jSQL.xhrCache: Caching AJAX response");
+					}
 
-		window[xhrType].prototype.getAllResponseHeaders = function(){
-			console.log("xhr: getAllResponseHeaders");
-			this.setMockProperties();
-			var r = this._xhr.getAllResponseHeaders.apply(this._xhr, arguments);
-			this.getMockProperties();
-			return r;
+					rsc.apply(this, arguments);
+				};
+				this._xhr.send.apply(this._xhr, arguments);
+			}else{
+				console.log("serve cached tits");
+			}
 		};
-
-		window[xhrType].prototype.getResponseHeader = function(){
-			console.log("xhr: getResponseHeader");
-			this.setMockProperties();
-			var r = this._xhr.getResponseHeader.apply(this._xhr, arguments);
-			this.getMockProperties();
-			return r;
-		};
-
-		window[xhrType].prototype.overrideMimeType = function(){
-			console.log("xhr: overrideMimeType");
-			this.setMockProperties();
-			var r = this._xhr.overrideMimeType.apply(this._xhr, arguments);
-			this.getMockProperties();
-			return r;
-		};
-
-		window[xhrType].prototype.setRequestHeader = function(){
-			console.log("xhr: setRequestHeader");
-			this.setMockProperties();
-			var r = this._xhr.setRequestHeader.apply(this._xhr, arguments);
-			this.getMockProperties();
-			return r;
-		};
-		
-		window[xhrType].prototype.send = function(){ 
-			console.log("xhr: send");
-			this.setMockProperties();
-			var r = this._xhr.send.apply(this._xhr, arguments);
-			this.getMockProperties();
-			return r;
-		};
-
-		window[xhrType].prototype.open = function(){
-			console.log("xhr: open");
-			this.setMockProperties();
-			var r = this._xhr.open.apply(this._xhr, arguments);
-			this.getMockProperties();
-			return r;
-		};
-			
 	});
-	
+		
 	return {max_age: false, logging:false}; // what to put here? settings?
 })();
