@@ -1,5 +1,5 @@
 # jSQL 
-v1.1
+v1.3
 
 Too often web applications rely on server side databases to store state information, causing unnecessary strain on the server and longer load time for the end user. jSQL aims to solve the quandary of the stateless web by using various APIs to store serialized data structures on the user's hard drive. 
 
@@ -20,7 +20,11 @@ jSQL is written with flexibility, ease of use, and efficiency in mind. It suppor
 jSQL is implemented in a single JavaScript file. Save the [`jSQL.js`](https://github.com/Pamblam/jSQL/blob/master/jSQL.js) file (or if for performance junkies, the minified [`jSQL.min.js`](https://github.com/Pamblam/jSQL/blob/master/jSQL.min.js) file) to your project folder and include it.
 
     <script src='jSQL.js'></script>
-    
+  
+  
+
+#### Create a table
+
 When the database has loaded into memory, you'll want to make sure you have a table to work with. Any database operations that are to be made immediately when the app loads should be called from within the [`jSQL.load()`](https://github.com/Pamblam/jSQL/wiki/Persistence-Management#jsqlloadonloadcallback) callback.
 
     jSQL.load(function(){
@@ -30,6 +34,10 @@ When the database has loaded into memory, you'll want to make sure you have a ta
         // jSQL.createTable({users: {name: {type:varchar, args: 25}, age: {type: int}}}).ifNotExists().execute();
     });
     
+ 
+ 
+#### Insert into table
+
 At some point, you might want to put some data in that table.
 
     jSQL.query("insert into users ('bob', 34)").execute();
@@ -46,6 +54,8 @@ You can use prepared statements in low level syntax too:
 
     jSQL.insertInto('users').values({name:'?',  age:'?'}).execute(['bob',34]);
     
+#### Select from table
+
 Once you've got the data in there, you're probably going to want to get it back out.
 
     var users = jSQL.query("select * from users where name like '%ob'").execute().fetchAll("ASSOC");
@@ -56,7 +66,7 @@ The low level select sytax is easy too:
 
 When you've made changes or additions to the database, call [`jSQL.persist()`](https://github.com/Pamblam/jSQL/wiki/Persistence-Management#jsqlpersist) to commit your changes. 
 
-For more information and to read about other query types, see the [jSQL Documentation](https://github.com/Pamblam/jSQL/wiki#jsql-docs).
+For more information and to read about other update, delete and other operations, see the [jSQL Wiki](https://github.com/Pamblam/jSQL/wiki#jsql-docs).
 
 <hr>
 
