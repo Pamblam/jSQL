@@ -1,5 +1,5 @@
 /**
- * jSQL.js v1.2
+ * jSQL.js v1.3
  * A Javascript Query Language Database Engine
  * @author Robert Parham
  * @website https://github.com/Pamblam/jSQL#jsql
@@ -1589,8 +1589,8 @@
 
 			try {
 				indexedDB = window.indexedDB || window.webkitIndexedDB || window.mozIndexedDB || window.msIndexedDB;
-				IDBTransaction = window.hasOwnProperty('webkitIndexedDB') ? window.webkitIDBTransaction : window.IDBTransaction;
-				IDBKeyRange = window.hasOwnProperty('webkitIndexedDB') ? window.webkitIDBKeyRange : window.IDBKeyRange;
+				IDBTransaction = window.hasOwnProperty('IDBTransaction') ? window.IDBTransaction : window.webkitIDBTransaction ;
+				IDBKeyRange = window.hasOwnProperty('IDBKeyRange') ? window.IDBKeyRange : window.webkitIndexedDB;
 			} catch (e) {
 				throw "indexedDB is not supported in this browser";
 			}
@@ -1665,8 +1665,7 @@
 		// Insert a group of rows
 		self.insert = function(model, data, successCallback) {
 			if(typeof successCallback !== "function") successCallback = function(){};
-			var transParam = undefined === IDBTransaction ? 'readwrite' : IDBTransaction.READ_WRITE;
-			var transaction = self.db.transaction([model], transParam);
+			var transaction = self.db.transaction([model], undefined === IDBTransaction.READ_WRITE ? 'readwrite' : IDBTransaction.READ_WRITE);
 			var store, i, request;
 			var total = data.length;
 
@@ -1688,9 +1687,8 @@
 
 		// Delete all items from the database
 		self.delete = function(model, successCallback) {
-			var transParam = undefined === IDBTransaction ? 'readwrite' : IDBTransaction.READ_WRITE;
-			if(typeof successCallback !== "function") successCallback = function(){};
-			var transaction = self.db.transaction([model], transParam), store, request;
+			if(typeof successCallback != "function") successCallback = function(){};
+			var transaction = self.db.transaction([model], undefined === IDBTransaction.READ_WRITE ? 'readwrite' : IDBTransaction.READ_WRITE), store, request;
 			transaction.onerror = function(){ throw "Could not initiate a transaction"; };;
 			store = transaction.objectStore(model);
 			request = store.clear();
@@ -1701,8 +1699,7 @@
 		// Get all data from the datastore
 		self.select = function(model, successCallback) {
 			if("function" !== typeof successCallback) successCallback = function(){};
-			var transParam = undefined === IDBTransaction ? 'readonly' : IDBTransaction.READ_ONLY ;
-			var transaction = self.db.transaction([model], transParam), store, request, results = [];
+			var transaction = self.db.transaction([model], undefined === IDBTransaction.READ_ONLY ? 'readonly' : IDBTransaction.READ_ONLY), store, request, results = [];
 			transaction.onerror = function(){ throw "Could not initiate a transaction"; };;
 			store = transaction.objectStore(model);
 			request = store.openCursor();
@@ -1899,7 +1896,7 @@
 	////////////////////////////////////////////////////////////////////////////
 	
 	return {
-		version: 1.2,
+		version: 1.3,
 		tables: {},
 		query: jSQLParseQuery,
 		createTable: createTable,
