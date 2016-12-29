@@ -39,16 +39,30 @@
       var $ul = $('#jSQLTableTabs').find('ul').eq(0);
       var id = 'jSQLResultsTab-' + $ul.find('li').length;
       $ul.append('<li><a href="#' + id + '">' + table + '</a></li>');
-      $ul.after('<div id="' + id + '">' + table + '</div>');
+      $ul.after('<div id="' + id + '"></div>');
       var data = jSQL.query('select * from zips').execute().fetchAll('assoc');
       if (data.length > 15) data = data.slice(0, 15);
       var tableHTML = data.length ? makeTableHTML(data)  : '<center>No data in this table</center>';
-      console.log(tableHTML);
-      alert('check');
+      $("#"+id).append(tableHTML);
     }
   }
   function makeTableHTML(data) {
-    return 'make a table';
+    var html = [];
+    html.push('<table><thead><tr>');
+    for(var name in data[0])
+      html.push('<th>'+name+'</th>');
+    html.push('</tr></thead><tbody>');
+    for(var i = 0; i<data.length; i++){
+      html.push('<tr>');
+      for(var name in data[i]){
+        var type = typeof data[i][name];
+        var val = type !== "string" && type !== "number" ? "["+type+"]" : data[i][name];
+        if(val.length > 50) val = val.substring(0, 47)+"...";
+        html.push('<td>'+val+'</td>');
+      }   
+      html.push('</tr>');
+    }
+    return html.join('');
   }
   function openButtonHandler() {
     $('body').append('<div id=\'jSQLMyAdminOverlay\' style=\'position:fixed; top:0; left:0; height:100%; width:100%; z-index: 2147483646; background: rgba(255,255,255,0.7)\'><br><br><center><h3>Loading jSQLMyAdmin...</h3></center></div>');
