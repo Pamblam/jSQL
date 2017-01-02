@@ -9,6 +9,7 @@
 (function () {
 	var jSQLMyAdminVersion = 0;
 	var cm;
+	var isButton = true;
 	if (typeof window.jSQL === 'object') {
 
 		var resources = [];
@@ -40,7 +41,7 @@
 			$('#openjSQLMyAdmin').css({"line-height": "0.9"});
 			$('#openjSQLMyAdmin').click(openButtonHandler);
 		});
-	}
+	}else if(isButton) alert("There is no jSQL on this page.");
 	function drawjSQLMyAdmin() {
 		jSQL.load(function () {
 			var $overlay = $('#jSQLMyAdminOverlay').empty();
@@ -168,4 +169,5 @@
 			})();
 		});
 	}
+	return false;
 })();
