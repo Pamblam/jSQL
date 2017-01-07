@@ -1,8 +1,7 @@
 # jSQLMyAdmin
+v1.1
 
-**jSQLMyAdmin is under development and not ready for use yet. Please Come back later.**
-
-jSQLMyAdmin is a UI development and debugging tool that is overlayed onto web pages that implement jSQL. It is intended to be somewhat similar to mySQL's  phpMyAdmin.
+jSQLMyAdmin is a UI development and debugging tool that is overlayed onto any web page. It is intended to be somewhat similar to mySQL's  phpMyAdmin.
 
 ## Userscript usage
 
@@ -11,3 +10,4 @@ Download [Greasemonkey](https://addons.mozilla.org/en-US/firefox/addon/greasemon
 ## Toolbar button usage
 
 Open button.html in your browser and drag the button to your browser's bookmarks toolbar. Load a page that uses jSQL in your browser and then press the button from the toolbar to open jSQLMyAdmin.
+
