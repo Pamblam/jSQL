@@ -1082,8 +1082,8 @@
 			return query;
 		};
 
-		// Remove excess whitespace, linebreaks
-		query = query.replace(/(\r\n|\n|\r)/gm," ").replace(/ +(?= )/g,'').trim();
+		// Remove excess whitespace, linebreaks, tabs
+		query = query.replace(/\t/g,' ').replace(/(\r\n|\n|\r)/gm," ").replace(/ +(?= )/g,'').trim();
 		
 		// Break words into uppercase array
 		var words = query.split(" ");
@@ -1111,6 +1111,19 @@
 
 				// Next word should be the table name
 				var table = removeQuotes(words.shift());
+				// If table is quoted, mean there may be spaces in table name,
+				// look for next quote to get full table name
+				if(table.indexOf("`") === 0){
+					table = table.substring(1);
+					var restOfQuery = " "+words.join(" ");
+					for(var i=0; table.indexOf("`")<0&&i<restOfQuery.length;i++){
+						var char = restOfQuery[i];
+						if(char === " ") words.shift();
+						table += char;
+					}
+					table = removeQuotes("`"+table);
+				}
+				
 				if(undefined === jSQL.tables[table]) throw "Table "+table+" does not exist.";
 				
 				return jSQL.dropTable(table);
@@ -1126,6 +1139,19 @@
 
 				// Next word should be the table name
 				table = removeQuotes(words.shift());
+				
+				// If table is quoted, mean there may be spaces in table name,
+				// look for next quote to get full table name
+				if(table.indexOf("`") === 0){
+					table = table.substring(1);
+					var restOfQuery = " "+words.join(" ");
+					for(var i=0; table.indexOf("`")<0&&i<restOfQuery.length;i++){
+						var char = restOfQuery[i];
+						if(char === " ") words.shift();
+						table += char;
+					}
+					table = removeQuotes("`"+table);
+				}
 				if(undefined === jSQL.tables[table]) throw "Table "+table+" does not exist.";
 				
 				// Remove a few chars and re-split
@@ -1198,7 +1224,20 @@
 					table = removeQuotes(words.shift());
 					ine=true;
 				} 
-
+				
+				// If table is quoted, mean there may be spaces in table name,
+				// look for next quote to get full table name
+				if(table.indexOf("`") === 0){
+					table = table.substring(1);
+					var restOfQuery = " "+words.join(" ");
+					for(var i=0; table.indexOf("`")<0&&i<restOfQuery.length;i++){
+						var char = restOfQuery[i];
+						if(char === " ") words.shift();
+						table += char;
+					}
+					table = removeQuotes("`"+table);
+				}
+			
 				params[table] = {};
 
 				// Get column definitions
@@ -1216,7 +1255,7 @@
 				// loop and apply column definitions to params object
 				for(var i=0; i<cols.length; i++){
 					var colparts = cols[i].split(" ");
-					var colname = colparts.shift();
+					var colname = removeQuotes(colparts.shift());
 					params[table][colname] = {type:"AMBI",args:[]};
 					if(colparts.length){
 						var typename = colparts.shift().toUpperCase();
@@ -1268,6 +1307,27 @@
 				var table, colValPairs, query, orderColumns = [];
 				table = removeQuotes(words.shift());
 				
+				// If table is quoted, mean there may be spaces in table name,
+				// look for next quote to get full table name
+				if(table.indexOf("`") === 0){
+					table = table.substring(1);
+					var restOfQuery = " "+words.join(" ");
+					for(var i=0; table.indexOf("`")<0&&i<restOfQuery.length;i++){
+						var char = restOfQuery[i];
+						if(char === " ") words.shift();
+						table += char;
+					}
+					table = removeQuotes("`"+table);
+				}
+				
+				for(var name in jSQL.tables){
+					if(!jSQL.tables.hasOwnProperty(name)) continue;
+					if(name.toUpperCase() == removeQuotes(table.toUpperCase())){
+						table = name;
+						break;
+					}
+				}
+				
 				var set = words.shift().toUpperCase();
 				if (set !== "SET")
 					throw "Unintelligible query. Expected 'SET.'";
@@ -1291,7 +1351,20 @@
 						columns[i] = columns[i].substr(0, columns[i].length-1);
 				words.shift(); // pop the FROM off
 				table = words.shift();
-
+				
+				// If table is quoted, mean there may be spaces in table name,
+				// look for next quote to get full table name
+				if(table.indexOf("`") === 0){
+					table = table.substring(1);
+					var restOfQuery = " "+words.join(" ");
+					for(var i=0; table.indexOf("`")<0&&i<restOfQuery.length;i++){
+						var char = restOfQuery[i];
+						if(char === " ") words.shift();
+						table += char;
+					}
+					table = removeQuotes("`"+table);
+				}
+				
 				for(var name in jSQL.tables){
 					if(!jSQL.tables.hasOwnProperty(name)) continue;
 					if(name.toUpperCase() == removeQuotes(table.toUpperCase())){
@@ -1896,7 +1969,7 @@
 	////////////////////////////////////////////////////////////////////////////
 	
 	return {
-		version: 1.3,
+		version: 1.4,
 		tables: {},
 		query: jSQLParseQuery,
 		createTable: createTable,

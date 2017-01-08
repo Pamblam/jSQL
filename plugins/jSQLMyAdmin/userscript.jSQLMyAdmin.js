@@ -7,7 +7,7 @@
 // @grant       none
 // ==/UserScript==
 void(function () {
-	var jSQLMyAdminVersion = 1.1;
+	var jSQLMyAdminVersion = 1.3;
 	
 	/**
 	 * Turn this userscript into a browser button..
@@ -94,7 +94,7 @@ void(function () {
 				setTimeout(function(){
 					var tableName = $(ui.newPanel).data("tn");
 					if(tableName === undefined) return;
-					var data = jSQL.query('select * from '+tableName).execute().fetchAll('array');
+					var data = jSQL.select('*').from(tableName).execute().fetchAll('array');
 					var tableHTML = '<div style="overflow-x:auto; width:100%; margin:0; padding:0;"><table></table></div>';
 					$(ui.newPanel).html(tableHTML);
 					var cols = [];
