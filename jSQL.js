@@ -559,6 +559,7 @@
 				}
 			}
 			jSQL.tables[this.table].insertRow(this.data);
+			return this;
 		};
 		this.fetch = function(){ return null; };
 		this.fetchAll = function(){ return []; };
@@ -868,6 +869,7 @@
 		// A helper function that extracts values from a string of
 		// quoted, comma separated values, taking into account escaped chars
 		var getNextQueryVals = function(str) {
+			var numbers = "0,1,2,3,4,5,6,7,8,9,0,.".split(",");
 			var vals = [];
 			var inQuote = false;
 			var currentVal = [];
@@ -901,6 +903,13 @@
 					currentVal.push(str[i]);
 				} else if(str[i] === "?"){
 					vals.push('?');
+				}else if(numbers.indexOf(str[i])>-1){
+					var v = "";
+					while(numbers.indexOf(str[i])>-1&&i < str.length){
+						v += str[i];
+						i++;
+					}
+					vals.push(parseFloat(v));
 				}else if (str[i] !== " " && str[i] !== ",") {
 					return vals;
 				}
@@ -1081,9 +1090,9 @@
 			}
 			return query;
 		};
-
-		// Remove excess whitespace, linebreaks, tabs
-		query = query.replace(/\t/g,' ').replace(/(\r\n|\n|\r)/gm," ").replace(/ +(?= )/g,'').trim();
+		
+		// Remove excess whitespace, linebreaks, tabs, comments
+		query = jSQL.minify(query);
 		
 		// Break words into uppercase array
 		var words = query.split(" ");
@@ -1238,8 +1247,8 @@
 					table = removeQuotes("`"+table);
 				}
 			
-				params[table] = {};
-
+				params[table] = [];
+				
 				// Get column definitions
 				var parts = conlumnDef.split(",");
 				for(var i=0;i<parts.length;i++){
@@ -1251,12 +1260,12 @@
 					}
 					if(str.trim()!=="") cols.push(str.trim());
 				}
-
+				
 				// loop and apply column definitions to params object
 				for(var i=0; i<cols.length; i++){
 					var colparts = cols[i].split(" ");
 					var colname = removeQuotes(colparts.shift());
-					params[table][colname] = {type:"AMBI",args:[]};
+					params[table][i] = {name: colname, type:"AMBI",args:[]};
 					if(colparts.length){
 						var typename = colparts.shift().toUpperCase();
 						if((typename.match(/\(/g) || []).length){ // typename contains opening (
@@ -1292,11 +1301,12 @@
 							var a = argsDef.split(","); 
 							for(var d=0;d<a.length; d++)
 								if(a[d].trim()!=="")
-								  params[table][colname].args.push(a[d].trim());
+								  params[table][i].args.push(a[d].trim());
 						}
-						params[table][colname].type = typename.split("(")[0].trim().toUpperCase();
+						params[table][i].type = typename.split("(")[0].trim().toUpperCase();
 					}
 				}		
+				
 				var query = jSQL.createTable(params);
 				if(ine) query.ifNotExists();
 				return query;
@@ -1914,10 +1924,10 @@
 	function createTable(name, columnsOrData, types){
 		
 		// allow for all params to be passed in a single object
-		// jSQL.createTable({myTable: {
-		//		ID: { type: "INT", args: [] }, 
-		//		Name: { type: "VARCHAR", args: [30] },
-		// }})
+		// jSQL.createTable({myTable: [
+		//		{ name: "ID", type: "INT", args: [] }, 
+		//		{ name: "Name", type: "VARCHAR", args: [30] }
+		// ]})
 		if(undefined === columnsOrData && undefined === types && "object" === typeof name){
 			columnsOrData = [];
 			types = [];
@@ -1925,12 +1935,12 @@
 				if(!name.hasOwnProperty(tblname))continue;
 				var columnDefs = name[tblname];
 				name = tblname;
-				for(var col in columnDefs){
-					if(!columnDefs.hasOwnProperty(col)) continue;
+				for(var n=0; n<columnDefs.length; n++){
+					var col = columnDefs[n].name;
 					columnsOrData.push(col);
 					types.push({
-						type: columnDefs[col].type, 
-						args: (undefined===columnDefs[col].args ? []:columnDefs[col].args)
+						type: columnDefs[n].type, 
+						args: (undefined===columnDefs[n].args ? []:columnDefs[n].args)
 					});
 				}
 				break;
@@ -1965,6 +1975,78 @@
 	}
 	
 	////////////////////////////////////////////////////////////////////////////
+	// Helper/Misc Methods /////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////////////
+	
+	function jSQLReset(){ 
+		jSQL.tables = {};
+		jSQL.persist(); 
+	}
+	
+	function jSQLMinifier(sql){
+		var cleanSQL = "";
+		var lines = sql.split("\n");
+		var inQuote = false;
+		var quoteType = "";
+		var quotes = ["'", "`", '"'];
+		var inMultiLineComment = false;
+		for (var i = 0; i < lines.length; i++) {
+			for (var n = 0; n < lines[i].length; n++) {
+				var char = lines[i][n];
+				if (!inQuote && quotes.indexOf(char) > -1) {
+					inQuote = true;
+					quoteType = char;
+					cleanSQL += char;
+					continue;
+				} else if (inQuote && quoteType === char) {
+					inQuote = false;
+					quoteType = "";
+					cleanSQL += char;
+					continue;
+				} else if (inQuote) {
+					cleanSQL += char;
+					continue;
+				}
+				// not in a quote
+				var isCommentStart =
+						char === "/" &&
+						lines[i].length > n &&
+						lines[i][n + 1] == "*"
+				var isCommentEnd =
+						char === "*" &&
+						lines[i].length > n &&
+						lines[i][n + 1] == "/"
+				if (!inMultiLineComment && isCommentStart) {
+					inMultiLineComment = true;
+					continue;
+				} else if (isCommentEnd && inMultiLineComment) {
+					n++;
+					inMultiLineComment = false;
+					continue;
+				}
+				if (inMultiLineComment)
+					continue;
+				// not in multiline comment
+				var isSLCommentStart =
+						char === "#" ||
+						(char === "-" &&
+								lines[i].length > n &&
+								lines[i][n + 1] == "-");
+				if (isSLCommentStart)
+					break;
+				else
+					cleanSQL += char;
+			}
+			cleanSQL += "\n";
+		}
+		return cleanSQL
+			.replace(/\t/g,' ')
+			.replace(/(\r\n|\n|\r)/gm," ")
+			.replace(/ +(?= )/g,'')
+			.trim();
+	}
+	
+	////////////////////////////////////////////////////////////////////////////
 	// Exposed Methods /////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////////////////
 	
@@ -1980,7 +2062,9 @@
 		insertInto: insertInto,
 		types: new jSQLDataTypeList(),
 		persist: persistenceManager.persist,
-		load: persistenceManager.load
+		load: persistenceManager.load,
+		reset: jSQLReset,
+		minify: jSQLMinifier
 	};
 	
 }());

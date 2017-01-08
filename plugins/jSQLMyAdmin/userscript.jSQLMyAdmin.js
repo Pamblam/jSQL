@@ -7,7 +7,7 @@
 // @grant       none
 // ==/UserScript==
 void(function () {
-	var jSQLMyAdminVersion = 1.3;
+	var jSQLMyAdminVersion = 1.4;
 	
 	/**
 	 * Turn this userscript into a browser button..
@@ -23,6 +23,7 @@ void(function () {
 	var cm;
 	var drawnTables = [];
 	var resources = [];
+	var minJSQLVersion = 1.4;
 	
 	if (typeof window.jSQL === 'undefined') resources.push({
 		// jSQL v1.3
@@ -53,6 +54,11 @@ void(function () {
 	
 	showjSQLLoader();
 	loadresources(resources).then(function(){
+		if("undefined" === typeof jSQL.version || jSQL.version < minJSQLVersion){
+			var current_version = "undefined" === typeof jSQL.version ? "<1" : jSQL.version;
+			if(!confirm("jSQLMyAdmin requires jSQL version >= "+minJSQLVersion+". This page includes jSQL version "+current_version+". Some features will not work. Do you want to open jSQLMyAdmin anyway?"))
+				return;
+		}
 		closejSQL();
 		if(isBtn) openjSQL();
 	});
@@ -63,28 +69,27 @@ void(function () {
 	}
 	function drawjSQLMyAdmin() {
 		jSQL.load(function () {
-			var selectMenu = "<select id='queryTypeSelect'><option value='SELECT'>SELECT</option><option value='CREATE'>CREATE</option><option value='UPDATE'>UPDATE</option><option value='DROP'>DROP</option><option value='INSERT'>INSERT</option></select>";
+			// does the saved queries table exist?
+			if(undefined === jSQL.tables['Saved Queries']){
+				jSQL.query("CREATE TABLE `Saved Queries` (`Name` VARCHAR(20), `Query` LONGTEXT)").execute();
+				jSQL.insertInto("Saved Queries").values({Name:"Create", Query: "-- A Create Query Template\nCREATE TABLE IF NOT EXISTS `myTable` \n(\t`String` VARCHAR(20),\n\t`Number` INT\n)"}).execute();
+				jSQL.insertInto("Saved Queries").values({Name:"Select", Query: "-- A Select Query Template\nSELECT\n\t*\nFROM\n\t`myTable`\nWHERE\n\t`Number` > 2"}).execute();
+				jSQL.insertInto("Saved Queries").values({Name:"Update", Query: "-- An Update Query Template\nUPDATE `myTable`\nSET\n\t`String` = 'Big Number'\nWHERE\n\t`Number` > 2"}).execute();
+				jSQL.insertInto("Saved Queries").values({Name:"Insert", Query: "-- An Insert Query Template\nINSERT INTO `myTable`\n\t(`String`, `Number`)\nVALUES\n\t('Some Number', 7)"}).execute();
+				jSQL.insertInto("Saved Queries").values({Name:"Drop", Query: "-- A Drop Query Template\nDROP TABLE `myTable`"}).execute();
+			}
+			var queries = jSQL.query("SELECT * FROM `Saved Queries`").execute().fetchAll("ASSOC");
+			var selectMenu = "<select id='queryTypeSelect'><option>Choose...</option>";
+			for(var i=queries.length; i--;) selectMenu += "<option value='"+queries[i].Name+"'>"+queries[i].Name+"</option>";
+			selectMenu += "</select>";
 			var $overlay = $('#jsOverlayContainer').empty();
 			$overlay.html('<h5>jSQL Version: ' + jSQL.version + ' | jSQLMyAdmin Version: ' + jSQLMyAdminVersion + '</h5>');
-			$overlay.append('<div id="jSQLTableTabs"><ul><li><a href="#jSQLResultsTab">Query</a></li></ul><div id="jSQLResultsTab"><div><div style="float:right;"><small><b>autocomplete</b>: <i>ctrl+space</i></small></div><div style="float:left"><b>Template: </b>'+selectMenu+'</div><div style="clear:both;"></div></div><textarea id="jSQLMyAdminQueryBox"></textarea><div style="text-align:right;"><button id="jSQLExecuteQueryButton">Run Query</button><button id="jSQLCommitButton">Commit</button></div><div id="jSQLMAQueryResults"><center><b>No results to show</b><br>Enter a query</center></div></div></div>');
+			$overlay.append('<div id="jSQLTableTabs"><ul><li><a href="#jSQLResultsTab">Query</a></li></ul><div id="jSQLResultsTab"><div><div style="float:right;"><small><b>autocomplete</b>: <i>ctrl+space</i></small></div><div style="float:left"><b>Template: </b>'+selectMenu+'</div><div style="clear:both;"></div></div><textarea id="jSQLMyAdminQueryBox"></textarea><div style="text-align:right;"><button id="jSQLExecuteQueryButton">Run Query</button><button id="jSQLMinifyQueryButton">Minify</button><button id="jSQLSaveQueryButton">Save</button><button id="jSQLResetButton">Reset</button><button id="jSQLCommitButton">Commit</button></div><div id="jSQLMAQueryResults"><center><b>No results to show</b><br>Enter a query</center></div></div></div>');
 			$("#queryTypeSelect").change(function(){
-				switch($(this).val()){
-					case "SELECT":
-						cm.getDoc().setValue('SELECT * FROM table');
-						break;
-					case "UPDATE":
-						cm.getDoc().setValue('UPDATE TABLE SET column1 = "value"');
-						break;
-					case "CREATE":
-						cm.getDoc().setValue('CREATE TABLE table (column1 VARCHAR(20), column2 INT)');
-						break;
-					case "INSERT":
-						cm.getDoc().setValue('INSERT INTO table VALUES ("value", 1)');
-						break;
-					case "DROP":
-						cm.getDoc().setValue('DROP TABLE table');
-						break;
-				}
+				var Name = $(this).val();
+				var query = jSQL.query("SELECT `Query` FROM `Saved Queries` WHERE `Name` = ?")
+						.execute([Name]).fetch("ASSOC").Query;
+				cm.getDoc().setValue(query);
 			});
 			$('#jSQLTableTabs').tabs({beforeActivate: function(event, ui) {
 				var tableName = $(ui.newPanel).data("tn");
@@ -98,7 +103,7 @@ void(function () {
 					var tableHTML = '<div style="overflow-x:auto; width:100%; margin:0; padding:0;"><table></table></div>';
 					$(ui.newPanel).html(tableHTML);
 					var cols = [];
-					for(var i=jSQL.tables[tableName].columns.length; i--;) 
+					for(var i=0; i<jSQL.tables[tableName].columns.length; i++) 
 						cols.push({title: jSQL.tables[tableName].columns[i]});
 					$(ui.newPanel).find('table').DataTable({
 						data: data,
@@ -110,6 +115,32 @@ void(function () {
 			$("#jSQLExecuteQueryButton").button({icons: { primary: "ui-icon-caret-1-e"}});
 			$('#jSQLExecuteQueryButton').css({"line-height": "0.9"});
 			$("#jSQLExecuteQueryButton").click(runjSQLQuery);
+			$("#jSQLMinifyQueryButton").button({icons: { primary: "ui-icon-minusthick"}});
+			$('#jSQLMinifyQueryButton').css({"line-height": "0.9"});
+			$("#jSQLMinifyQueryButton").click(minifyjSQLQuery);
+			$("#jSQLResetButton").button({icons: { primary: "ui-icon-refresh"}});
+			$('#jSQLResetButton').css({"line-height": "0.9"});
+			$("#jSQLResetButton").click(function(){
+				if(!confirm("Do you want to delete all tables?")) return;
+				jSQL.reset();
+				jSQL.query("CREATE TABLE `Saved Queries` (`Name` VARCHAR(20), `Query` LONGTEXT)").execute();
+				jSQL.insertInto("Saved Queries").values({Name:"Create", Query: "-- A Create Query Template\nCREATE TABLE IF NOT EXISTS `myTable` \n(\t`String` VARCHAR(20),\n\t`Number` INT\n)"}).execute();
+				jSQL.insertInto("Saved Queries").values({Name:"Select", Query: "-- A Select Query Template\nSELECT\n\t*\nFROM\n\t`myTable`\nWHERE\n\t`Number` > 2"}).execute();
+				jSQL.insertInto("Saved Queries").values({Name:"Update", Query: "-- An Update Query Template\nUPDATE `myTable`\nSET\n\t`String` = 'Big Number'\nWHERE\n\t`Number` > 2"}).execute();
+				jSQL.insertInto("Saved Queries").values({Name:"Insert", Query: "-- An Insert Query Template\nINSERT INTO `myTable`\n\t(`String`, `Number`)\nVALUES\n\t('Some Number', 7)"}).execute();
+				jSQL.insertInto("Saved Queries").values({Name:"Drop", Query: "-- A Drop Query Template\nDROP TABLE `myTable`"}).execute();
+				closejSQL();
+				openjSQL();
+			});
+			$("#jSQLSaveQueryButton").button({icons: { primary: "ui-icon-star"}});
+			$('#jSQLSaveQueryButton').css({"line-height": "0.9"});
+			$("#jSQLSaveQueryButton").click(function(){
+				var name = prompt("Enter a name for this Template:");
+				var query = cm.getValue();
+				jSQL.query("INSERT INTO `Saved Queries` (`Name`, `Query`) VALUES (?, ?)")
+					.execute([name, query]);
+				$("#queryTypeSelect").append("<option value='"+name+"'>"+name+"</option>");
+			});
 			$("#jSQLCommitButton").button({icons: { primary: "ui-icon-check"}});
 			$('#jSQLCommitButton').css({"line-height": "0.9"});
 			$("#jSQLCommitButton").click(function(){
@@ -141,6 +172,10 @@ void(function () {
 			});
 		});
 	}
+	function minifyjSQLQuery(){
+		var sql = cm.getValue();
+		cm.getDoc().setValue(jSQL.minify(sql));
+	}
 	function runjSQLQuery(){
 		var sql = cm.getValue();
 		try{
@@ -161,6 +196,7 @@ void(function () {
 		}catch(e){
 			var msg = e.message ? e.message+"" : e+"";
 			alert(msg);
+			throw e;
 		}
 	}
 	function addTableTab(tableName){
@@ -175,6 +211,7 @@ void(function () {
 	}
 	function addAllTables() {
 		for (var table in jSQL.tables) {
+			if("Saved Queries" === table) continue;
 			addTableTab(table);
 		}
 	}
