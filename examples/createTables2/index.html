@@ -34,19 +34,10 @@
 				// if it does not already exist
 				var query = jSQL.query("Create table if not exists oTable "+
 					"(name varchar(50,5), age int, created date, greet function, favorite_hat hat)");
-			
-				// Alternative syntax
-//				var query = jSQL.createTable({oTable: {
-//					name: {type:"VARCHAR"},
-//					age: {type:"INT"},
-//					created: {type:"DATE"},
-//					greet: {type:"FUNCTION"},
-//					favorite_hat: {type:"HAT"}
-//				}}).ifNotExists();
 					
 				// execute the query and insert the data 
 				// (if the table doesn't already exist)
-				query.execute([{
+				query.execute([{ 
 					name: "bob",
 					age: 27,
 					created: new Date(),
@@ -65,7 +56,7 @@
 					greet: function(){alert("sup dawg!");},
 					favorite_hat: new hat("tophat","purple")
 				}]);
-				jSQL.persist();
+				jSQL.commit();
 				
 				echo("<p>There are "+jSQL.tables.oTable.data.length+" total rows in `oTable`</p>");
 				var results = jSQL.query('SELECT * FROM `oTable`').execute().fetchAll();

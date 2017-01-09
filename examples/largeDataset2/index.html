@@ -26,7 +26,7 @@
 						if (xhttp.readyState == 4 && xhttp.status == 200) {
 							var data = JSON.parse(xhttp.responseText);
 							jSQL.createTable("zips", data).execute();
-							jSQL.persist();
+							jSQL.commit();
 							document.getElementById('loading').style.display = "none";
 							document.getElementById('hidden').style.display = "block";
 						}

@@ -1,5 +1,5 @@
 /**
- * jSQL.js v1.3
+ * jSQL.js v1.6
  * A Javascript Query Language Database Engine
  * @author Robert Parham
  * @website https://github.com/Pamblam/jSQL#jsql
@@ -307,7 +307,6 @@
 	function jSQLQuery(type){
 		var self = this;
 		self.type = type.toUpperCase();
-		
 		self.tablename = null;
 		self.columns = [];
 		self.data = [];
@@ -317,7 +316,6 @@
 		self.newvals = {};
 		self.whereClause = new jSQLWhereClause(self);
 		self.resultSet = [];
-		
 		self.init = function(){
 			switch(self.type){
 				case "CREATE": return (new jSQLCreateQuery).init.apply(self, arguments); break;
@@ -328,7 +326,6 @@
 				case "DELETE": return (new jSQLDeleteQuery).init.apply(self, arguments); break;
 			}
 		};
-		
 		self.ifNotExists = function(){
 			switch(self.type){
 				case "CREATE": return (new jSQLCreateQuery).ifNotExists.apply(self, arguments); break;
@@ -339,7 +336,6 @@
 				case "DELETE": return (new jSQLDeleteQuery).ifNotExists.apply(self, arguments); break;
 			}
 		};
-		
 		self.execute = function(){
 			switch(self.type){
 				case "CREATE": return (new jSQLCreateQuery).execute.apply(self, arguments); break;
@@ -350,7 +346,6 @@
 				case "DELETE": return (new jSQLDeleteQuery).execute.apply(self, arguments); break;
 			}
 		};
-		
 		self.fetch = function(){
 			switch(self.type){
 				case "CREATE": return (new jSQLCreateQuery).fetch.apply(self, arguments); break;
@@ -361,7 +356,6 @@
 				case "DELETE": return (new jSQLDeleteQuery).fetch.apply(self, arguments); break;
 			}
 		};
-		
 		self.fetchAll = function(){
 			switch(self.type){
 				case "CREATE": return (new jSQLCreateQuery).fetchAll.apply(self, arguments); break;
@@ -372,7 +366,6 @@
 				case "DELETE": return (new jSQLDeleteQuery).fetchAll.apply(self, arguments); break;
 			}
 		};
-		
 		self.values = function(){
 			switch(self.type){
 				case "CREATE": return (new jSQLCreateQuery).values.apply(self, arguments); break;
@@ -383,7 +376,6 @@
 				case "DELETE": return (new jSQLDeleteQuery).values.apply(self, arguments); break;
 			}
 		};
-		
 		self.set = function(){
 			switch(self.type){
 				case "CREATE": return (new jSQLCreateQuery).set.apply(self, arguments); break;
@@ -394,7 +386,6 @@
 				case "DELETE": return (new jSQLDeleteQuery).set.apply(self, arguments); break;
 			}
 		};
-		
 		self.where = function(){
 			switch(self.type){
 				case "CREATE": return (new jSQLCreateQuery).where.apply(self, arguments); break;
@@ -405,7 +396,6 @@
 				case "DELETE": return (new jSQLDeleteQuery).where.apply(self, arguments); break;
 			}
 		};
-		
 		self.from = function(){
 			switch(self.type){
 				case "CREATE": return (new jSQLCreateQuery).from.apply(self, arguments); break;
@@ -414,6 +404,56 @@
 				case "INSERT": return (new jSQLInsertQuery).from.apply(self, arguments); break;
 				case "DROP": return (new jSQLDropQuery).from.apply(self, arguments); break;
 				case "DELETE": return (new jSQLDeleteQuery).from.apply(self, arguments); break;
+			}
+		};
+		self.orderBy = function(columns){
+			switch(self.type){
+				case "CREATE": return (new jSQLCreateQuery).orderBy.apply(self, arguments); break;
+				case "UPDATE": return (new jSQLUpdateQuery).orderBy.apply(self, arguments); break;
+				case "SELECT": return (new jSQLSelectQuery).orderBy.apply(self, arguments); break;
+				case "INSERT": return (new jSQLInsertQuery).orderBy.apply(self, arguments); break;
+				case "DROP": return (new jSQLDropQuery).orderBy.apply(self, arguments); break;
+				case "DELETE": return (new jSQLDeleteQuery).orderBy.apply(self, arguments); break;
+			}
+		};
+		self.asc = function(){
+			switch(self.type){
+				case "CREATE": return (new jSQLCreateQuery).asc.apply(self, arguments); break;
+				case "UPDATE": return (new jSQLUpdateQuery).asc.apply(self, arguments); break;
+				case "SELECT": return (new jSQLSelectQuery).asc.apply(self, arguments); break;
+				case "INSERT": return (new jSQLInsertQuery).asc.apply(self, arguments); break;
+				case "DROP": return (new jSQLDropQuery).asc.apply(self, arguments); break;
+				case "DELETE": return (new jSQLDeleteQuery).asc.apply(self, arguments); break;
+			}
+		};
+		self.desc = function(){
+			switch(self.type){
+				case "CREATE": return (new jSQLCreateQuery).desc.apply(self, arguments); break;
+				case "UPDATE": return (new jSQLUpdateQuery).desc.apply(self, arguments); break;
+				case "SELECT": return (new jSQLSelectQuery).desc.apply(self, arguments); break;
+				case "INSERT": return (new jSQLInsertQuery).desc.apply(self, arguments); break;
+				case "DROP": return (new jSQLDropQuery).desc.apply(self, arguments); break;
+				case "DELETE": return (new jSQLDeleteQuery).desc.apply(self, arguments); break;
+			}
+		};
+		self.limit = function(){
+			switch(self.type){
+				case "CREATE": return (new jSQLCreateQuery).limit.apply(self, arguments); break;
+				case "UPDATE": return (new jSQLUpdateQuery).limit.apply(self, arguments); break;
+				case "SELECT": return (new jSQLSelectQuery).limit.apply(self, arguments); break;
+				case "INSERT": return (new jSQLInsertQuery).limit.apply(self, arguments); break;
+				case "DROP": return (new jSQLDropQuery).limit.apply(self, arguments); break;
+				case "DELETE": return (new jSQLDeleteQuery).limit.apply(self, arguments); break;
+			}
+		};
+		self.distinct = function(){
+			switch(self.type){
+				case "CREATE": return (new jSQLCreateQuery).distinct.apply(self, arguments); break;
+				case "UPDATE": return (new jSQLUpdateQuery).distinct.apply(self, arguments); break;
+				case "SELECT": return (new jSQLSelectQuery).distinct.apply(self, arguments); break;
+				case "INSERT": return (new jSQLInsertQuery).distinct.apply(self, arguments); break;
+				case "DROP": return (new jSQLDropQuery).distinct.apply(self, arguments); break;
+				case "DELETE": return (new jSQLDeleteQuery).distinct.apply(self, arguments); break;
 			}
 		};
 	}
@@ -426,78 +466,15 @@
 		this.init = function(tablename){
 			if(undefined === jSQL.tables[tablename])
 				throw "Table: "+tablename+" doesn't exist.";
-			this.table = this.table = jSQL.tables[tablename];
+			this.table = jSQL.tables[tablename];
 			return this;
 		};
-		this.execute = function(){ 
-			var results = [];
+		this.execute = function(){
+			var resultRowIndexes = this.whereClause.getResultRowIndexes();
+			var results = [], newData = []; 
 			for(var i=0; i<this.table.data.length; i++){
-				if(this.whereClause.LIMIT > 0 && results.length == this.whereClause.LIMIT) break;
-				// LOOPING ROWS
-				if(this.whereClause.finalConditions.length < 1){
-					results.push(i);
-				}else{
-					var addToResults = false;
-					var x = this.whereClause.finalConditions.length;
-					while(x--){
-						// LOOP THROUGH CONDITION SETS
-						var conditions = this.whereClause.finalConditions[x];
-						var safeCondition = true;
-						var ii = conditions.length;
-						while(ii--){
-							// LOOP THROUGH EACH CONDITION IN THE SET
-							var condition = conditions[ii];
-							switch(condition.type){
-								case ">": 
-									if(isNaN(parseFloat(this.table.data[i][this.table.colmap[condition.col]])) || this.table.data[i][this.table.colmap[condition.col]] < condition.value)
-										safeCondition = false;
-									break;
-								case "<": 
-									if(isNaN(parseFloat(this.table.data[i][this.table.colmap[condition.col]])) || this.table.data[i][this.table.colmap[condition.col]] > condition.value)
-										safeCondition = false;
-									break;
-								case "=": 
-									if(this.table.data[i][this.table.colmap[condition.col]] != condition.value)
-										safeCondition = false;
-									break;
-								case "!=": break;
-									if(this.table.data[i][this.table.colmap[condition.col]] == condition.value)
-										safeCondition = false;
-									break;
-								case "%%": 
-									if(this.table.data[i][this.table.colmap[condition.col]].indexOf(condition.value) < 0)
-										safeCondition = false;
-									break;
-								case "%-": 
-									if(this.table.data[i][this.table.colmap[condition.col]].indexOf(condition.value) != this.table.data[i][this.table.colmap[condition.col]].length - condition.value.length)
-										safeCondition = false;
-									break;
-								case "-%": 
-									if(this.table.data[i][this.table.colmap[condition.col]].indexOf(condition.value) != 0)
-										safeCondition = false;
-									break;
-							}
-							if(!safeCondition) break;
-						}
-						if(safeCondition){
-							addToResults = true;
-							break;
-						}
-					}
-					if(addToResults){
-						results.push(i);
-					}
-				}
-			}
-			
-			// this.table.data[i]
-			var newData = []; var newResults=[];
-			for(var r=results.length; r--;){
-				var index = results[r];
-				for(var i=this.table.data.length; i--;){
-					if(i===index) newResults.push(this.table.data[i]);
-					else newData.push(this.table.data[i]);
-				}
+				if(resultRowIndexes.indexOf(i)>-1) results.push(this.table.data[i]);
+				else newData.push(this.table.data[i]);
 			}
 			this.table.data = newData;
 			this.resultSet = results;
@@ -512,6 +489,22 @@
 		this.ifNotExists = function(){ throw "ifNotExists() is not a valid method for a delete query"; };
 		this.set = function(){ throw "set() is not a valid method for a delete query"; };
 		this.from = function(){ throw "from() is not a valid method for a delete query"; };
+		this.orderBy = function(columns){
+			return this.whereClause.orderBy(columns);
+		};
+		this.asc = function(){
+			return this.whereClause.asc();
+		};
+		this.desc = function(){
+			return this.whereClause.desc();
+		};
+		this.limit = function(){
+			return this.whereClause.limit();
+		};
+		this.distinct = function(){
+			this.whereClause.isDistinct = true;
+			return this;
+		};
 	}
 	
 	function jSQLDropQuery(){
@@ -532,15 +525,18 @@
 		this.set = function(){ throw "set() is not a valid method for a drop query"; };
 		this.where = function(){ throw "where() is not a valid method for a drop query"; };
 		this.from = function(){ throw "from() is not a valid method for a drop query"; };
+		this.orderBy = function(){ throw "orderBy() is not a valid method for a drop query"; };
+		this.asc = function(){ throw "asc() is not a valid method for a drop query"; };
+		this.desc = function(){ throw "desc() is not a valid method for a drop query"; };
+		this.limit = function(){ throw "limit() is not a valid method for a drop query"; };
+		this.distinct = function(){ throw "distinct() is not a valid method for a drop query"; };
 	}
 	
 	function jSQLInsertQuery(){
-		
 		this.init = function(table){
 			this.table = table;
 			return this;
 		};
-		
 		this.values = function(data){
 			if(undefined === jSQL.tables[this.table])
 				throw "Table: "+this.table+" doesn't exist.";
@@ -567,15 +563,18 @@
 		this.set = function(){ throw "set() is not a valid method for an insert query"; };
 		this.where = function(){ throw "where() is not a valid method for an insert query"; };
 		this.from = function(){ throw "from() is not a valid method for an insert query"; };
+		this.orderBy = function(){ throw "orderBy() is not a valid method for an update query"; };
+		this.asc = function(){ throw "asc() is not a valid method for an update query"; };
+		this.desc = function(){ throw "desc() is not a valid method for an update query"; };
+		this.limit = function(){ throw "limit() is not a valid method for an insert query"; };
+		this.distinct = function(){ throw "distinct() is not a valid method for an insert query"; };
 	}
 	
 	function jSQLSelectQuery(){
-
 		this.init = function(columns){
 			this.columns = Array.isArray(columns) ? columns : [columns];
 			return this;
 		};
-		
 		this.from = function(table){
 			if(undefined === jSQL.tables[table])
 				throw "Table: "+table+" doesn't exist.";
@@ -583,97 +582,27 @@
 			if(this.columns[0] == "*") this.columns = this.table.columns;
 			return this;
 		};
-		
 		this.where = function(column){
 			return this.whereClause.where(column);
 		};
-		
 		this.execute = function(){
-			var results = [];
-			for(var i=0; i<this.table.data.length; i++){
-				if(this.whereClause.LIMIT > 0 && results.length == this.whereClause.LIMIT) break;
-				// LOOPING ROWS
-				if(this.whereClause.finalConditions.length < 1){
-					// IF THERE ARE NO CONDITIONS, ADD ROW TO RESULT SET
-					var row = {};
-					for(var n=0; n<this.columns.length; n++){
-						row[this.columns[n]] = this.table.data[i][this.table.colmap[this.columns[n]]];
-					}
-					results.push(row);
-				}else{
-					var addToResults = false;
-					var x = this.whereClause.finalConditions.length;
-					while(x--){
-						// LOOP THROUGH CONDITION SETS
-						var conditions = this.whereClause.finalConditions[x];
-						var safeCondition = true;
-						var ii = conditions.length;
-						while(ii--){
-							// LOOP THROUGH EACH CONDITION IN THE SET
-							var condition = conditions[ii];
-							switch(condition.type){
-								case ">": 
-									if(isNaN(parseFloat(this.table.data[i][this.table.colmap[condition.col]])) || this.table.data[i][this.table.colmap[condition.col]] < condition.value)
-										safeCondition = false;
-									break;
-								case "<": 
-									if(isNaN(parseFloat(this.table.data[i][this.table.colmap[condition.col]])) || this.table.data[i][this.table.colmap[condition.col]] > condition.value)
-										safeCondition = false;
-									break;
-								case "=": 
-									if(this.table.data[i][this.table.colmap[condition.col]] != condition.value)
-										safeCondition = false;
-									break;
-								case "!=": break;
-									if(this.table.data[i][this.table.colmap[condition.col]] == condition.value)
-										safeCondition = false;
-									break;
-								case "%%": 
-									if(this.table.data[i][this.table.colmap[condition.col]].indexOf(condition.value) < 0)
-										safeCondition = false;
-									break;
-								case "%-": 
-									if(this.table.data[i][this.table.colmap[condition.col]].indexOf(condition.value) != this.table.data[i][this.table.colmap[condition.col]].length - condition.value.length)
-										safeCondition = false;
-									break;
-								case "-%": 
-									if(this.table.data[i][this.table.colmap[condition.col]].indexOf(condition.value) != 0)
-										safeCondition = false;
-									break;
-							}
-							if(!safeCondition) break;
-						}
-						if(safeCondition){
-							addToResults = true;
-							break;
-						}
-					}
-					if(addToResults){
-						var row = {};
-						for(var n=0; n<this.columns.length; n++){
-							row[this.columns[n]] = this.table.data[i][this.table.colmap[this.columns[n]]];
-						}
-						results.push(row);
-					}
+			var resultRowIndexes = this.whereClause.getResultRowIndexes();
+			
+			var resultRows = [];
+			for(var i=0; i<resultRowIndexes.length; i++)
+				resultRows.push(this.table.data[resultRowIndexes[i]]);
+			
+			var results = []; 
+			for(var i=0; i<resultRows.length; i++){
+				var row = {};
+				for(var n=0; n<this.columns.length; n++){
+					row[this.columns[n]] = resultRows[i][this.table.colmap[this.columns[n]]]
 				}
-			}
-			if(this.whereClause.sortColumn.length > 0){
-				results.sort(function(a, b){
-
-					return (function srrrrt(i){
-						if(undefined === this.whereClause.sortColumn[i]) return 0;
-						if(a[this.whereClause.sortColumn[i]] < b[this.whereClause.sortColumn[i]]) return -1;
-						if(a[this.whereClause.sortColumn[i]] > b[this.whereClause.sortColumn[i]]) return 1;
-						return srrrrt(i+1);
-					}(0));
-
-				});
-				if(this.whereClause.sortDirection == "DESC") results.reverse();
+				results.push(row);
 			}
 			this.resultSet = results;
 			return this;
 		};
-		
 		this.fetch = function(Mode){
 			if(undefined === Mode) Mode = "ASSOC";
 			Mode = Mode.toUpperCase();
@@ -695,7 +624,6 @@
 			}
 			return row;
 		};
-
 		this.fetchAll = function(Mode){
 			if(undefined === Mode) Mode = "ASSOC";
 			Mode = Mode.toUpperCase();
@@ -708,31 +636,42 @@
 			}
 			return res;
 		};
-		
 		this.values = function(){ throw "values() is not a valid method for a select query"; };
 		this.ifNotExists = function(){ throw "ifNotExists() is not a valid method for a select query"; };
 		this.set = function(){ throw "set() is not a valid method for a select query"; };
+		this.orderBy = function(columns){
+			return this.whereClause.orderBy(columns);
+		};
+		this.asc = function(){
+			return this.whereClause.asc();
+		};
+		this.desc = function(){
+			return this.whereClause.desc();
+		};
+		this.limit = function(){
+			return this.whereClause.limit();
+		};
+		this.distinct = function(){
+			this.whereClause.isDistinct = true;
+			return this;
+		};
 	}
 	
 	function jSQLUpdateQuery(){
-		
 		this.init = function(table){
 			if(undefined === jSQL.tables[table])
 				throw "Table: "+table+" doesn't exist.";
 			this.table = this.table = jSQL.tables[table];
 			return this;
 		};
-		
 		this.set = function(newvals){
 			this.newvals = newvals;
 			for(var c in newvals) if(newvals.hasOwnProperty(c)) this.columns.push(c);
 			return this;
 		};
-		
 		this.where = function(column){
 			return this.whereClause.where(column);
 		};
-		
 		this.execute = function(preparedVals){
 			
 			if(undefined !== preparedVals && Array.isArray(preparedVals))
@@ -740,85 +679,42 @@
 					if(this.newvals.hasOwnProperty(i) && this.newvals[i] == '?' && preparedVals.length)
 						this.newvals[i] = preparedVals.shift();
 			
-			var results = [];
-			for(var i=0; i<this.table.data.length; i++){
-				if(this.whereClause.LIMIT > 0 && results.length == this.whereClause.LIMIT) break;
-				// LOOPING ROWS
-				if(this.whereClause.finalConditions.length < 1){
-					// IF THERE ARE NO CONDITIONS, ADD ROW TO RESULT SET
-					var row = {};
-					for(var n=0; n<this.columns.length; n++){
-						this.table.data[i][this.table.colmap[this.columns[n]]] = this.newvals[this.columns[n]];
-						row[this.columns[n]] = this.table.data[i][this.table.colmap[this.columns[n]]];
-					}
-					results.push(row);
-				}else{
-					var addToResults = false;
-					var x = this.whereClause.finalConditions.length;
-					while(x--){
-						// LOOP THROUGH CONDITION SETS
-						var conditions = this.whereClause.finalConditions[x];
-						var safeCondition = true;
-						var ii = conditions.length;
-						while(ii--){
-							// LOOP THROUGH EACH CONDITION IN THE SET
-							var condition = conditions[ii];
-							switch(condition.type){
-								case ">": 
-									if(isNaN(parseFloat(this.table.data[i][this.table.colmap[condition.col]])) || this.table.data[i][this.table.colmap[condition.col]] < condition.value)
-										safeCondition = false;
-									break;
-								case "<": 
-									if(isNaN(parseFloat(this.table.data[i][this.table.colmap[condition.col]])) || this.table.data[i][this.table.colmap[condition.col]] > condition.value)
-										safeCondition = false;
-									break;
-								case "=": 
-									if(this.table.data[i][this.table.colmap[condition.col]] != condition.value)
-										safeCondition = false;
-									break;
-								case "!=": break;
-									if(this.table.data[i][this.table.colmap[condition.col]] == condition.value)
-										safeCondition = false;
-									break;
-								case "%%": 
-									if(this.table.data[i][this.table.colmap[condition.col]].indexOf(condition.value) < 0)
-										safeCondition = false;
-									break;
-								case "%-": 
-									if(this.table.data[i][this.table.colmap[condition.col]].indexOf(condition.value) != this.table.data[i][this.table.colmap[condition.col]].length - condition.value.length)
-										safeCondition = false;
-									break;
-								case "-%": 
-									if(this.table.data[i][this.table.colmap[condition.col]].indexOf(condition.value) != 0)
-										safeCondition = false;
-									break;
-							}
-							if(!safeCondition) break;
-						}
-						if(safeCondition){
-							addToResults = true;
-							break;
-						}
-					}
-					if(addToResults){
-						var row = {};
-						for(var n=0; n<this.columns.length; n++){
-							this.table.data[i][this.table.colmap[this.columns[n]]] = this.newvals[this.columns[n]];
-							row[this.columns[n]] = this.table.data[i][this.table.colmap[this.columns[n]]];
-						}
-						results.push(row);
-					}
+			var resultRowIndexes = this.whereClause.getResultRowIndexes();
+			
+			var results = []; 
+			for(var i=0; i<resultRowIndexes.length; i++){
+				var rowIndex = resultRowIndexes[i], row = {};
+				for(var n=0; n<this.columns.length; n++){
+					this.table.data[rowIndex][this.table.colmap[this.columns[n]]] = this.newvals[this.columns[n]];
+					row[this.columns[n]] = this.table.data[rowIndex][this.table.colmap[this.columns[n]]];
 				}
+				results.push(row);
 			}
+			
 			this.resultSet = results;
 			return this;
 		};
-		
 		this.fetch = function(){ return null; };
 		this.fetchAll = function(){ return []; };
 		this.values = function(){ throw "values() is not a valid method for an update query"; };
 		this.ifNotExists = function(){ throw "ifNotExists() is not a valid method for an update query"; };
 		this.from = function(){ throw "from() is not a valid method for an update query"; };
+		this.orderBy = function(columns){
+			return this.whereClause.orderBy(columns);
+		};
+		this.asc = function(){
+			return this.whereClause.asc();
+		};
+		this.desc = function(){
+			return this.whereClause.desc();
+		};
+		this.limit = function(){
+			return this.whereClause.limit();
+		};
+		this.distinct = function(){
+			this.whereClause.isDistinct = true;
+			return this;
+		};
 	}
 	
 	function jSQLCreateQuery(){
@@ -841,6 +737,11 @@
 		this.set = function(){ throw "set() is not a valid method for a create query"; };
 		this.where = function(){ throw "where() is not a valid method for a create query"; };
 		this.from = function(){ throw "from() is not a valid method for a create query"; };
+		this.orderBy = function(){ throw "orderBy() is not a valid method for a create query"; };
+		this.asc = function(){ throw "asc() is not a valid method for a create query"; };
+		this.desc = function(){ throw "desc() is not a valid method for a create query"; };
+		this.limit = function(){ throw "limit() is not a valid method for a create query"; };
+		this.distinct = function(){ throw "distinct() is not a valid method for a create query"; };
 	}
 	
 	////////////////////////////////////////////////////////////////////////////
@@ -869,7 +770,7 @@
 		// A helper function that extracts values from a string of
 		// quoted, comma separated values, taking into account escaped chars
 		var getNextQueryVals = function(str) {
-			var numbers = "0,1,2,3,4,5,6,7,8,9,0,.".split(",");
+			var numbers = "+,-,0,1,2,3,4,5,6,7,8,9,0,.".split(",");
 			var vals = [];
 			var inQuote = false;
 			var currentVal = [];
@@ -919,8 +820,37 @@
 		
 		// A helper function that gets column/value pairs from an update query
 		var getColValPairs = function(str){
-			var parts = str.split(',');
-
+			
+			// break parts up only on commas that do not occur inside quoted text
+			// see Issue #3
+			var parts = [];
+			var currentPart = "";
+			var quotes = ["'",'"',"`"];
+			var inQuote = false;
+			var quoteType = "";
+			for(var i=0; i<str.length; i++){
+				if(!inQuote && quotes.indexOf(str[i])>-1){
+					inQuote = true;
+					quoteType = str[i];
+					currentPart += str[i];
+					continue;
+				}
+				if(inQuote && str[i] === quoteType){
+					inQuote = false;
+					quoteType = "";
+					currentPart += str[i];
+					continue;
+				}
+				if(inQuote || str[i]!==","){
+					currentPart += str[i];
+					continue;
+				}
+				parts.push(currentPart);
+				currentPart = "";
+			}
+			parts.push(currentPart);
+			currentPart = "";
+				
 			var newVals = {};
 			var whereClause = "";
 
@@ -989,8 +919,14 @@
 							whereClause += char;
 					}
 				}
+				whereClause += ",";
 				if(val !== '') newVals[removeQuotes(col)] = isNum ? parseFloat(val) : val;
 			}
+			
+			//  trim off triling comma
+			if(whereClause.substring(whereClause.length-1)===",") 
+				whereClause = whereClause.substring(0,whereClause.length-1);
+			
 			return {
 				newVals: newVals,
 				whereClause: whereClause
@@ -1058,7 +994,39 @@
 						query = query.or(ccc);
 						break;
 					case "LIMIT":
-						query = query.limit(words.shift());
+						var limit = words.shift(), offset, commaFound=false;
+						// if the last char is comma, trim it off
+						if(limit[limit.length-1]===","){
+							limit = limit.substring(0,limit.length-1);
+							commaFound = true;
+						}
+						if(!commaFound && limit.indexOf(",")>0){
+							var p = limit.split(",");
+							limit = p[0];
+							words.unshift(p[1]);
+							commaFound = true;
+						}
+						if(!commaFound && words.length){
+							var nextWord = words.shift();
+							if(nextWord[0]===","){
+								commaFound = true;
+								if(nextWord.length>1){
+									nextWord = nextWord.substring(1,limit.length);
+									words.unshift(nextWord)
+								}
+							}else words.unshift(nextWord);
+						}
+						if(commaFound){
+							offset = limit;
+							limit = words.shift();
+						}
+						if(words.length && !commaFound){
+							var nextWord = words.shift();
+							if(nextWord.toUpperCase()==="OFFSET"){
+								offset = words.shift();
+							}else words.unshift(nextWord);
+						}
+						query = query.limit(limit, offset);
 						break;
 					case "ORDER":
 						if(words.shift().toUpperCase() != "BY") throw "Expected 'ORDER BY', got something else.";
@@ -1099,8 +1067,9 @@
 		
 		switch(words.shift().toUpperCase()){
 			case "DELETE":
-				// Next Word should be "TABLE"
-				if(words.shift().toUpperCase() !== "FROM") throw "Unintelligible query. Expected 'TABLE'";
+				var orderColumns = [];
+				// Next Word should be "FROM"
+				if(words.shift().toUpperCase() !== "FROM") throw "Unintelligible query. Expected 'FROM'";
 				
 				// Next word should be the table name
 				var table = removeQuotes(words.shift());
@@ -1344,18 +1313,26 @@
 				
 				var parts = getColValPairs(words.join(' '));
 				query = jSQL.update(table).set(parts.newVals);
+				
 				query = parseWhereClause(query, parts.whereClause.split(' '));
 				return query;
 				break;
 				
 			case "SELECT":
-				var table, columns, query, orderColumns = [];
+				var table, columns, query, orderColumns = [], isDistinct = false;;
 				var upperWords = query.toUpperCase().split(" "); upperWords.shift();
 				var fromIndex = upperWords.indexOf("FROM");
 				
 				if(fromIndex < 0) throw "Unintelligible query. Expected 'FROM'";
 				
 				columns = words.splice(0, fromIndex);
+				
+				if(columns[0].toUpperCase()==="ALL") columns.shift();
+				if(columns[0].toUpperCase()==="DISTINCT" || columns[0].toUpperCase()==="DISTINCTROW"){
+					columns.shift();
+					isDistinct = true;
+				}
+				
 				for(var i=columns.length; i--;)
 					while(columns[i].indexOf(",") == columns[i].length-1)
 						columns[i] = columns[i].substr(0, columns[i].length-1);
@@ -1399,7 +1376,9 @@
 
 				// Generate the query object
 				query = jSQL.select(columns).from(table);
+				if(isDistinct) query = query.distinct();
 				query = parseWhereClause(query, words);
+				
 				
 				return query;
 				break;
@@ -1419,9 +1398,11 @@
 		self.pendingColumn = "";
 		self.conditions = [];
 		self.LIMIT = 0;
+		self.OFFSET = 0;
 		self.finalConditions = [];
 		self.sortColumn = [];
 		self.sortDirection = "ASC";
+		self.isDistinct = false;
 
 		self.where = function(column){
 			if(self.pendingColumn !== "") throw "Must add a conditional before adding another 'Where' condition.";
@@ -1494,8 +1475,10 @@
 			return self.where(column);
 		};
 
-		self.limit = function(limit){
+		self.limit = function(limit, offset){
 			self.LIMIT = parseInt(limit);
+			if(undefined !== offset) 
+				self.OFFSET = parseInt(offset);
 			return self;
 		};
 
@@ -1560,6 +1543,116 @@
 
 		self.fetchAll = function(Mode){
 			return self.context.fetchAll(Mode);
+		};
+		
+		self.getResultRowIndexes = function(){
+			var resultRowIndexes = [];
+			for(var i=0; i<self.context.table.data.length; i++){
+				// LOOPING ROWS
+				if(self.finalConditions.length < 1){
+					// IF THERE ARE NO CONDITIONS, ADD ROW TO RESULT SET
+					resultRowIndexes.push(i);
+				}else{
+					var addToResults = false;
+					var x = self.finalConditions.length;
+					while(x--){
+						// LOOP THROUGH CONDITION SETS
+						var conditions = self.finalConditions[x];
+						var safeCondition = true;
+						var ii = conditions.length;
+						while(ii--){
+							// LOOP THROUGH EACH CONDITION IN THE SET
+							var condition = conditions[ii];
+							switch(condition.type){
+								case ">": 
+									if(isNaN(parseFloat(self.context.table.data[i][self.context.table.colmap[condition.col]])) || self.context.table.data[i][self.context.table.colmap[condition.col]] < condition.value)
+										safeCondition = false;
+									break;
+								case "<": 
+									if(isNaN(parseFloat(self.context.table.data[i][self.context.table.colmap[condition.col]])) || self.context.table.data[i][self.context.table.colmap[condition.col]] > condition.value)
+										safeCondition = false;
+									break;
+								case "=": 
+									if(self.context.table.data[i][self.context.table.colmap[condition.col]] != condition.value)
+										safeCondition = false;
+									break;
+								case "!=": break;
+									if(self.context.table.data[i][self.context.table.colmap[condition.col]] == condition.value)
+										safeCondition = false;
+									break;
+								case "%%": 
+									if(self.context.table.data[i][self.context.table.colmap[condition.col]].indexOf(condition.value) < 0)
+										safeCondition = false;
+									break;
+								case "%-": 
+									if(self.context.table.data[i][self.context.table.colmap[condition.col]].indexOf(condition.value) != self.context.table.data[i][self.context.table.colmap[condition.col]].length - condition.value.length)
+										safeCondition = false;
+									break;
+								case "-%": 
+									if(self.context.table.data[i][self.context.table.colmap[condition.col]].indexOf(condition.value) != 0)
+										safeCondition = false;
+									break;
+							}
+							if(!safeCondition) break;
+						}
+						if(safeCondition){
+							addToResults = true;
+							break;
+						}
+					}
+					if(addToResults){
+						resultRowIndexes.push(i);
+					}
+				}
+			}
+			
+			if(self.sortColumn.length > 0){
+				resultRowIndexes.sort(function(a, b){
+					a=self.context.table.data[a]; 
+					b=self.context.table.data[b];					
+					return (function srrrrt(i){					
+						if(undefined === self.sortColumn[i]) return 0;
+						var sortColumn = self.sortColumn[i];
+						var sortColumnIndex = self.context.table.colmap[sortColumn];						
+						if(a[sortColumnIndex] < b[sortColumnIndex]) return -1;
+						if(a[sortColumnIndex] > b[sortColumnIndex]) return 1;
+						return srrrrt(i+1);
+					}(0));
+				});	
+				if(self.sortDirection == "DESC") resultRowIndexes.reverse();
+			}
+			
+			if(self.isDistinct){
+				var resultRows = [];
+				for(var i=0; i<resultRowIndexes.length; i++)
+					resultRows.push(self.context.table.data[resultRowIndexes[i]]);
+				var distinctRows = [], newResultRows = []; 
+				for(var i=0; i<resultRows.length; i++){
+					var row = {};
+					for(var n=0; n<self.context.columns.length; n++){
+						row[self.context.columns[n]] = resultRows[i][self.context.table.colmap[self.context.columns[n]]]
+					}
+					
+					// is this row unique?
+					var testRow = JSON.stringify(row);
+					if(distinctRows.indexOf(testRow)>-1) continue;
+					newResultRows.push(resultRowIndexes[i]);
+					distinctRows.push(testRow);
+				}
+				resultRowIndexes = newResultRows;
+			}
+			
+			if(self.LIMIT > 0 && resultRowIndexes.length > self.LIMIT){
+				if(self.OFFSET > resultRowIndexes.length){
+					resultRowIndexes = [];
+				}
+				if(self.LIMIT > resultRowIndexes.length) self.LIMIT = resultRowIndexes.length;
+				if(resultRowIndexes.length){
+					resultRowIndexes = resultRowIndexes.slice(self.OFFSET, self.OFFSET+self.LIMIT);
+				}
+			}
+			
+			return resultRowIndexes;
 		};
 	}
 	
@@ -1815,7 +1908,9 @@
 		self.isLoading = false;
 		self.loadingCallbacks = [];
 		
-		self.persist = function(callback){
+		
+		
+		self.commit = function(callback){
 			if("function" === typeof callback) callback = function(){};
 			if(self.error!==false) throw self.error;
 			var rows = [];
@@ -1980,7 +2075,7 @@
 	
 	function jSQLReset(){ 
 		jSQL.tables = {};
-		jSQL.persist(); 
+		jSQL.commit(); 
 	}
 	
 	function jSQLMinifier(sql){
@@ -2051,7 +2146,7 @@
 	////////////////////////////////////////////////////////////////////////////
 	
 	return {
-		version: 1.4,
+		version: 1.6,
 		tables: {},
 		query: jSQLParseQuery,
 		createTable: createTable,
@@ -2061,10 +2156,12 @@
 		deleteFrom: deleteFrom,
 		insertInto: insertInto,
 		types: new jSQLDataTypeList(),
-		persist: persistenceManager.persist,
 		load: persistenceManager.load,
 		reset: jSQLReset,
-		minify: jSQLMinifier
+		minify: jSQLMinifier,
+		commit: persistenceManager.commit,
+		// legacy, to be removed at a later date
+		persist: persistenceManager.commit
 	};
 	
 }());

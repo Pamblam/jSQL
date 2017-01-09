@@ -155,7 +155,7 @@
 			jSQL.load(function(){
 				
 				// Uncomment this line to drop the table and start over
-				// jSQL.query("DROP TABLE `PhoneNumbers`").execute(); jSQL.persist();
+				// jSQL.query("DROP TABLE `PhoneNumbers`").execute(); jSQL.commit();
 				
 				// If the table doesn't exist yet, 
 				// create it and add some sample data
@@ -165,7 +165,7 @@
 						{ID: 1, Name: "Hillary Clinton", Phone: "(888) 812 - 8357"}
 					];
 					jSQL.createTable("PhoneNumbers", data).execute();
-					jSQL.persist();
+					jSQL.commit();
 				}
 				
 				// Load all the data from the database into the UI
@@ -186,7 +186,7 @@
 					var id = lastID+1;
 					var exe = [id, name, phone];
 					var q = jSQL.query("INSERT INTO `PhoneNumbers` VALUES (?, ?, ?)").execute(exe);
-					jSQL.persist();
+					jSQL.commit();
 					addRecordToUI(getRecordByID(id));
 				});
 				addEventHandler(sBtn, 'click', function(){
@@ -243,7 +243,7 @@
 			// Delete a record by it's ID
 			function deleteRecordByID(id){
 				jSQL.deleteFrom('PhoneNumbers').where('ID').equals(id).execute();
-				jSQL.persist();
+				jSQL.commit();
 				drawHTMLTable();
 			}
 			
@@ -253,7 +253,7 @@
 				var newName = prompt("Enter a new name: ",row.Name);
 				var newPhone = prompt("Enter a new phone ",row.Phone);
 				jSQL.query('update PhoneNumbers set Name = ?, Phone = ? where ID = ?').execute([newName,newPhone,id]);
-				jSQL.persist();
+				jSQL.commit();
 				drawHTMLTable();
 			}
 			

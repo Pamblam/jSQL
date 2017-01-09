@@ -7,12 +7,12 @@
 // @grant       none
 // ==/UserScript==
 void(function () {
-	var jSQLMyAdminVersion = 1.4;
+	var jSQLMyAdminVersion = 1.5;
 	
 	/**
 	 * Turn this userscript into a browser button..
 	 *  - Change the isBtn variable below to true
-	 *  - Minify entire userscript: http://www.danstools.com/javascript-minify/
+	 *  - Minify entire userscript: https://javascript-minifier.com/
 	 *  - URL encode the minified userscript: http://meyerweb.com/eric/tools/dencoder/
 	 *  - Make HTML page with link like this
 	 *		<a href="javascript:(minified, urlencoded userscript here)">jSQLMyAdmin</a>
@@ -87,9 +87,11 @@ void(function () {
 			$overlay.append('<div id="jSQLTableTabs"><ul><li><a href="#jSQLResultsTab">Query</a></li></ul><div id="jSQLResultsTab"><div><div style="float:right;"><small><b>autocomplete</b>: <i>ctrl+space</i></small></div><div style="float:left"><b>Template: </b>'+selectMenu+'</div><div style="clear:both;"></div></div><textarea id="jSQLMyAdminQueryBox"></textarea><div style="text-align:right;"><button id="jSQLExecuteQueryButton">Run Query</button><button id="jSQLMinifyQueryButton">Minify</button><button id="jSQLSaveQueryButton">Save</button><button id="jSQLResetButton">Reset</button><button id="jSQLCommitButton">Commit</button></div><div id="jSQLMAQueryResults"><center><b>No results to show</b><br>Enter a query</center></div></div></div>');
 			$("#queryTypeSelect").change(function(){
 				var Name = $(this).val();
+				if(undefined === Name || Name === "" || Name === null || Name === false) return;
 				var query = jSQL.query("SELECT `Query` FROM `Saved Queries` WHERE `Name` = ?")
-						.execute([Name]).fetch("ASSOC").Query;
+					.execute([Name]).fetch("ASSOC").Query;
 				cm.getDoc().setValue(query);
+				$(this).val($(this).find("option:first").val());
 			});
 			$('#jSQLTableTabs').tabs({beforeActivate: function(event, ui) {
 				var tableName = $(ui.newPanel).data("tn");
@@ -136,6 +138,7 @@ void(function () {
 			$('#jSQLSaveQueryButton').css({"line-height": "0.9"});
 			$("#jSQLSaveQueryButton").click(function(){
 				var name = prompt("Enter a name for this Template:");
+				if(!name) return;
 				var query = cm.getValue();
 				jSQL.query("INSERT INTO `Saved Queries` (`Name`, `Query`) VALUES (?, ?)")
 					.execute([name, query]);
@@ -144,7 +147,7 @@ void(function () {
 			$("#jSQLCommitButton").button({icons: { primary: "ui-icon-check"}});
 			$('#jSQLCommitButton').css({"line-height": "0.9"});
 			$("#jSQLCommitButton").click(function(){
-				jSQL.persist();
+				jSQL.commit();
 				$("#jSQLCommitButton").button("option", "label", "Committed!");
 				setTimeout(function(){
 					$("#jSQLCommitButton").button("option", "label", "Commit");
@@ -192,7 +195,7 @@ void(function () {
 			var tableHTML = data.length ? '<br><div><small><b>Results</b></small></div><div style="overflow-x:auto; width:100%; margin:0; padding:0;">'+makeTableHTML(data)+'</div>' : '<center><b>No results to show</b><br>Enter a query</center>';
 			addAllTables();
 			$("#jSQLMAQueryResults").html(tableHTML);
-			$('#jSQLMAQueryResults').find('table').DataTable();
+			$('#jSQLMAQueryResults').find('table').DataTable({"order": []});
 		}catch(e){
 			var msg = e.message ? e.message+"" : e+"";
 			alert(msg);

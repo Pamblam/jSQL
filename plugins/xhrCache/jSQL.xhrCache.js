@@ -215,17 +215,17 @@ window.jSQL.xhrCache = (function(callback){
 		
 		// Make sure there's a table available
 		jSQL.createTable({
-			jSQLCache: {
-				method: {type: "varchar"},
-				url: {type: "varchar"},
-				post_data: {type:"varchar"},
-				post_data_type: {type: "varchar"},
-				username: {type:"varchar"},
-				password: {type:"varchar"},
-				cached_time: {type:"date"},
-				use_count: {type: "int"},
-				response: {type:"json"}
-			}
+			jSQLCache: [
+				{name:"method", type: "varchar"},
+				{name:"url", type: "varchar"},
+				{name:"post_data", type:"varchar"},
+				{name:"post_data_type", type: "varchar"},
+				{name:"username", type:"varchar"},
+				{name:"password", type:"varchar"},
+				{name:"cached_time", type:"date"},
+				{name:"use_count", type: "int"},
+				{name:"response", type:"json"}
+			]
 		}).ifNotExists().execute();
 		
 		XHRCreep.methods.notify.open = function(){
@@ -272,7 +272,7 @@ window.jSQL.xhrCache = (function(callback){
 					jSQL.query("delete from jSQLCache where method = ? and"+
 					" url = ? and post_data = ? and post_data_type = ? and username = ?"+
 					" and password = ?").execute(params);
-					jSQL.persist();
+					jSQL.commit();
 				}
 			}
 			
@@ -315,7 +315,7 @@ window.jSQL.xhrCache = (function(callback){
 							var params = [_this._METHOD, _this._URL, _this._POST_DATA, _this._POST_DATA_TYPE,
 								_this._USERNAME, _this._PASSWORD, new Date(), 0, sreq];
 							query.execute(params);
-							jSQL.persist();
+							jSQL.commit();
 							
 							if(jSQL.xhrCache.logging)
 								console.log("jSQL.xhrCache: Caching AJAX response");
