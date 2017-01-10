@@ -1,5 +1,5 @@
 /**
- * jSQL.js v1.6
+ * jSQL.js v1.7
  * A Javascript Query Language Database Engine
  * @author Robert Parham
  * @website https://github.com/Pamblam/jSQL#jsql
@@ -1931,7 +1931,7 @@
 			});
 		};
 		
-		self.load = function(LoadCallback){	
+		self.load = function(LoadCallback){
 			if("function" !== typeof LoadCallback) LoadCallback = function(){};
 			self.loadingCallbacks.push(LoadCallback);
 			
@@ -1942,16 +1942,24 @@
 			if(self.isLoading) return;
 			self.isLoading = true;
 			
+			self.rollback(function(){
+				self.isLoading = false;
+				self.loaded = true;
+				while(self.loadingCallbacks.length) 
+					self.loadingCallbacks.shift()();
+			});
+		};
+		
+		self.rollback = function(LoadCallback){
+			if("function" !== typeof LoadCallback) LoadCallback = function(){};
+			
 			// Wait for the schema to be set up
 			(function waitForSchema(tries){
 				try{
 					self.api.select("jSQL_data_schema", function(r){
 						jSQL.tables = {};
 						if(r.length === 0){
-							self.isLoading = false;
-							self.loaded = true;
-							while(self.loadingCallbacks.length) 
-								self.loadingCallbacks.shift()();
+							LoadCallback()
 							return;
 						}
 						for(var i=r.length; i--;){
@@ -2146,7 +2154,7 @@
 	////////////////////////////////////////////////////////////////////////////
 	
 	return {
-		version: 1.6,
+		version: 1.7,
 		tables: {},
 		query: jSQLParseQuery,
 		createTable: createTable,
@@ -2160,6 +2168,7 @@
 		reset: jSQLReset,
 		minify: jSQLMinifier,
 		commit: persistenceManager.commit,
+		rollback: persistenceManager.rollback,
 		// legacy, to be removed at a later date
 		persist: persistenceManager.commit
 	};
