@@ -1,5 +1,5 @@
 # jSQL 
-v1.6
+v2
 
 jSQL is a state and data management tool as well as a robust SQL engine. For complete documentation, please see [the jSQL Wiki](https://github.com/Pamblam/jSQL/wiki).
 

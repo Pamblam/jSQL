@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>jSQL test</title>
+    </head>
+    <body>
+		<script src="../../jSQL.js"></script>
+		<script>
+
+			var data = [
+				[0, "rob", "hamburger"],
+				[1, "bob", "fish tacos"],
+				[2, "ted", "applesauce"]
+			];
+
+			jSQL.load(function(){
+				
+				//// Create a compound key using low-level syntax
+				// jSQL.createTable({myTable: [
+				//		{ name: "ID", type: "INT", args: [] }, 
+				//		{ name: "Name", type: "VARCHAR", args: [30] },
+				//		{ name: "FOOD", type: "VARCHAR", args: [30] }
+				// ]}, [
+				//		{ column: ["ID", "Name"], type: "unique" }	
+				// ]).execute(data);
+				 
+				//// Create a compund key using high level syntax
+				// jSQL.query("create table if not exists myTable (ID int, Name varchar, FOOD varchar, PRIMARY KEY (ID, Name))").execute(data);
+
+				// Create a non-compound key using high-level syntax
+				jSQL.query("create table if not exists myTable (ID int primary, Name varchar, FOOD varchar)").execute(data);
+				
+				jSQL.insertInto('myTable').values({ID:0, Name:'Nerd', FOOD: "Bagels"}).ignore().execute();
+				
+				console.log("done");
+			});
+
+			
+			
+	
+			
+		</script>
+    </body>
+</html>

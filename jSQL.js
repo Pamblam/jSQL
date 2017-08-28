@@ -1,5 +1,5 @@
 /**
- * jSQL.js v1.7
+ * jSQL.js v2
  * A Javascript Query Language Database Engine
  * @author Robert Parham
  * @website https://github.com/Pamblam/jSQL#jsql
@@ -137,16 +137,22 @@
 	// jSQL Table constructor //////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////////////////
 	
-	function jSQLTable(name, columns, data, types){
+	function jSQLTable(name, columns, data, types, keys){
 		var self = this;	
 		self.name = "";		// Table name
 		self.columns = [];	// Array of column names
 		self.data = [];		// Array of arrays
 		self.colmap = {};	// Colmap
-		self.types = [];    // array of data types for each column [{type:"",args:[]}..}
-			
+		self.types = [];    // array of data types for each column [{type:"",args:[]}..]
+		
+		// List of column keys on the table
+		self.keys = {
+			primary: {column: false, map: {}},
+			unique: []
+		};
+		
 		// Create the table and load the data, if there is any
-		self.init = function(name, columns, data, types){
+		self.init = function(name, columns, data, types, keys){
 			self.name = name;
 
 			// If the types array does not exist, create it
@@ -191,7 +197,23 @@
 			
 			// Create a column map
 			for(var i=0; i<columns.length; i++) self.colmap[columns[i]] = i;
-
+			
+			// Set up keys if key data is provided
+			var key;
+			var keyTypes = ["primary", "unique"];
+			for(var k=0; key=keys[k]; k++){
+				if(!key.hasOwnProperty("column") || (!Array.isArray(key.column) && self.columns.indexOf(key.column) === -1)) throw "Invalid constraint";
+				if(Array.isArray(key.column)){
+					for(var kk=0; kk<key.column.length; kk++){
+						if(self.columns.indexOf(key.column[kk]) === -1) throw "Invalid constraint";
+					}
+				}
+				var type = key.hasOwnProperty('type') && keyTypes.indexOf(key.type.toLowerCase()) !== -1 ? key.type.toLowerCase() : "unique";
+				if(type == "primary" && self.keys.primary.column !== false) throw "This table already has a primary key";
+				if(type == "primary") self.keys.primary.column = key.column;
+				if(type == "unique") self.keys.unique.push({column:key.column, map:{}});
+			}
+			
 			// Load the data, if there is any
 			if(data !== undefined) self.loadData(data);
 		};
@@ -199,7 +221,27 @@
 		self.renameColumn = function(oldname, newname){
 			if(undefined === oldname || "string" != typeof newname) throw "renameColumn expects and old column name and a new one, both must be strings.";
 			if(self.columns.indexOf(oldname) < 0) throw "The column "+oldname+" does not exist in this table.";
+			// Update the columns
 			self.columns.splice(self.columns.indexOf(oldname), 1, newname);
+			// Update the primary keys
+			if(self.keys.primary.column === oldname) self.keys.primary.column = newname;
+			if(Array.isArray(self.keys.primary.column))
+				for(var i=self.keys.primary.column.length; i--;)
+					if(self.keys.primary.column[i] === oldname) self.keys.primary.column[i] = newname;
+			// Update the unique keys
+			for(var n=self.keys.unique.length; n--;){
+				if(self.keys.unique[n].column === oldname) self.keys.unique[n].column = newname;
+				if(Array.isArray(self.keys.unique[n].column))
+					for(var i=self.keys.unique[n].column.length; i--;)
+						if(self.keys.unique[n].column[i] === oldname) self.keys.unique[n].column[i] = newname;
+			}
+			// Update colmap
+			var colmap = {};
+			for(var col in self.colmap)
+				if(self.colmap.hasOwnProperty(col))
+					if(col === oldname) colmap[newname] = self.colmap[col];
+					else colmap[col] = self.colmap[col];
+			self.colmap = colmap;
 		};
 		
 		self.addColumn = function(name, defaultVal, type){
@@ -232,7 +274,7 @@
 			while(i--) self.insertRow(data[i]);
 		};
 
-		self.insertRow = function(data){
+		self.insertRow = function(data, ignore){
 			var row = [];
 
 			// If the row is an Array
@@ -281,6 +323,57 @@
 			for(var i=row.length; i--;)
 				row[i] = self.normalizeColumnStoreValue(self.columns[i], row[i]);
 			
+			// Make sure the primary key(s) is/are not violated
+			// There can only be one primary key, but if it's an array it
+			// is treated as a compound key
+			if(self.keys.primary.column){ 
+				var primary_key_columns = Array.isArray(self.keys.primary.column) ? self.keys.primary.column : [self.keys.primary.column];
+				var pk_col, pk_vals = [];
+				var violation;
+				for(var pk=0; pk_col=primary_key_columns[pk]; pk++){
+					var primary_index = self.colmap[pk_col];
+					violation = false;
+					if(null === row[primary_index]){
+						if(ignore === true){
+							violation = true;
+							continue;
+						}
+						throw "Cannot insert a null value in a primary column";
+					}
+					pk_vals.push(row[primary_index]);
+				}
+				if(!violation){
+					pk_vals = JSON.stringify(pk_vals);
+					if(self.keys.primary.map.hasOwnProperty(pk_vals)) throw "Primary key violated";
+					self.keys.primary.map[pk_vals] = self.data.length;
+				}
+			}
+			
+			// Check the unique keys, There may be multiple and they may be compound
+			var ukey;
+			for(var k=0; ukey=self.keys.unique[k]; k++){
+				var key_columns = Array.isArray(ukey.column) ? ukey.column : [ukey.column];
+				var col, vals = [];
+				var violation;
+				for(var uk=0; col=key_columns[uk]; uk++){
+					var index = self.colmap[col];
+					violation = false;
+					if(null === row[index]){
+						if(ignore === true){
+							violation = true;
+							continue;
+						}
+						throw "Cannot insert a null value in a unique column";
+					}
+					vals.push(row[index]);
+				}
+				if(!violation){
+					vals = JSON.stringify(vals);
+					if(ukey.map.hasOwnProperty(vals)) throw "Unique key violated";
+					self.keys.unique[k].map[vals] = self.data.length;
+				}
+			}
+			
 			self.data.push(row);
 		};
 
@@ -297,7 +390,7 @@
 			return jSQL.types.getByType(type.type.toUpperCase()).unserialize(value, type.args);
 		};
 		
-		self.init(name, columns, data, types);
+		self.init(name, columns, data, types, keys);
 	}
 
 	////////////////////////////////////////////////////////////////////////////
@@ -354,6 +447,16 @@
 				case "INSERT": return (new jSQLInsertQuery).fetch.apply(self, arguments); break;
 				case "DROP": return (new jSQLDropQuery).fetch.apply(self, arguments); break;
 				case "DELETE": return (new jSQLDeleteQuery).fetch.apply(self, arguments); break;
+			}
+		};
+		self.ignore = function(){
+			switch(self.type){
+				case "CREATE": return (new jSQLCreateQuery).ignore.apply(self, arguments); break;
+				case "UPDATE": return (new jSQLUpdateQuery).ignore.apply(self, arguments); break;
+				case "SELECT": return (new jSQLSelectQuery).ignore.apply(self, arguments); break;
+				case "INSERT": return (new jSQLInsertQuery).ignore.apply(self, arguments); break;
+				case "DROP": return (new jSQLDropQuery).ignore.apply(self, arguments); break;
+				case "DELETE": return (new jSQLDeleteQuery).ignore.apply(self, arguments); break;
 			}
 		};
 		self.fetchAll = function(){
@@ -486,6 +589,7 @@
 		this.fetch = function(){ return null; };
 		this.fetchAll = function(){ return []; };
 		this.values = function(){ throw "values() is not a valid method for a delete query"; };
+		this.ignore = function(){ throw "ignore() is not a valid method for a delete query"; };
 		this.ifNotExists = function(){ throw "ifNotExists() is not a valid method for a delete query"; };
 		this.set = function(){ throw "set() is not a valid method for a delete query"; };
 		this.from = function(){ throw "from() is not a valid method for a delete query"; };
@@ -530,11 +634,13 @@
 		this.desc = function(){ throw "desc() is not a valid method for a drop query"; };
 		this.limit = function(){ throw "limit() is not a valid method for a drop query"; };
 		this.distinct = function(){ throw "distinct() is not a valid method for a drop query"; };
+		this.ignore = function(){ throw "ignore() is not a valid method for a drop query"; };
 	}
 	
 	function jSQLInsertQuery(){
 		this.init = function(table){
 			this.table = table;
+			this.ignoreFlag = false;
 			return this;
 		};
 		this.values = function(data){
@@ -554,9 +660,10 @@
 							this.data[i] = preparedVals.shift();
 				}
 			}
-			jSQL.tables[this.table].insertRow(this.data);
+			jSQL.tables[this.table].insertRow(this.data, this.ignore);
 			return this;
 		};
+		this.ignore = function(){ this.ignoreFlag=true; return this; };
 		this.fetch = function(){ return null; };
 		this.fetchAll = function(){ return []; };
 		this.ifNotExists = function(){ throw "ifNotExists() is not a valid method for an insert query"; };
@@ -636,6 +743,7 @@
 			}
 			return res;
 		};
+		this.ignore = function(){ throw "ignore() is not a valid method for a select query"; };
 		this.values = function(){ throw "values() is not a valid method for a select query"; };
 		this.ifNotExists = function(){ throw "ifNotExists() is not a valid method for a select query"; };
 		this.set = function(){ throw "set() is not a valid method for a select query"; };
@@ -699,6 +807,7 @@
 		this.values = function(){ throw "values() is not a valid method for an update query"; };
 		this.ifNotExists = function(){ throw "ifNotExists() is not a valid method for an update query"; };
 		this.from = function(){ throw "from() is not a valid method for an update query"; };
+		this.ignore = function(){ throw "ignore() is not a valid method for an update query"; };
 		this.orderBy = function(columns){
 			return this.whereClause.orderBy(columns);
 		};
@@ -718,17 +827,18 @@
 	}
 	
 	function jSQLCreateQuery(){
-		this.init = function(tablename, columns, types){
+		this.init = function(tablename, columns, types, keys){
 			this.tablename = tablename;
 			this.columns = columns;
 			this.coltypes = types;
+			this.keys = keys;
 			return this;
 		};
 		this.ifNotExists = function(){ this.INEFlag=true; return this; };
 		this.execute = function(data){ 
 			if(undefined !== data) this.data = data; 
 			if(!(this.INEFlag && jSQL.tables.hasOwnProperty(this.tablename)))
-				window.jSQL.tables[this.tablename] = new jSQLTable(this.tablename, this.columns, this.data, this.coltypes);
+				window.jSQL.tables[this.tablename] = new jSQLTable(this.tablename, this.columns, this.data, this.coltypes, this.keys);
 			return this;
 		};
 		this.fetch = function(){ return null; };
@@ -742,6 +852,7 @@
 		this.desc = function(){ throw "desc() is not a valid method for a create query"; };
 		this.limit = function(){ throw "limit() is not a valid method for a create query"; };
 		this.distinct = function(){ throw "distinct() is not a valid method for a create query"; };
+		this.ignore = function(){ throw "ignore() is not a valid method for a create query"; };
 	}
 	
 	////////////////////////////////////////////////////////////////////////////
@@ -1230,12 +1341,72 @@
 					if(str.trim()!=="") cols.push(str.trim());
 				}
 				
+				// keys param as passed to the table constructor
+				var keys = [];
+				
 				// loop and apply column definitions to params object
 				for(var i=0; i<cols.length; i++){
 					var colparts = cols[i].split(" ");
 					var colname = removeQuotes(colparts.shift());
+					
+					// If this line is actually a key definition rather tahn a column defintion
+					if(colname.toUpperCase() == "PRIMARY" || colname.toUpperCase() == "UNIQUE"){
+						var char, def_started = false, in_quote = false, key_cols = [], curr_col = "";
+						for(var c=0; char=cols[i][c]; c++){
+							if(char === "("){
+								def_started = true;
+								continue;
+							}
+							if(!def_started) continue;
+							if(['"', '`', "'"].indexOf(char) !== -1){
+								if(in_quote === false){
+									in_quote = char;
+								}else if(in_quote === char){
+									in_quote = false;
+									key_cols.push(curr_col);
+									curr_col = "";
+								}else{
+									curr_col += char;
+								}
+								continue;
+							}
+							if(char === " " && !in_quote){
+								if(curr_col !== "") key_cols.push(curr_col);
+								curr_col = "";
+								continue;
+							}
+							if(def_started === true && char === ")"){
+								if(curr_col !== "") key_cols.push(curr_col);
+								curr_col = "";
+								break;
+							}
+							if(char == "," && !in_quote) continue;
+							curr_col += char;
+						}
+						keys.push({column: key_cols, type: colname.toLowerCase()});
+						
+						// This isn't a column so continue the loop here...
+						continue;
+					}
+					
 					params[table][i] = {name: colname, type:"AMBI",args:[]};
 					if(colparts.length){
+						
+						// If the column definition includes "primary [key]" or "unique [key]" remove those words now
+						var colparts_new = [], colparts_primary_index = false, colparts_unique_index = false;
+						for(var n = 0; n<colparts.length; n++){
+							if(colparts[n].toUpperCase() === "PRIMARY") colparts_primary_index = n;
+							else if(colparts[n].toUpperCase() === "UNIQUE") colparts_unique_index = n;
+							else if(colparts[n].toUpperCase() === "KEY" && colparts_primary_index!==false && n === (1+colparts_primary_index)){ /* do nothing */ }
+							else if(colparts[n].toUpperCase() === "KEY" && colparts_unique_index!==false && n === (1+colparts_unique_index)){ /* do nothing */ }
+							else colparts_new.push(colparts[n]);
+						}
+						colparts = colparts_new;
+						if(false !== colparts_primary_index) keys.push({column: colname, type: "primary"});
+						if(false !== colparts_unique_index) keys.push({column: colname, type: "unique"});
+						if(!colparts.length) continue;
+						
+						// Parse column definition if one is included
 						var typename = colparts.shift().toUpperCase();
 						if((typename.match(/\(/g) || []).length){ // typename contains opening (
 							while(!(typename.match(/\)/g) || []).length){ // make sure it has a closing one
@@ -1276,7 +1447,7 @@
 					}
 				}		
 				
-				var query = jSQL.createTable(params);
+				var query = jSQL.createTable(params, keys);
 				if(ine) query.ifNotExists();
 				return query;
 				
@@ -2024,14 +2195,26 @@
 	// Syntactic sugar /////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////////////////
 	
-	function createTable(name, columnsOrData, types){
+	function createTable(name, columnsOrData, types, keys){
 		
 		// allow for all params to be passed in a single object
 		// jSQL.createTable({myTable: [
 		//		{ name: "ID", type: "INT", args: [] }, 
 		//		{ name: "Name", type: "VARCHAR", args: [30] }
 		// ]})
-		if(undefined === columnsOrData && undefined === types && "object" === typeof name){
+		// 
+		// OR
+		// 
+		// jSQL.createTable({myTable: [
+		//		{ name: "ID", type: "INT", args: [] }, 
+		//		{ name: "Name", type: "VARCHAR", args: [30] }
+		// ]}, [
+		//		{ column: "ID", type: "primary" }	
+		// ])
+		var dataObjNoKeys = undefined === columnsOrData && undefined === types && "object" === typeof name && undefined === keys;
+		var dataObjWithKeys = Array.isArray(columnsOrData) && undefined === types && "object" === typeof name && undefined === keys;
+		if(dataObjNoKeys || dataObjWithKeys){
+			if(dataObjWithKeys) keys = columnsOrData;
 			columnsOrData = [];
 			types = [];
 			for(var tblname in name){
@@ -2052,8 +2235,9 @@
 		
 		// if a single column was provided
 		if(!Array.isArray(columnsOrData)) columnsOrData=[columnsOrData];
-		
-		return new jSQLQuery("CREATE").init(name, columnsOrData, types);
+		if(undefined === keys) keys = [];
+		if(!Array.isArray(keys)) keys=[keys];
+		return new jSQLQuery("CREATE").init(name, columnsOrData, types, keys);
 	}
 	
 	function select(cols){
@@ -2154,7 +2338,7 @@
 	////////////////////////////////////////////////////////////////////////////
 	
 	return {
-		version: 1.7,
+		version: 2,
 		tables: {},
 		query: jSQLParseQuery,
 		createTable: createTable,
