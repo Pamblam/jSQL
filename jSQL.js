@@ -329,24 +329,20 @@
 			if(self.keys.primary.column){ 
 				var primary_key_columns = Array.isArray(self.keys.primary.column) ? self.keys.primary.column : [self.keys.primary.column];
 				var pk_col, pk_vals = [];
-				var violation;
 				for(var pk=0; pk_col=primary_key_columns[pk]; pk++){
 					var primary_index = self.colmap[pk_col];
-					violation = false;
 					if(null === row[primary_index]){
-						if(ignore === true){
-							violation = true;
-							continue;
-						}
+						if(ignore === true) return;
 						throw "Cannot insert a null value in a primary column";
 					}
 					pk_vals.push(row[primary_index]);
 				}
-				if(!violation){
-					pk_vals = JSON.stringify(pk_vals);
-					if(self.keys.primary.map.hasOwnProperty(pk_vals)) throw "Primary key violated";
-					self.keys.primary.map[pk_vals] = self.data.length;
+				pk_vals = JSON.stringify(pk_vals);
+				if(self.keys.primary.map.hasOwnProperty(pk_vals)){
+					if(ignore === true) return;
+					throw "Primary key violated";
 				}
+				self.keys.primary.map[pk_vals] = self.data.length;
 			}
 			
 			// Check the unique keys, There may be multiple and they may be compound
@@ -354,24 +350,20 @@
 			for(var k=0; ukey=self.keys.unique[k]; k++){
 				var key_columns = Array.isArray(ukey.column) ? ukey.column : [ukey.column];
 				var col, vals = [];
-				var violation;
 				for(var uk=0; col=key_columns[uk]; uk++){
 					var index = self.colmap[col];
-					violation = false;
 					if(null === row[index]){
-						if(ignore === true){
-							violation = true;
-							continue;
-						}
+						if(ignore === true) return;
 						throw "Cannot insert a null value in a unique column";
 					}
 					vals.push(row[index]);
 				}
-				if(!violation){
-					vals = JSON.stringify(vals);
-					if(ukey.map.hasOwnProperty(vals)) throw "Unique key violated";
-					self.keys.unique[k].map[vals] = self.data.length;
+				vals = JSON.stringify(vals);
+				if(ukey.map.hasOwnProperty(vals)){
+					if(ignore === true) return;
+					throw "Unique key violated";
 				}
+				self.keys.unique[k].map[vals] = self.data.length;
 			}
 			
 			self.data.push(row);
@@ -660,7 +652,7 @@
 							this.data[i] = preparedVals.shift();
 				}
 			}
-			jSQL.tables[this.table].insertRow(this.data, this.ignore);
+			jSQL.tables[this.table].insertRow(this.data, this.ignoreFlag);
 			return this;
 		};
 		this.ignore = function(){ this.ignoreFlag=true; return this; };
@@ -1221,10 +1213,16 @@
 				
 			case "INSERT": 
 				
-				var table, cols=[], values = [];
+				var table, cols=[], values = [], ignore = false;
 
+				var into = words.shift().toUpperCase();
+				if(into === "IGNORE"){
+					ignore = true;
+					into = words.shift().toUpperCase();
+				}
+				
 				// Next Word should be "INTO"
-				if(words.shift().toUpperCase() !== "INTO") throw "Unintelligible query. Expected 'INTO'";
+				if(into !== "INTO") throw "Unintelligible query. Expected 'INTO'";
 
 				// Next word should be the table name
 				table = removeQuotes(words.shift());
@@ -1277,8 +1275,8 @@
 					data[cols[i]] = values[i];
 				}
 
-				//jSQL.tables[table].insertRow(data);
-				return jSQL.insertInto(table).values(data);
+				var q = jSQL.insertInto(table).values(data);
+				return ignore ? q.ignore() : q;
 				
 				break;
 			case "CREATE": 

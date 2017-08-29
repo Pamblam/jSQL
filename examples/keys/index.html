@@ -31,7 +31,9 @@
 				// Create a non-compound key using high-level syntax
 				jSQL.query("create table if not exists myTable (ID int primary, Name varchar, FOOD varchar)").execute(data);
 				
-				jSQL.insertInto('myTable').values({ID:0, Name:'Nerd', FOOD: "Bagels"}).ignore().execute();
+				//jSQL.insertInto('myTable').values({ID:0, Name:'Nerd', FOOD: "Bagels"}).ignore().execute();
+				
+				jSQL.query("insert into myTable VALUES (0, 'nerd', 'bagel')").execute();
 				
 				console.log("done");
 			});

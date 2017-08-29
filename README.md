@@ -1,11 +1,14 @@
-# jSQL 
-v2
+![enter image description here](http://i.imgur.com/VQlJKOc.png)
+
+jSQL - Version 2.0  - *Now gluten free!*
+
+<hr>
 
 jSQL is a state and data management tool as well as a robust SQL engine. For complete documentation, please see [the jSQL Wiki](https://github.com/Pamblam/jSQL/wiki).
 
 Under the hood, jSQL has 3 layers: 
 
- - **At the Lowest level**, jSQL automatically chooses the best method of storage to save state and interacts directly with it. This layer exposes a persistence method, [`jSQL.commit()`](https://github.com/Pamblam/jSQL/wiki/Persistence-Management#jsqlpersist), which is called to serialize and store all data currently in the jSQL database on the user's hard drive. While the app is open and loaded in the browser, this data is serialized and stored within reach in the [`jSQL.tables`](https://github.com/Pamblam/jSQL/wiki/Persistence-Management#jsqltables) object where the library is able to perform operations on it.
+ - **At the Lowest level**, jSQL automatically chooses the best method of storage to save state and interacts directly with it. This layer exposes a persistence method, [`jSQL.commit()`](https://github.com/Pamblam/jSQL/wiki/Persistence-Management#jsqlcommit), which is called to serialize and store all data currently in the jSQL database on the user's hard drive. While the app is open and loaded in the browser, this data is serialized and stored within reach in the [`jSQL.tables`](https://github.com/Pamblam/jSQL/wiki/Persistence-Management#jsqltables) object where the library is able to perform operations on it.
 
  - **In the middle**, a set of methods are used to build [`jSQLQuery` objects](https://github.com/Pamblam/jSQL/wiki/jSQLquery-interface) which execute CRUD commands on the jSQL database and it's tables. *(See: [`jSQL.createTable()`](https://github.com/Pamblam/jSQL/wiki/Querying-the-Database#jsqlcreatetableparams), [`jSQL.select()`](https://github.com/Pamblam/jSQL/wiki/Querying-the-Database#jsqlselectcolumns), [`jSQL.insertInto()`](https://github.com/Pamblam/jSQL/wiki/Querying-the-Database#jsqlinsertintotablename), [`jSQL.dropTable()`](https://github.com/Pamblam/jSQL/wiki/Querying-the-Database#jsqldroptabletablename), [`jSQL.update()`](https://github.com/Pamblam/jSQL/wiki/Querying-the-Database#jsqlupdatetablename), and [`jSQL.deleteFrom()`](https://github.com/Pamblam/jSQL/wiki/Querying-the-Database#jsqldeletefromtablename))*
 
@@ -28,43 +31,29 @@ jSQL is implemented in a single JavaScript file. Save the [`jSQL.js`](https://gi
 When the database has loaded into memory, you'll want to make sure you have a table to work with. Any database operations that are to be made immediately when the app loads should be called from within the [`jSQL.load()`](https://github.com/Pamblam/jSQL/wiki/Persistence-Management#jsqlloadonloadcallback) callback.
 
     jSQL.load(function(){
-        jSQL.query("create table if not exists users (name varchar(25), age int)").execute();
-        
-        // alternatively, the low level syntax is...
-        // jSQL.createTable({users: {name: {type:varchar, args: 25}, age: {type: int}}}).ifNotExists().execute();
+	    var sql = "create table if not exists users (name varchar(25), age int)";
+        jSQL.query(sql).execute();
     });
     
- 
- 
 #### Insert into table
 
 At some point, you might want to put some data in that table.
 
     jSQL.query("insert into users ('bob', 34)").execute();
     
-For a performance boost, you can use the low level syntax instead:
-
-    jSQL.insertInto('users').values({name:'bob',  age:34}).execute();
-    
 Prefer prepared statements? Just replace values with question marks and pass the values to the execute method in an array.
     
     jSQL.query("insert into users (?, ?)").execute(['bob', 34]);
-    
-You can use prepared statements in low level syntax too:
-
-    jSQL.insertInto('users').values({name:'?',  age:'?'}).execute(['bob',34]);
     
 #### Select from table
 
 Once you've got the data in there, you're probably going to want to get it back out.
 
     var users = jSQL.query("select * from users where name like '%ob'").execute().fetchAll("ASSOC");
-    
-The low level select sytax is easy too:
 
-    var users = jSQL.select('*').from('users').where('name').like('%ob').execute().fetchAll("ASSOC");
+#### Persisting changes in the browser
 
-When you've made changes or additions to the database, call [`jSQL.persist()`](https://github.com/Pamblam/jSQL/wiki/Persistence-Management#jsqlpersist) to commit your changes. 
+When you've made changes or additions to the database, call [`jSQL.commit()`](https://github.com/Pamblam/jSQL/wiki/Persistence-Management#jsqlcommit) to commit your changes. 
 
 For more information and to read about other update, delete and other operations, see the [jSQL Wiki](https://github.com/Pamblam/jSQL/wiki#jsql-docs).
 
