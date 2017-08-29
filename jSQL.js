@@ -1,8 +1,8 @@
 /**
- * jSQL.js v2
+ * jSQL.js v2.1
  * A Javascript Query Language Database Engine
  * @author Robert Parham
- * @website https://github.com/Pamblam/jSQL#jsql
+ * @website http://pamblam.github.io/jSQL/
  * @license http://www.apache.org/licenses/LICENSE-2.0
  */
 
@@ -2085,6 +2085,13 @@
 			var rows = [];
 			for(var tbl in jSQL.tables){
 				if(!jSQL.tables.hasOwnProperty(tbl)) continue;
+				
+				var keys = [];
+				for(var i=0; i<jSQL.tables[tbl].keys.unique.length; i++)
+					keys.push({column: jSQL.tables[tbl].keys.unique.column, type: "unique"});
+				if(jSQL.tables[tbl].keys.primary.column)
+					keys.push({column: jSQL.tables[tbl].keys.primary.column, type: "primary"});
+				
 				var data = jSQL.select("*").from(tbl).execute().fetchAll();
 				for(var i=data.length; i--;){
 					var row = data[i];
@@ -2092,7 +2099,7 @@
 						if(!row.hasOwnProperty(n)) continue;
 						row[n] = jSQL.tables[tbl].normalizeColumnStoreValue(n, row[n]);
 					}
-					rows.push({table: tbl, data:JSON.stringify(row), colTypes: JSON.stringify(jSQL.tables[tbl].types)});
+					rows.push({table: tbl, data:JSON.stringify(row), colTypes: JSON.stringify(jSQL.tables[tbl].types), keys: JSON.stringify(keys)});
 				}
 			}
 			self.api.delete("jSQL_data_schema", function(){
@@ -2135,13 +2142,14 @@
 							var tablename = r[i].table;
 							var rowdata = JSON.parse(r[i].data);
 							var colTypes = JSON.parse(r[i].colTypes);
+							var keys = JSON.parse(r[i].keys);
 							// Create the table in memory if it doesn't exist yet
 							if(undefined === jSQL.tables[tablename]){
 								var cols = [];
 								for(var c in rowdata)
 									if(rowdata.hasOwnProperty(c))
 										cols.push(c);
-								jSQL.createTable(tablename, cols, colTypes).execute();
+								jSQL.createTable(tablename, cols, colTypes, keys).execute();
 							}
 							
 							for(var c in rowdata){
@@ -2336,7 +2344,7 @@
 	////////////////////////////////////////////////////////////////////////////
 	
 	return {
-		version: 2,
+		version: 2.1,
 		tables: {},
 		query: jSQLParseQuery,
 		createTable: createTable,

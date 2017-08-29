@@ -1,6 +1,6 @@
-![enter image description here](http://i.imgur.com/VQlJKOc.png)
+[![jSQL Logo](http://i.imgur.com/VQlJKOc.png)](http://pamblam.github.io/jSQL/)
 
-jSQL - Version 2.0  - *Now gluten free!*
+jSQL - Version 2.1  - *Now gluten free!*
 
 <hr>
 
