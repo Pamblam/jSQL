@@ -1,5 +1,5 @@
 /**
- * jSQL.js v2.1.1
+ * jSQL.js v2.2
  * A Javascript Query Language Database Engine
  * @author Robert Parham
  * @website http://pamblam.github.io/jSQL/
@@ -15,6 +15,9 @@
 	
 	function jSQL_Error(error_no) {
 		this.error = error_no;
+		this.stack = undefined; new Error().stack;
+		var e = new Error();
+		if(e.stack) this.stack = e.stack;
 		switch(error_no){
 			case "0001": this.message = "Corrupted function stored in data."; break;
 			case "0002": this.message = "Attempted to aaply a non-function as an error handler."; break;
@@ -40,8 +43,46 @@
 			case "0022": this.message = "Method does not apply to query type."; break;
 			case "0023": this.message = "Fetch expects paramter one to be 'ASSOC', 'ARRAY', or undefined."; break;
 			case "0024": this.message = "Expected number or quoted string."; break;
-			case "0025": this.message = ""; break;
-			default: this.message = "Unknown error"; break;
+			case "0025": this.message = "Expected 'ORDER BY'."; break;
+			case "0026": this.message = "Must call ORDER BY before using ASC."; break;
+			case "0027": this.message = "Must call ORDER BY before using DESC."; break;
+			case "0028": this.message = "Unintelligible query. Expected 'FROM'."; break;
+			case "0029": this.message = "Unintelligible query. Expected 'TABLE'."; break;
+			case "0030": this.message = "Unintelligible query. Expected 'INTO'."; break;
+			case "0031": this.message = "Unintelligible query. Expected 'VALUES'."; break;
+			case "0032": this.message = "Unintelligible query. Too many values."; break;
+			case "0033": this.message = "Unintelligible query. Columns mismatch."; break;
+			case "0034": this.message = "Invalid Column definition."; break;
+			case "0035": this.message = "Unintelligible query. Expected 'NOT'."; break;
+			case "0036": this.message = "Unintelligible query. Expected 'EXISTS'."; break;
+			case "0037": this.message = "Unintelligible query. expected ')'."; break;
+			case "0038": this.message = "Invalid Arg definition."; break;
+			case "0039": this.message = "Unintelligible query. Expected 'SET'."; break;
+			case "0040": this.message = "Unintelligible query. Expected 'FROM'."; break;
+			case "0041": this.message = "Unintelligible query. WTF?"; break;
+			case "0042": this.message = "Must add a conditional before adding another 'Where' condition."; break;
+			case "0043": this.message = "Column name must be a string."; break;
+			case "0044": this.message = "Must add a 'where' clause before the 'equals' call."; break;
+			case "0045": this.message = "Must add a 'where' clause before the 'preparedLike' call."; break;
+			case "0046": this.message = "Must add a 'where' clause before the 'doesNotEqual' call."; break;
+			case "0047": this.message = "Must add a 'where' clause before the 'lessThan' call."; break;
+			case "0048": this.message = "Must add a 'where' clause before the 'greaterThan' call."; break;
+			case "0049": this.message = "Must add a 'where' clause before the 'contains' call."; break;
+			case "0050": this.message = "Must add a 'where' clause before the 'endsWith' call."; break;
+			case "0051": this.message = "Must add a 'where' clause before the 'beginsWith' call."; break;
+			case "0052": this.message = "Must use orderBy clause before using ASC."; break;
+			case "0053": this.message = "Must use orderBy clause before using DESC."; break;
+			case "0054": this.message = "Could not execute query."; break;
+			case "0055": this.message = "Error creating table."; break;
+			case "0056": this.message = "Error opening database."; break;
+			case "0057": this.message = "indexedDB is not supported in this browser."; break;
+			case "0058": this.message = "Could not add data after 10 seconds."; break;
+			case "0059": this.message = "Error updating datastore version."; break;
+			case "0060": this.message = "Could not connect to the indexedDB datastore."; break;
+			case "0061": this.message = "Could not initiate a transaction."; break;
+			case "0062": this.message = "Could not initiate a request."; break;
+			case "0063": this.message = "Browser doesn't support Web SQL or IndexedDB."; break;
+			default: this.message = "Unknown error."; break;
 		}
 		this.toString = function () {
 			if(undefined === this.error) return "jSQL Error - "+this.message;
@@ -51,7 +92,7 @@
 	
 	var error_handler_function = function(){};
 	function _throw(e, skip){
-		if(skip !== true) error_handler_function();
+		if(skip !== true) error_handler_function(e);
 		throw e;
 	};
 	
@@ -92,7 +133,7 @@
 			},
 			unserialize: function(value, args){
 				var p = value.split("-");
-				if(p.shift() !== "jSQLFunct") _throw(new jSQL_Error("0001"));
+				if(p.shift() !== "jSQLFunct") return _throw(new jSQL_Error("0001"));
 				p = value.split("-");
 				p.shift();
 				var f = null;
@@ -100,7 +141,7 @@
 					eval("f = "+p.join("-"));
 				}catch(e){};
 				if("function" === typeof f) return f;
-				_throw(new jSQL_Error("0001"));
+				return _throw(new jSQL_Error("0001"));
 			}
 		},{
 			type: "BOOLEAN",
@@ -154,10 +195,10 @@
 			}
 		}];
 		this.add = function(type){
-			if(typeof type !== "object") _throw(new jSQL_Error("0003"));
-			if(undefined === type.type) _throw(new jSQL_Error("0004"));
-			if("function" !== typeof type.serialize) _throw(new jSQL_Error("0005"));
-			if("function" !== typeof type.unserialize) _throw(new jSQL_Error("0006"));
+			if(typeof type !== "object") return _throw(new jSQL_Error("0003"));
+			if(undefined === type.type) return _throw(new jSQL_Error("0004"));
+			if("function" !== typeof type.serialize) return _throw(new jSQL_Error("0005"));
+			if("function" !== typeof type.unserialize) return _throw(new jSQL_Error("0006"));
 			this.list.push({
 				type: type.type.toUpperCase(),
 				aliases: Array.isArray(type.aliases) ? type.aliases : [],
@@ -179,7 +220,7 @@
 				if(this.list[i].type===type || 
 					(this.list[i].aliases !== undefined && this.list[i].aliases.indexOf(type) > -1)) 
 					return this.list[i];
-			_throw(new jSQL_Error("0007"));
+			return _throw(new jSQL_Error("0007"));
 		};
 	}
 	
@@ -207,7 +248,7 @@
 
 			// If the types array does not exist, create it
 			if(undefined === types) types = [];
-			if(!Array.isArray(types)) _throw(new jSQL_Error("0008"));
+			if(!Array.isArray(types)) return _throw(new jSQL_Error("0008"));
 			
 			// If first param is array, no third param
 			if(Array.isArray(columns) && undefined === data)
@@ -228,7 +269,7 @@
 
 			// At this point, columns should be an array
 			// - Double check and save it to the object
-			if(!Array.isArray(columns)) _throw(new jSQL_Error("0009"));
+			if(!Array.isArray(columns)) return _throw(new jSQL_Error("0009"));
 			self.columns = columns;
 
 			// Fill any missing holes in the types array 
@@ -241,7 +282,7 @@
 			for(var i=self.types.length; i--;){
 				var type = self.types[i].type.toUpperCase();
 				if(!jSQL.types.exists(type))
-					_throw(new jSQL_Error("0007"));
+					return _throw(new jSQL_Error("0007"));
 				self.types[i].type = type;
 			}
 			
@@ -252,14 +293,14 @@
 			var key;
 			var keyTypes = ["primary", "unique"];
 			for(var k=0; key=keys[k]; k++){
-				if(!key.hasOwnProperty("column") || (!Array.isArray(key.column) && self.columns.indexOf(key.column) === -1)) _throw(new jSQL_Error("0010"));
+				if(!key.hasOwnProperty("column") || (!Array.isArray(key.column) && self.columns.indexOf(key.column) === -1)) return _throw(new jSQL_Error("0010"));
 				if(Array.isArray(key.column)){
 					for(var kk=0; kk<key.column.length; kk++){
-						if(self.columns.indexOf(key.column[kk]) === -1) _throw(new jSQL_Error("0010"));
+						if(self.columns.indexOf(key.column[kk]) === -1) return _throw(new jSQL_Error("0010"));
 					}
 				}
 				var type = key.hasOwnProperty('type') && keyTypes.indexOf(key.type.toLowerCase()) !== -1 ? key.type.toLowerCase() : "unique";
-				if(type == "primary" && self.keys.primary.column !== false) _throw(new jSQL_Error("0011"));
+				if(type == "primary" && self.keys.primary.column !== false) return _throw(new jSQL_Error("0011"));
 				if(type == "primary") self.keys.primary.column = key.column;
 				if(type == "unique") self.keys.unique.push({column:key.column, map:{}});
 			}
@@ -269,8 +310,8 @@
 		};
 		
 		self.renameColumn = function(oldname, newname){
-			if(undefined === oldname || "string" != typeof newname) _throw(new jSQL_Error("0012"));
-			if(self.columns.indexOf(oldname) < 0) _throw(new jSQL_Error("0013"));
+			if(undefined === oldname || "string" != typeof newname) return _throw(new jSQL_Error("0012"));
+			if(self.columns.indexOf(oldname) < 0) return _throw(new jSQL_Error("0013"));
 			// Update the columns
 			self.columns.splice(self.columns.indexOf(oldname), 1, newname);
 			// Update the primary keys
@@ -308,7 +349,7 @@
 			var i=self.data.length; while(i--) self.data[i].push(defaultVal);
 			self.colmap[name] = self.columns.length -1;
 			if(!jSQL.types.exists(type.type))
-				_throw(new jSQL_Error("0007"));
+				return _throw(new jSQL_Error("0007"));
 			self.types.push(type);
 		};
 
@@ -316,7 +357,7 @@
 		self.loadData = function(data){
 
 			// Dataset must be an Array of rows
-			if(!Array.isArray(data)) _throw(new jSQL_Error("0014"));
+			if(!Array.isArray(data)) return _throw(new jSQL_Error("0014"));
 
 			// Loop columns and insert the data
 			var i = data.length;
@@ -367,7 +408,7 @@
 				
 				for(var n=0; n<self.columns.length; n++)
 					row.push(data[self.columns[n]]);
-			}else _throw(new jSQL_Error("0015"));
+			}else return _throw(new jSQL_Error("0015"));
 			
 			// validate & cast each row type
 			for(var i=row.length; i--;)
@@ -383,14 +424,14 @@
 					var primary_index = self.colmap[pk_col];
 					if(null === row[primary_index]){
 						if(ignore === true) return;
-						_throw(new jSQL_Error("0016"));
+						return _throw(new jSQL_Error("0016"));
 					}
 					pk_vals.push(row[primary_index]);
 				}
 				pk_vals = JSON.stringify(pk_vals);
 				if(self.keys.primary.map.hasOwnProperty(pk_vals)){
 					if(ignore === true) return;
-					_throw(new jSQL_Error("0017"));
+					return _throw(new jSQL_Error("0017"));
 				}
 				self.keys.primary.map[pk_vals] = self.data.length;
 			}
@@ -404,14 +445,14 @@
 					var index = self.colmap[col];
 					if(null === row[index]){
 						if(ignore === true) return;
-						_throw(new jSQL_Error("0018"));
+						return _throw(new jSQL_Error("0018"));
 					}
 					vals.push(row[index]);
 				}
 				vals = JSON.stringify(vals);
 				if(ukey.map.hasOwnProperty(vals)){
 					if(ignore === true) return;
-					_throw(new jSQL_Error("0019"));
+					return _throw(new jSQL_Error("0019"));
 				}
 				self.keys.unique[k].map[vals] = self.data.length;
 			}
@@ -424,7 +465,7 @@
 			var storeVal = jSQL.types.getByType(type.type.toUpperCase()).serialize(value, type.args)
 			if((!isNaN(parseFloat(storeVal)) && isFinite(storeVal)) || typeof storeVal === "string")
 				return storeVal;
-			_throw(new jSQL_Error("0020"));
+			return _throw(new jSQL_Error("0020"));
 		};
 		
 		self.normalizeColumnFetchValue = function(colName, value){
@@ -610,7 +651,7 @@
 	function jSQLDeleteQuery(){
 		this.init = function(tablename){
 			if(undefined === jSQL.tables[tablename])
-				_throw(new jSQL_Error("0021"));
+				return _throw(new jSQL_Error("0021"));
 			this.table = jSQL.tables[tablename];
 			return this;
 		};
@@ -630,11 +671,11 @@
 		};
 		this.fetch = function(){ return null; };
 		this.fetchAll = function(){ return []; };
-		this.values = function(){ _throw(new jSQL_Error("0022")); };
-		this.ignore = function(){ _throw(new jSQL_Error("0022")); };
-		this.ifNotExists = function(){ _throw(new jSQL_Error("0022")); };
-		this.set = function(){ _throw(new jSQL_Error("0022")); };
-		this.from = function(){ _throw(new jSQL_Error("0022")); };
+		this.values = function(){ return _throw(new jSQL_Error("0022")); };
+		this.ignore = function(){ return _throw(new jSQL_Error("0022")); };
+		this.ifNotExists = function(){ return _throw(new jSQL_Error("0022")); };
+		this.set = function(){ return _throw(new jSQL_Error("0022")); };
+		this.from = function(){ return _throw(new jSQL_Error("0022")); };
 		this.orderBy = function(columns){
 			return this.whereClause.orderBy(columns);
 		};
@@ -659,24 +700,24 @@
 			return this;
 		};
 		this.execute = function(){ 
-			if(undefined === jSQL.tables[this.tablename]) _throw(new jSQL_Error("0021"));
+			if(undefined === jSQL.tables[this.tablename]) return _throw(new jSQL_Error("0021"));
 			// Delete the table
 			delete jSQL.tables[this.tablename];
 			return this; 
 		};
 		this.fetch = function(){ return null; };
 		this.fetchAll = function(){ return []; };
-		this.values = function(){ _throw(new jSQL_Error("0022")); };
-		this.ifNotExists = function(){ _throw(new jSQL_Error("0022")); };
-		this.set = function(){ _throw(new jSQL_Error("0022")); };
-		this.where = function(){ _throw(new jSQL_Error("0022")); };
-		this.from = function(){ _throw(new jSQL_Error("0022")); };
-		this.orderBy = function(){ _throw(new jSQL_Error("0022")); };
-		this.asc = function(){ _throw(new jSQL_Error("0022")); };
-		this.desc = function(){ _throw(new jSQL_Error("0022")); };
-		this.limit = function(){ _throw(new jSQL_Error("0022")); };
-		this.distinct = function(){ _throw(new jSQL_Error("0022")); };
-		this.ignore = function(){ _throw(new jSQL_Error("0022")); };
+		this.values = function(){ return _throw(new jSQL_Error("0022")); };
+		this.ifNotExists = function(){ return _throw(new jSQL_Error("0022")); };
+		this.set = function(){ return _throw(new jSQL_Error("0022")); };
+		this.where = function(){ return _throw(new jSQL_Error("0022")); };
+		this.from = function(){ return _throw(new jSQL_Error("0022")); };
+		this.orderBy = function(){ return _throw(new jSQL_Error("0022")); };
+		this.asc = function(){ return _throw(new jSQL_Error("0022")); };
+		this.desc = function(){ return _throw(new jSQL_Error("0022")); };
+		this.limit = function(){ return _throw(new jSQL_Error("0022")); };
+		this.distinct = function(){ return _throw(new jSQL_Error("0022")); };
+		this.ignore = function(){ return _throw(new jSQL_Error("0022")); };
 	}
 	
 	function jSQLInsertQuery(){
@@ -687,7 +728,7 @@
 		};
 		this.values = function(data){
 			if(undefined === jSQL.tables[this.table])
-				_throw(new jSQL_Error("0021"));
+				return _throw(new jSQL_Error("0021"));
 			this.data = data;
 			return this;
 		};
@@ -708,15 +749,15 @@
 		this.ignore = function(){ this.ignoreFlag=true; return this; };
 		this.fetch = function(){ return null; };
 		this.fetchAll = function(){ return []; };
-		this.ifNotExists = function(){ _throw(new jSQL_Error("0022")); };
-		this.set = function(){ _throw(new jSQL_Error("0022")); };
-		this.where = function(){ _throw(new jSQL_Error("0022")); };
-		this.from = function(){ _throw(new jSQL_Error("0022")); };
-		this.orderBy = function(){ _throw(new jSQL_Error("0022")); };
-		this.asc = function(){ _throw(new jSQL_Error("0022")); };
-		this.desc = function(){ _throw(new jSQL_Error("0022")); };
-		this.limit = function(){ _throw(new jSQL_Error("0022")); };
-		this.distinct = function(){ _throw(new jSQL_Error("0022")); };
+		this.ifNotExists = function(){ return _throw(new jSQL_Error("0022")); };
+		this.set = function(){ return _throw(new jSQL_Error("0022")); };
+		this.where = function(){ return _throw(new jSQL_Error("0022")); };
+		this.from = function(){ return _throw(new jSQL_Error("0022")); };
+		this.orderBy = function(){ return _throw(new jSQL_Error("0022")); };
+		this.asc = function(){ return _throw(new jSQL_Error("0022")); };
+		this.desc = function(){ return _throw(new jSQL_Error("0022")); };
+		this.limit = function(){ return _throw(new jSQL_Error("0022")); };
+		this.distinct = function(){ return _throw(new jSQL_Error("0022")); };
 	}
 	
 	function jSQLSelectQuery(){
@@ -726,7 +767,7 @@
 		};
 		this.from = function(table){
 			if(undefined === jSQL.tables[table])
-				_throw(new jSQL_Error("0021"));
+				return _throw(new jSQL_Error("0021"));
 			this.table = jSQL.tables[table];
 			if(this.columns[0] == "*") this.columns = this.table.columns;
 			return this;
@@ -755,7 +796,7 @@
 		this.fetch = function(Mode){
 			if(undefined === Mode) Mode = "ASSOC";
 			Mode = Mode.toUpperCase();
-			if(Mode !== "ASSOC" && Mode !== "ARRAY") _throw(new jSQL_Error("0023"));
+			if(Mode !== "ASSOC" && Mode !== "ARRAY") return _throw(new jSQL_Error("0023"));
 			if(!this.resultSet.length) return false;
 			var row = this.resultSet.shift();
 			
@@ -776,7 +817,7 @@
 		this.fetchAll = function(Mode){
 			if(undefined === Mode) Mode = "ASSOC";
 			Mode = Mode.toUpperCase();
-			if(Mode !== "ASSOC" && Mode !== "ARRAY") _throw(new jSQL_Error("0023"));
+			if(Mode !== "ASSOC" && Mode !== "ARRAY") return _throw(new jSQL_Error("0023"));
 			if(!this.resultSet.length) return false;
 
 			var res = [];
@@ -785,10 +826,10 @@
 			}
 			return res;
 		};
-		this.ignore = function(){ _throw(new jSQL_Error("0022")); };
-		this.values = function(){ _throw(new jSQL_Error("0022")); };
-		this.ifNotExists = function(){ _throw(new jSQL_Error("0022")); };
-		this.set = function(){ _throw(new jSQL_Error("0022")); };
+		this.ignore = function(){ return _throw(new jSQL_Error("0022")); };
+		this.values = function(){ return _throw(new jSQL_Error("0022")); };
+		this.ifNotExists = function(){ return _throw(new jSQL_Error("0022")); };
+		this.set = function(){ return _throw(new jSQL_Error("0022")); };
 		this.orderBy = function(columns){
 			return this.whereClause.orderBy(columns);
 		};
@@ -810,7 +851,7 @@
 	function jSQLUpdateQuery(){
 		this.init = function(table){
 			if(undefined === jSQL.tables[table])
-				_throw(new jSQL_Error("0021"));
+				return _throw(new jSQL_Error("0021"));
 			this.table = this.table = jSQL.tables[table];
 			this.ignoreFlag = false;
 			return this;
@@ -850,14 +891,14 @@
 						var primary_index = this.table.colmap[pk_col];
 						if(null === row[primary_index]){
 							if(this.ignoreFlag === true) return this;
-							_throw(new jSQL_Error("0016"));
+							return _throw(new jSQL_Error("0016"));
 						}
 						pk_vals.push(row[primary_index]);
 					}
 					pk_vals = JSON.stringify(pk_vals);
 					if(this.table.keys.primary.map.hasOwnProperty(pk_vals)){
 						if(this.ignoreFlag === true) return this;
-						_throw(new jSQL_Error("0017"));
+						return _throw(new jSQL_Error("0017"));
 					}
 				}
 				
@@ -870,14 +911,14 @@
 						var index = this.table.colmap[col];
 						if(null === row[index]){
 							if(this.ignoreFlag === true) return this;
-							_throw(new jSQL_Error("0018"));
+							return _throw(new jSQL_Error("0018"));
 						}
 						vals.push(row[index]);
 					}
 					vals = JSON.stringify(vals);
 					if(ukey.map.hasOwnProperty(vals)){
 						if(this.ignoreFlag === true) return this;
-						_throw(new jSQL_Error("0019"));
+						return _throw(new jSQL_Error("0019"));
 					}
 					uni_vals.push(vals);
 				}
@@ -916,9 +957,9 @@
 		};
 		this.fetch = function(){ return null; };
 		this.fetchAll = function(){ return []; };
-		this.values = function(){ _throw(new jSQL_Error("0022")); };
-		this.ifNotExists = function(){ _throw(new jSQL_Error("0022")); };
-		this.from = function(){ _throw(new jSQL_Error("0022")); };
+		this.values = function(){ return _throw(new jSQL_Error("0022")); };
+		this.ifNotExists = function(){ return _throw(new jSQL_Error("0022")); };
+		this.from = function(){ return _throw(new jSQL_Error("0022")); };
 		this.ignore = function(){ this.ignoreFlag=true; return this; };
 		this.orderBy = function(columns){
 			return this.whereClause.orderBy(columns);
@@ -955,16 +996,16 @@
 		};
 		this.fetch = function(){ return null; };
 		this.fetchAll = function(){ return []; };
-		this.values = function(){ _throw(new jSQL_Error("0022")); };
-		this.set = function(){ _throw(new jSQL_Error("0022")); };
-		this.where = function(){ _throw(new jSQL_Error("0022")); };
-		this.from = function(){ _throw(new jSQL_Error("0022")); };
-		this.orderBy = function(){ _throw(new jSQL_Error("0022")); };
-		this.asc = function(){ _throw(new jSQL_Error("0022")); };
-		this.desc = function(){ _throw(new jSQL_Error("0022")); };
-		this.limit = function(){ _throw(new jSQL_Error("0022")); };
-		this.distinct = function(){ _throw(new jSQL_Error("0022")); };
-		this.ignore = function(){ _throw(new jSQL_Error("0022")); };
+		this.values = function(){ return _throw(new jSQL_Error("0022")); };
+		this.set = function(){ return _throw(new jSQL_Error("0022")); };
+		this.where = function(){ return _throw(new jSQL_Error("0022")); };
+		this.from = function(){ return _throw(new jSQL_Error("0022")); };
+		this.orderBy = function(){ return _throw(new jSQL_Error("0022")); };
+		this.asc = function(){ return _throw(new jSQL_Error("0022")); };
+		this.desc = function(){ return _throw(new jSQL_Error("0022")); };
+		this.limit = function(){ return _throw(new jSQL_Error("0022")); };
+		this.distinct = function(){ return _throw(new jSQL_Error("0022")); };
+		this.ignore = function(){ return _throw(new jSQL_Error("0022")); };
 	}
 	
 	////////////////////////////////////////////////////////////////////////////
@@ -987,7 +1028,7 @@
 			for(var i=0; i<jSQL.tables[table].columns.length; i++)
 				if(removeQuotes(c.toUpperCase()) == jSQL.tables[table].columns[i].toUpperCase())
 					return jSQL.tables[table].columns[i];
-			_throw(new jSQL_Error("0013"), skipErrors);
+			return _throw(new jSQL_Error("0013"), skipErrors);
 		};
 				
 		// A helper function that extracts values from a string of
@@ -1109,7 +1150,7 @@
 										newVals[removeQuotes(col)] = '?';
 										state = 3;
 									}else{
-										_throw(new jSQL_Error("0024"));
+										return _throw(new jSQL_Error("0024"));
 									}
 								}
 							break;
@@ -1167,9 +1208,9 @@
 							ccc = convertToCol(words.shift(), true);
 						}catch(ex){
 							return new (function(error){
-								this.execute = function(){ _throw(error); };
-								this.fetch = function(){ _throw(error); };
-								this.fetchAll = function(){ _throw(error); };
+								this.execute = function(){ return _throw(error); };
+								this.fetch = function(){ return _throw(error); };
+								this.fetchAll = function(){ return _throw(error); };
 							})(ex.message);
 						}
 						query = query.where(ccc);
@@ -1247,7 +1288,7 @@
 						query = query.limit(limit, offset);
 						break;
 					case "ORDER":
-						if(words.shift().toUpperCase() != "BY") throw "Expected 'ORDER BY'.";
+						if(words.shift().toUpperCase() != "BY") return _throw(new jSQL_Error("0025"));
 						while(words.length > 0){
 							var nextWord = words.shift();
 							try{
@@ -1265,11 +1306,11 @@
 						query = query.orderBy(orderColumns);
 						break;
 					case "ASC":
-						if(!orderColumns.length) throw "Must call ORDER BY before using ASC.";
+						if(!orderColumns.length) return _throw(new jSQL_Error("0026"));
 						query = query.asc();
 						break;
 					case "DESC":
-						if(!orderColumns.length) throw "Must call ORDER BY before using DESC.";
+						if(!orderColumns.length) return _throw(new jSQL_Error("0027"));
 						query = query.desc();
 						break;
 				}
@@ -1287,11 +1328,11 @@
 			case "DELETE":
 				var orderColumns = [];
 				// Next Word should be "FROM"
-				if(words.shift().toUpperCase() !== "FROM") throw "Unintelligible query. Expected 'FROM'";
+				if(words.shift().toUpperCase() !== "FROM") return _throw(new jSQL_Error("0028"));
 				
 				// Next word should be the table name
 				var table = removeQuotes(words.shift());
-				if(undefined === jSQL.tables[table]) throw "Table "+table+" does not exist.";
+				if(undefined === jSQL.tables[table]) return _throw(new jSQL_Error("0021"));
 				
 				var query = jSQL.deleteFrom(table);
 				query = parseWhereClause(query, words);
@@ -1303,7 +1344,7 @@
 			case "DROP":				
 				
 				// Next Word should be "TABLE"
-				if(words.shift().toUpperCase() !== "TABLE") throw "Unintelligible query. Expected 'TABLE'";
+				if(words.shift().toUpperCase() !== "TABLE") return _throw(new jSQL_Error("0029"));
 
 				// Next word should be the table name
 				var table = removeQuotes(words.shift());
@@ -1320,7 +1361,7 @@
 					table = removeQuotes("`"+table);
 				}
 				
-				if(undefined === jSQL.tables[table]) throw "Table "+table+" does not exist.";
+				if(undefined === jSQL.tables[table]) return _throw(new jSQL_Error("0021"));
 				
 				return jSQL.dropTable(table);
 				
@@ -1337,7 +1378,7 @@
 				}
 				
 				// Next Word should be "INTO"
-				if(into !== "INTO") throw "Unintelligible query. Expected 'INTO'";
+				if(into !== "INTO") return _throw(new jSQL_Error("0030"));
 
 				// Next word should be the table name
 				table = removeQuotes(words.shift());
@@ -1354,7 +1395,7 @@
 					}
 					table = removeQuotes("`"+table);
 				}
-				if(undefined === jSQL.tables[table]) throw "Table "+table+" does not exist.";
+				if(undefined === jSQL.tables[table]) return _throw(new jSQL_Error("0021"));
 				
 				// Remove a few chars and re-split
 				words = words.join(" ")
@@ -1371,19 +1412,19 @@
 				}
 
 				if(next.toUpperCase() !== "VALUES") 
-					throw "Unintelligible query. Expected 'VALUES' near '"+next+"'";
+					return _throw(new jSQL_Error("0031"));
 				
 				var w = words.join(' ');
 				values = getNextQueryVals(w);
 
 				if(!cols.length){
 					for(var i=0;  i<values.length; i++){
-						if(undefined === jSQL.tables[table].columns[i]) throw "Error: too many values.";
+						if(undefined === jSQL.tables[table].columns[i]) return _throw(new jSQL_Error("0032"));
 						cols.push(jSQL.tables[table].columns[i]);
 					}
 				}
 
-				if(values.length !== cols.length) throw "Error: Columns mismatch.";
+				if(values.length !== cols.length) return _throw(new jSQL_Error("0033"));
 
 				var data = {};
 				for(var i=0; i<cols.length; i++){
@@ -1398,14 +1439,14 @@
 				var params = {};
 				var table, c, cols = [],ine=false;
 				// Next Word should be "TABLE"
-				if(words.shift().toUpperCase() !== "TABLE") throw "Unintelligible query. Expected 'TABLE'";
+				if(words.shift().toUpperCase() !== "TABLE") return _throw(new jSQL_Error("0029"));
 
 				// get the column definition part of the table
 				var str = words.join(" ");
 				var conlumnDef = "";
 				var opencount = (str.match(/\(/g) || []).length;
 				var closecount = (str.match(/\)/g) || []).length;
-				if(opencount !== closecount) throw "Invalid Column definition.";
+				if(opencount !== closecount) return _throw(new jSQL_Error("0034"));
 				if(opencount > 0)
 					conlumnDef = str.substring(str.indexOf("(")+1, str.lastIndexOf(")"));
 
@@ -1421,8 +1462,8 @@
 				table = removeQuotes(words.shift());
 
 				if(table.toUpperCase() === "IF"){
-					if(words.shift().toUpperCase() !== "NOT") throw "Unintelligible query. Expected 'NOT'";
-					if(words.shift().toUpperCase() !== "EXISTS") throw "Unintelligible query. Expected 'EXISTS'";
+					if(words.shift().toUpperCase() !== "NOT") return _throw(new jSQL_Error("0035"));
+					if(words.shift().toUpperCase() !== "EXISTS") return _throw(new jSQL_Error("0036"));
 					table = removeQuotes(words.shift());
 					ine=true;
 				} 
@@ -1523,7 +1564,7 @@
 						var typename = colparts.shift().toUpperCase();
 						if((typename.match(/\(/g) || []).length){ // typename contains opening (
 							while(!(typename.match(/\)/g) || []).length){ // make sure it has a closing one
-								if(!colparts.length) throw "Invalid query, expected ')'";
+								if(!colparts.length) return _throw(new jSQL_Error("0037"));
 								typename += " "+colparts.shift();
 							}
 							// check if there is anything after the last ) and shift it back on to colparts array
@@ -1546,7 +1587,7 @@
 						if(typename.indexOf("(") > -1){ 
 							var opencount = (typename.match(/\(/g) || []).length;
 							var closecount = (typename.match(/\)/g) || []).length;
-							if(opencount !== closecount) throw "Invalid Arg definition: "+typename;
+							if(opencount !== closecount) return _throw(new jSQL_Error("0038"));
 							if(opencount > 0)
 								argsDef = typename.substring(typename.indexOf("(")+1, typename.lastIndexOf(")"));
 						}
@@ -1593,7 +1634,7 @@
 				
 				var set = words.shift().toUpperCase();
 				if (set !== "SET")
-					throw "Unintelligible query. Expected 'SET.'";
+					return _throw(new jSQL_Error("0039"));
 				
 				var parts = getColValPairs(words.join(' '));
 				query = jSQL.update(table).set(parts.newVals);
@@ -1607,7 +1648,7 @@
 				var upperWords = query.toUpperCase().split(" "); upperWords.shift();
 				var fromIndex = upperWords.indexOf("FROM");
 				
-				if(fromIndex < 0) throw "Unintelligible query. Expected 'FROM'";
+				if(fromIndex < 0) return _throw(new jSQL_Error("0040"));
 				
 				columns = words.splice(0, fromIndex);
 				
@@ -1644,18 +1685,14 @@
 					}
 				}
 				if(undefined === jSQL.tables[table]) return new (function(error){
-					this.execute = function(){ throw error; };
-					this.fetch = function(){ throw error; };
-					this.fetchAll = function(){ throw error; };
-				})("Table: "+table+" does not exist.");
+					this.execute = function(){ return _throw(error); };
+					this.fetch = function(){ return _throw(error); };
+					this.fetchAll = function(){ return _throw(error); };
+				})(new jSQL_Error("0021"));
 
 				if(columns.length == 1 && columns[0] == "*") columns = '*';
 				else for(var i=0;i<columns.length;i++){
-					try{
-						columns[i] = convertToCol(columns[i]);
-					}catch(ex){
-						throw ex.message;
-					}
+					columns[i] = convertToCol(columns[i]);
 				}
 
 				// Generate the query object
@@ -1668,7 +1705,7 @@
 				break;
 				
 			default:
-				throw "Unintelligible query. Error near: "+words[0];
+				return _throw(new jSQL_Error("0041"));
 		}
 	}
 	
@@ -1689,63 +1726,63 @@
 		self.isDistinct = false;
 
 		self.where = function(column){
-			if(self.pendingColumn !== "") throw "Must add a conditional before adding another 'Where' condition.";
-			if('string' != typeof column) throw "Column name must be a string.";
+			if(self.pendingColumn !== "") return _throw(new jSQL_Error("0042"));
+			if('string' != typeof column) return _throw(new jSQL_Error("0043"));
 			self.pendingColumn = column;
 			return self;
 		};
 
 		self.equals = function(value){
-			if(self.pendingColumn == "") throw "Must add a 'where' clause before the 'equals' call.";
+			if(self.pendingColumn == "") return _throw(new jSQL_Error("0044"));
 			self.conditions.push({col: self.pendingColumn, type: '=', value: value});
 			self.pendingColumn = "";
 			return self;
 		};
 		
 		self.preparedLike = function(){
-			if(self.pendingColumn == "") throw "Must add a 'where' clause before the 'preparedLike' call.";
+			if(self.pendingColumn == "") return _throw(new jSQL_Error("0045"));
 			self.conditions.push({col: self.pendingColumn, type: 'pl', value: "?"});
 			self.pendingColumn = "";
 			return self;
 		};
 
 		self.doesNotEqual = function(value){
-			if(self.pendingColumn == "") throw "Must add a 'where' clause before the 'doesNotEqual' call.";
+			if(self.pendingColumn == "") return _throw(new jSQL_Error("0046"));
 			self.conditions.push({col: self.pendingColumn, type: '!=', value: value});
 			self.pendingColumn = "";
 			return self;
 		};
 
 		self.lessThan = function(value){
-			if(self.pendingColumn == "") throw "Must add a 'where' clause before the 'lessThan' call.";
+			if(self.pendingColumn == "") return _throw(new jSQL_Error("0047"));
 			self.conditions.push({col: self.pendingColumn, type: '<', value: value});
 			self.pendingColumn = "";
 			return self;
 		};
 		
 		self.greaterThan = function(value){
-			if(self.pendingColumn == "") throw "Must add a 'where' clause before the 'greaterThan' call.";
+			if(self.pendingColumn == "") return _throw(new jSQL_Error("0048"));
 			self.conditions.push({col: self.pendingColumn, type: '>', value: value});
 			self.pendingColumn = "";
 			return self;
 		};
 		
 		self.contains = function(value){
-			if(self.pendingColumn == "") throw "Must add a 'where' clause before the 'contains' call.";
+			if(self.pendingColumn == "") return _throw(new jSQL_Error("0049"));
 			self.conditions.push({col: self.pendingColumn, type: '%%', value: value});
 			self.pendingColumn = "";
 			return self;
 		};
 		
 		self.endsWith = function(value){
-			if(self.pendingColumn == "") throw "Must add a 'where' clause before the 'endsWith' call.";
+			if(self.pendingColumn == "") return _throw(new jSQL_Error("0050"));
 			self.conditions.push({col: self.pendingColumn, type: '%-', value: value});
 			self.pendingColumn = "";
 			return self;
 		};
 		
 		self.beginsWith = function(value){
-			if(self.pendingColumn == "") throw "Must add a 'where' clause before the 'beginsWith' call.";
+			if(self.pendingColumn == "") return _throw(new jSQL_Error("0051"));
 			self.conditions.push({col: self.pendingColumn, type: '-%', value: value});
 			self.pendingColumn = "";
 			return self;
@@ -1773,13 +1810,13 @@
 		};
 
 		self.asc = function(){
-			if('' == self.sortColumn) throw "Must use orderBy clause before using ASC";
+			if('' == self.sortColumn) return _throw(new jSQL_Error("0052"));
 			self.sortDirection = "ASC";
 			return self;
 		};
 
 		self.desc = function(){
-			if('' == self.sortColumn) throw "Must use orderBy clause before using DESC";
+			if('' == self.sortColumn) return _throw(new jSQL_Error("0053"));
 			self.sortDirection = "DESC";
 			return self;
 		};
@@ -1951,7 +1988,7 @@
 		// private function to execute a query
 		var __runQuery = function(query, data, successCallback, failureCallback) {
 			if(typeof successCallback != "function") successCallback = function(){};
-			if(typeof failureCallback != "function") failureCallback = function(){ throw "Could not execute query: "+query; };
+			if(typeof failureCallback != "function") failureCallback = function(){ return _throw(new jSQL_Error("0054")); };
 
 			var i, l, remaining;
 
@@ -1991,13 +2028,13 @@
 								});
 							});
 						})(modelData[i].name, modelData[i].rows);
-				}catch(e){ throw "Error creating table"; }
+				}catch(e){ return _throw(new jSQL_Error("0055")); }
 			};
 
 			try {
 				var dbname = window.location.href.replace(/\W+/g, ""); // use the current url to keep it unique
 				self.db = openDatabase("jSQL_"+dbname, "1.0", "jSQL "+dbname, (5 * 1024 * 1024));
-			} catch(e){ throw "Error opening database"; }
+			} catch(e){ return _throw(new jSQL_Error("0056")); }
 
 			__runQuery("SELECT COUNT(*) FROM "+modelData[0].name, [], null, function(){
 				installModels();
@@ -2052,11 +2089,11 @@
 				IDBTransaction = window.hasOwnProperty('IDBTransaction') ? window.IDBTransaction : window.webkitIDBTransaction ;
 				IDBKeyRange = window.hasOwnProperty('IDBKeyRange') ? window.IDBKeyRange : window.webkitIndexedDB;
 			} catch (e) {
-				throw "indexedDB is not supported in this browser";
+				return _throw(new jSQL_Error("0057"));
 			}
 
 			if (!indexedDB)
-				throw "indexedDB is not supported in this browser";
+				return _throw(new jSQL_Error("0057"));
 
 			var version = 1;
 			var dbname = window.location.href.replace(/\W+/g, ""); // use the current url to keep it unique
@@ -2085,7 +2122,7 @@
 					}catch(e){
 						if(x > 1000){
 							clearInterval(ivl);
-							throw "Could not add data after 10 seconds.";
+							return _throw(new jSQL_Error("0058"));
 						}
 						working = false;
 					}
@@ -2100,7 +2137,7 @@
 				if (self.db.setVersion && version !== self.db.version) {
 					setVersionRequest = self.db.setVersion(version);
 					setVersionRequest.onfailure = function(){
-						throw "Error updating datastore version";
+						return _throw(new jSQL_Error("0059"));
 					};
 					setVersionRequest.onsuccess = function (event) {
 						installModels();
@@ -2118,7 +2155,7 @@
 				installModels();
 			};
 			request.onerror = function (event) {
-				throw "Could not connect to the indexedDB datastore.";
+				return _throw(new jSQL_Error("0060"));
 			};
 		};
 
@@ -2134,13 +2171,13 @@
 				if (total === 0) successCallback(total);
 			};
 
-			transaction.onerror = function(){ throw "Could not initiate a transaction"; };;
+			transaction.onerror = function(){ return _throw(new jSQL_Error("0061")); };
 			store = transaction.objectStore(model);
 			for (i in data) {
 				if (data.hasOwnProperty(i)) {
 					request = store.add(data[i]);
 					request.onsuccess = successCallbackInner;
-					request.onerror = function(){ throw "Could not initiate a request"; };;
+					request.onerror = function(){ return _throw(new jSQL_Error("0062")); };
 				}
 			}
 		};
@@ -2149,10 +2186,10 @@
 		self.delete = function(model, successCallback) {
 			if(typeof successCallback != "function") successCallback = function(){};
 			var transaction = self.db.transaction([model], undefined === IDBTransaction.READ_WRITE ? 'readwrite' : IDBTransaction.READ_WRITE), store, request;
-			transaction.onerror = function(){ throw "Could not initiate a transaction"; };;
+			transaction.onerror = function(){ return _throw(new jSQL_Error("0061")); };
 			store = transaction.objectStore(model);
 			request = store.clear();
-			request.onerror = function(){ throw "Could not initiate a request"; };;
+			request.onerror = function(){ return _throw(new jSQL_Error("0062")); };
 			request.onsuccess = successCallback;
 		};
 
@@ -2160,10 +2197,10 @@
 		self.select = function(model, successCallback) {
 			if("function" !== typeof successCallback) successCallback = function(){};
 			var transaction = self.db.transaction([model], undefined === IDBTransaction.READ_ONLY ? 'readonly' : IDBTransaction.READ_ONLY), store, request, results = [];
-			transaction.onerror = function(){ throw "Could not initiate a transaction"; };;
+			transaction.onerror = function(){ return _throw(new jSQL_Error("0061")); };;
 			store = transaction.objectStore(model);
 			request = store.openCursor();
-			request.onerror = function(){ throw "Could not initiate a request"; };
+			request.onerror = function(){ return _throw(new jSQL_Error("0062")); };
 			var successCBCalled = false;
 			request.onsuccess = function (event) {
 				if(successCBCalled) return;
@@ -2196,7 +2233,7 @@
 		
 		self.commit = function(callback){
 			if("function" === typeof callback) callback = function(){};
-			if(self.error!==false) throw self.error;
+			if(self.error!==false) return _throw(self.error);
 			var rows = [];
 			for(var tbl in jSQL.tables){
 				if(!jSQL.tables.hasOwnProperty(tbl)) continue;
@@ -2306,7 +2343,7 @@
 					self.api = new WebSQLAPI();
 					self.api.init([{name: "jSQL_data_schema", rows:[]}]);
 				}catch(ex){
-					self.error = "Browser doesn't support Web SQL or IndexedDB";
+					self.error = new jSQL_Error("0063");
 				}
 			}
 		})();
@@ -2459,7 +2496,7 @@
 	////////////////////////////////////////////////////////////////////////////
 	
 	return {
-		version: 2.1,
+		version: 2.2,
 		tables: {},
 		query: jSQLParseQuery,
 		createTable: createTable,
