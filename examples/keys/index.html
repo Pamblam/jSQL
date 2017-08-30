@@ -29,15 +29,17 @@
 				// jSQL.query("create table if not exists myTable (ID int, Name varchar, FOOD varchar, PRIMARY KEY (ID, Name))").execute(data);
 
 				// Create a non-compound key using high-level syntax
-				jSQL.query("create table if not exists myTable (ID int primary, Name varchar, FOOD varchar)").execute(data);
+				jSQL.query("create table if not exists myTable (ID int unique key, Name varchar, FOOD varchar)").execute(data);
 				
 				// Insert ignore low level syntax
 				// jSQL.insertInto('myTable').values({ID:0, Name:'Nerd', FOOD: "Bagels"}).ignore().execute();
 				
 				// This will the primary key, adding "ignore" prevents it from throwing an error
-				jSQL.query("insert ignore into myTable VALUES (0, 'nerd', 'bagel')").execute();
+				//jSQL.query("insert ignore into myTable VALUES (0, 'nerd', 'bagel')").execute();
 				
-				jSQL.commit();
+				jSQL.update('myTable').ignore().set({ID:0}).where("Name").equals("bob").execute();
+				
+				//jSQL.commit();
 				
 				console.log("done");
 			});

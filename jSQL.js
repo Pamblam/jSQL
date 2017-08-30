@@ -1,5 +1,5 @@
 /**
- * jSQL.js v2.1
+ * jSQL.js v2.1.1
  * A Javascript Query Language Database Engine
  * @author Robert Parham
  * @website http://pamblam.github.io/jSQL/
@@ -8,6 +8,56 @@
 
 ;window.jSQL = (function(){
 	"use strict";
+	
+	////////////////////////////////////////////////////////////////////////////
+	// jSQL Error Handling /////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////////////
+	
+	function jSQL_Error(error_no) {
+		this.error = error_no;
+		switch(error_no){
+			case "0001": this.message = "Corrupted function stored in data."; break;
+			case "0002": this.message = "Attempted to aaply a non-function as an error handler."; break;
+			case "0003": this.message = "Invalid datatype definition."; break;
+			case "0004": this.message = "DataType must have a `type` property."; break;
+			case "0005": this.message = "DataType must have a `serialize` function."; break;
+			case "0006": this.message = "DataType must have an `unserialize` function."; break;
+			case "0007": this.message = "Unsupported data type."; break;
+			case "0008": this.message = "Invalid table types array."; break;
+			case "0009": this.message = "Unable to convert columns to array."; break;
+			case "0010": this.message = "Invalid constraint."; break;
+			case "0011": this.message = "This table already has a primary key."; break;
+			case "0012": this.message = "renameColumn expects and old column name and a new one, both must be strings."; break;
+			case "0013": this.message = "Column does not exist."; break;
+			case "0014": this.message = "Data must be an array."; break;
+			case "0015": this.message = "Data not structured properly."; break;
+			case "0016": this.message = "Cannot insert a null value in a primary column."; break;
+			case "0017": this.message = "Primary Key violated."; break;
+			case "0018": this.message = "Cannot insert a null value in a unique column."; break;
+			case "0019": this.message = "Unique key violated."; break;
+			case "0020": this.message = "Data type's serialize() method did not return a string."; break;
+			case "0021": this.message = "Table does not exist."; break;
+			case "0022": this.message = "Method does not apply to query type."; break;
+			case "0023": this.message = "Fetch expects paramter one to be 'ASSOC', 'ARRAY', or undefined."; break;
+			case "0024": this.message = "Expected number or quoted string."; break;
+			case "0025": this.message = ""; break;
+			default: this.message = "Unknown error"; break;
+		}
+		this.toString = function () {
+			if(undefined === this.error) return "jSQL Error - "+this.message;
+			return "jSQL Error #"+this.error+" - "+this.message;
+		};
+	}
+	
+	var error_handler_function = function(){};
+	function _throw(e, skip){
+		if(skip !== true) error_handler_function();
+		throw e;
+	};
+	
+	function onError(funct){
+		if(typeof funct === "function") error_handler_function = funct;
+	}
 	
 	////////////////////////////////////////////////////////////////////////////
 	// jSQLDataTypeList ////////////////////////////////////////////////////////
@@ -42,7 +92,7 @@
 			},
 			unserialize: function(value, args){
 				var p = value.split("-");
-				if(p.shift() !== "jSQLFunct") throw "Corrupted function stored in data";
+				if(p.shift() !== "jSQLFunct") _throw(new jSQL_Error("0001"));
 				p = value.split("-");
 				p.shift();
 				var f = null;
@@ -50,7 +100,7 @@
 					eval("f = "+p.join("-"));
 				}catch(e){};
 				if("function" === typeof f) return f;
-				throw "Corrupted function stored in data";
+				_throw(new jSQL_Error("0001"));
 			}
 		},{
 			type: "BOOLEAN",
@@ -104,10 +154,10 @@
 			}
 		}];
 		this.add = function(type){
-			if(typeof type !== "object") throw "Invalid datatype definition";
-			if(undefined === type.type) throw "DataType must have a `type` property.";
-			if("function" !== typeof type.serialize) throw "DataType must have a `serialize` function.";
-			if("function" !== typeof type.unserialize) throw "DataType must have an `unserialize` function.";
+			if(typeof type !== "object") _throw(new jSQL_Error("0003"));
+			if(undefined === type.type) _throw(new jSQL_Error("0004"));
+			if("function" !== typeof type.serialize) _throw(new jSQL_Error("0005"));
+			if("function" !== typeof type.unserialize) _throw(new jSQL_Error("0006"));
 			this.list.push({
 				type: type.type.toUpperCase(),
 				aliases: Array.isArray(type.aliases) ? type.aliases : [],
@@ -129,7 +179,7 @@
 				if(this.list[i].type===type || 
 					(this.list[i].aliases !== undefined && this.list[i].aliases.indexOf(type) > -1)) 
 					return this.list[i];
-			throw type+" is not a supported datatype";
+			_throw(new jSQL_Error("0007"));
 		};
 	}
 	
@@ -157,7 +207,7 @@
 
 			// If the types array does not exist, create it
 			if(undefined === types) types = [];
-			if(!Array.isArray(types)) throw "Invalid table types array";
+			if(!Array.isArray(types)) _throw(new jSQL_Error("0008"));
 			
 			// If first param is array, no third param
 			if(Array.isArray(columns) && undefined === data)
@@ -178,7 +228,7 @@
 
 			// At this point, columns should be an array
 			// - Double check and save it to the object
-			if(!Array.isArray(columns)) throw "Columns must be an array.";
+			if(!Array.isArray(columns)) _throw(new jSQL_Error("0009"));
 			self.columns = columns;
 
 			// Fill any missing holes in the types array 
@@ -191,7 +241,7 @@
 			for(var i=self.types.length; i--;){
 				var type = self.types[i].type.toUpperCase();
 				if(!jSQL.types.exists(type))
-					throw type+" is not a supported data type";
+					_throw(new jSQL_Error("0007"));
 				self.types[i].type = type;
 			}
 			
@@ -202,14 +252,14 @@
 			var key;
 			var keyTypes = ["primary", "unique"];
 			for(var k=0; key=keys[k]; k++){
-				if(!key.hasOwnProperty("column") || (!Array.isArray(key.column) && self.columns.indexOf(key.column) === -1)) throw "Invalid constraint";
+				if(!key.hasOwnProperty("column") || (!Array.isArray(key.column) && self.columns.indexOf(key.column) === -1)) _throw(new jSQL_Error("0010"));
 				if(Array.isArray(key.column)){
 					for(var kk=0; kk<key.column.length; kk++){
-						if(self.columns.indexOf(key.column[kk]) === -1) throw "Invalid constraint";
+						if(self.columns.indexOf(key.column[kk]) === -1) _throw(new jSQL_Error("0010"));
 					}
 				}
 				var type = key.hasOwnProperty('type') && keyTypes.indexOf(key.type.toLowerCase()) !== -1 ? key.type.toLowerCase() : "unique";
-				if(type == "primary" && self.keys.primary.column !== false) throw "This table already has a primary key";
+				if(type == "primary" && self.keys.primary.column !== false) _throw(new jSQL_Error("0011"));
 				if(type == "primary") self.keys.primary.column = key.column;
 				if(type == "unique") self.keys.unique.push({column:key.column, map:{}});
 			}
@@ -219,8 +269,8 @@
 		};
 		
 		self.renameColumn = function(oldname, newname){
-			if(undefined === oldname || "string" != typeof newname) throw "renameColumn expects and old column name and a new one, both must be strings.";
-			if(self.columns.indexOf(oldname) < 0) throw "The column "+oldname+" does not exist in this table.";
+			if(undefined === oldname || "string" != typeof newname) _throw(new jSQL_Error("0012"));
+			if(self.columns.indexOf(oldname) < 0) _throw(new jSQL_Error("0013"));
 			// Update the columns
 			self.columns.splice(self.columns.indexOf(oldname), 1, newname);
 			// Update the primary keys
@@ -258,7 +308,7 @@
 			var i=self.data.length; while(i--) self.data[i].push(defaultVal);
 			self.colmap[name] = self.columns.length -1;
 			if(!jSQL.types.exists(type.type))
-				throw type.type+" is not a supported data type";
+				_throw(new jSQL_Error("0007"));
 			self.types.push(type);
 		};
 
@@ -266,7 +316,7 @@
 		self.loadData = function(data){
 
 			// Dataset must be an Array of rows
-			if(!Array.isArray(data)) throw "Data must be an array.";
+			if(!Array.isArray(data)) _throw(new jSQL_Error("0014"));
 
 			// Loop columns and insert the data
 			var i = data.length;
@@ -317,7 +367,7 @@
 				
 				for(var n=0; n<self.columns.length; n++)
 					row.push(data[self.columns[n]]);
-			}else throw "Data not structured properly.";
+			}else _throw(new jSQL_Error("0015"));
 			
 			// validate & cast each row type
 			for(var i=row.length; i--;)
@@ -333,14 +383,14 @@
 					var primary_index = self.colmap[pk_col];
 					if(null === row[primary_index]){
 						if(ignore === true) return;
-						throw "Cannot insert a null value in a primary column";
+						_throw(new jSQL_Error("0016"));
 					}
 					pk_vals.push(row[primary_index]);
 				}
 				pk_vals = JSON.stringify(pk_vals);
 				if(self.keys.primary.map.hasOwnProperty(pk_vals)){
 					if(ignore === true) return;
-					throw "Primary key violated";
+					_throw(new jSQL_Error("0017"));
 				}
 				self.keys.primary.map[pk_vals] = self.data.length;
 			}
@@ -354,14 +404,14 @@
 					var index = self.colmap[col];
 					if(null === row[index]){
 						if(ignore === true) return;
-						throw "Cannot insert a null value in a unique column";
+						_throw(new jSQL_Error("0018"));
 					}
 					vals.push(row[index]);
 				}
 				vals = JSON.stringify(vals);
 				if(ukey.map.hasOwnProperty(vals)){
 					if(ignore === true) return;
-					throw "Unique key violated";
+					_throw(new jSQL_Error("0019"));
 				}
 				self.keys.unique[k].map[vals] = self.data.length;
 			}
@@ -374,7 +424,7 @@
 			var storeVal = jSQL.types.getByType(type.type.toUpperCase()).serialize(value, type.args)
 			if((!isNaN(parseFloat(storeVal)) && isFinite(storeVal)) || typeof storeVal === "string")
 				return storeVal;
-			throw type.type.toUpperCase()+".serialize() must return a number or a string.";
+			_throw(new jSQL_Error("0020"));
 		};
 		
 		self.normalizeColumnFetchValue = function(colName, value){
@@ -560,7 +610,7 @@
 	function jSQLDeleteQuery(){
 		this.init = function(tablename){
 			if(undefined === jSQL.tables[tablename])
-				throw "Table: "+tablename+" doesn't exist.";
+				_throw(new jSQL_Error("0021"));
 			this.table = jSQL.tables[tablename];
 			return this;
 		};
@@ -580,11 +630,11 @@
 		};
 		this.fetch = function(){ return null; };
 		this.fetchAll = function(){ return []; };
-		this.values = function(){ throw "values() is not a valid method for a delete query"; };
-		this.ignore = function(){ throw "ignore() is not a valid method for a delete query"; };
-		this.ifNotExists = function(){ throw "ifNotExists() is not a valid method for a delete query"; };
-		this.set = function(){ throw "set() is not a valid method for a delete query"; };
-		this.from = function(){ throw "from() is not a valid method for a delete query"; };
+		this.values = function(){ _throw(new jSQL_Error("0022")); };
+		this.ignore = function(){ _throw(new jSQL_Error("0022")); };
+		this.ifNotExists = function(){ _throw(new jSQL_Error("0022")); };
+		this.set = function(){ _throw(new jSQL_Error("0022")); };
+		this.from = function(){ _throw(new jSQL_Error("0022")); };
 		this.orderBy = function(columns){
 			return this.whereClause.orderBy(columns);
 		};
@@ -609,24 +659,24 @@
 			return this;
 		};
 		this.execute = function(){ 
-			if(undefined === jSQL.tables[this.tablename]) throw "Table "+this.tablename+" does not exist.";
+			if(undefined === jSQL.tables[this.tablename]) _throw(new jSQL_Error("0021"));
 			// Delete the table
 			delete jSQL.tables[this.tablename];
 			return this; 
 		};
 		this.fetch = function(){ return null; };
 		this.fetchAll = function(){ return []; };
-		this.values = function(){ throw "values() is not a valid method for a drop query"; };
-		this.ifNotExists = function(){ throw "ifNotExists() is not a valid method for a drop query"; };
-		this.set = function(){ throw "set() is not a valid method for a drop query"; };
-		this.where = function(){ throw "where() is not a valid method for a drop query"; };
-		this.from = function(){ throw "from() is not a valid method for a drop query"; };
-		this.orderBy = function(){ throw "orderBy() is not a valid method for a drop query"; };
-		this.asc = function(){ throw "asc() is not a valid method for a drop query"; };
-		this.desc = function(){ throw "desc() is not a valid method for a drop query"; };
-		this.limit = function(){ throw "limit() is not a valid method for a drop query"; };
-		this.distinct = function(){ throw "distinct() is not a valid method for a drop query"; };
-		this.ignore = function(){ throw "ignore() is not a valid method for a drop query"; };
+		this.values = function(){ _throw(new jSQL_Error("0022")); };
+		this.ifNotExists = function(){ _throw(new jSQL_Error("0022")); };
+		this.set = function(){ _throw(new jSQL_Error("0022")); };
+		this.where = function(){ _throw(new jSQL_Error("0022")); };
+		this.from = function(){ _throw(new jSQL_Error("0022")); };
+		this.orderBy = function(){ _throw(new jSQL_Error("0022")); };
+		this.asc = function(){ _throw(new jSQL_Error("0022")); };
+		this.desc = function(){ _throw(new jSQL_Error("0022")); };
+		this.limit = function(){ _throw(new jSQL_Error("0022")); };
+		this.distinct = function(){ _throw(new jSQL_Error("0022")); };
+		this.ignore = function(){ _throw(new jSQL_Error("0022")); };
 	}
 	
 	function jSQLInsertQuery(){
@@ -637,7 +687,7 @@
 		};
 		this.values = function(data){
 			if(undefined === jSQL.tables[this.table])
-				throw "Table: "+this.table+" doesn't exist.";
+				_throw(new jSQL_Error("0021"));
 			this.data = data;
 			return this;
 		};
@@ -658,15 +708,15 @@
 		this.ignore = function(){ this.ignoreFlag=true; return this; };
 		this.fetch = function(){ return null; };
 		this.fetchAll = function(){ return []; };
-		this.ifNotExists = function(){ throw "ifNotExists() is not a valid method for an insert query"; };
-		this.set = function(){ throw "set() is not a valid method for an insert query"; };
-		this.where = function(){ throw "where() is not a valid method for an insert query"; };
-		this.from = function(){ throw "from() is not a valid method for an insert query"; };
-		this.orderBy = function(){ throw "orderBy() is not a valid method for an update query"; };
-		this.asc = function(){ throw "asc() is not a valid method for an update query"; };
-		this.desc = function(){ throw "desc() is not a valid method for an update query"; };
-		this.limit = function(){ throw "limit() is not a valid method for an insert query"; };
-		this.distinct = function(){ throw "distinct() is not a valid method for an insert query"; };
+		this.ifNotExists = function(){ _throw(new jSQL_Error("0022")); };
+		this.set = function(){ _throw(new jSQL_Error("0022")); };
+		this.where = function(){ _throw(new jSQL_Error("0022")); };
+		this.from = function(){ _throw(new jSQL_Error("0022")); };
+		this.orderBy = function(){ _throw(new jSQL_Error("0022")); };
+		this.asc = function(){ _throw(new jSQL_Error("0022")); };
+		this.desc = function(){ _throw(new jSQL_Error("0022")); };
+		this.limit = function(){ _throw(new jSQL_Error("0022")); };
+		this.distinct = function(){ _throw(new jSQL_Error("0022")); };
 	}
 	
 	function jSQLSelectQuery(){
@@ -676,7 +726,7 @@
 		};
 		this.from = function(table){
 			if(undefined === jSQL.tables[table])
-				throw "Table: "+table+" doesn't exist.";
+				_throw(new jSQL_Error("0021"));
 			this.table = jSQL.tables[table];
 			if(this.columns[0] == "*") this.columns = this.table.columns;
 			return this;
@@ -705,7 +755,7 @@
 		this.fetch = function(Mode){
 			if(undefined === Mode) Mode = "ASSOC";
 			Mode = Mode.toUpperCase();
-			if(Mode !== "ASSOC" && Mode !== "ARRAY") throw "Fetch expects paramter one to be 'ASSOC', 'ARRAY', or blank";
+			if(Mode !== "ASSOC" && Mode !== "ARRAY") _throw(new jSQL_Error("0023"));
 			if(!this.resultSet.length) return false;
 			var row = this.resultSet.shift();
 			
@@ -726,7 +776,7 @@
 		this.fetchAll = function(Mode){
 			if(undefined === Mode) Mode = "ASSOC";
 			Mode = Mode.toUpperCase();
-			if(Mode !== "ASSOC" && Mode !== "ARRAY") throw "Fetch expects paramter one to be 'ASSOC', 'ARRAY', or blank";
+			if(Mode !== "ASSOC" && Mode !== "ARRAY") _throw(new jSQL_Error("0023"));
 			if(!this.resultSet.length) return false;
 
 			var res = [];
@@ -735,10 +785,10 @@
 			}
 			return res;
 		};
-		this.ignore = function(){ throw "ignore() is not a valid method for a select query"; };
-		this.values = function(){ throw "values() is not a valid method for a select query"; };
-		this.ifNotExists = function(){ throw "ifNotExists() is not a valid method for a select query"; };
-		this.set = function(){ throw "set() is not a valid method for a select query"; };
+		this.ignore = function(){ _throw(new jSQL_Error("0022")); };
+		this.values = function(){ _throw(new jSQL_Error("0022")); };
+		this.ifNotExists = function(){ _throw(new jSQL_Error("0022")); };
+		this.set = function(){ _throw(new jSQL_Error("0022")); };
 		this.orderBy = function(columns){
 			return this.whereClause.orderBy(columns);
 		};
@@ -760,8 +810,9 @@
 	function jSQLUpdateQuery(){
 		this.init = function(table){
 			if(undefined === jSQL.tables[table])
-				throw "Table: "+table+" doesn't exist.";
+				_throw(new jSQL_Error("0021"));
 			this.table = this.table = jSQL.tables[table];
+			this.ignoreFlag = false;
 			return this;
 		};
 		this.set = function(newvals){
@@ -781,14 +832,83 @@
 			
 			var resultRowIndexes = this.whereClause.getResultRowIndexes();
 			
-			var results = []; 
+			var results = [], new_rows = []; 
 			for(var i=0; i<resultRowIndexes.length; i++){
-				var rowIndex = resultRowIndexes[i], row = {};
+				var rowIndex = resultRowIndexes[i]; 
+				var row = this.table.data[rowIndex].slice(0);
+				
 				for(var n=0; n<this.columns.length; n++){
-					this.table.data[rowIndex][this.table.colmap[this.columns[n]]] = this.newvals[this.columns[n]];
-					row[this.columns[n]] = this.table.data[rowIndex][this.table.colmap[this.columns[n]]];
+					row[this.table.colmap[this.columns[n]]] = this.table.normalizeColumnStoreValue(this.columns[i], this.newvals[this.columns[n]]);
 				}
-				results.push(row);
+				
+				var primary_key_columns = this.table.keys.primary.column;
+				var pk_vals = false;
+				if(primary_key_columns !== false){
+					if(!Array.isArray(primary_key_columns)) primary_key_columns = [primary_key_columns];
+					var pk_col; pk_vals = [];
+					for(var pk=0; pk_col=primary_key_columns[pk]; pk++){
+						var primary_index = this.table.colmap[pk_col];
+						if(null === row[primary_index]){
+							if(this.ignoreFlag === true) return this;
+							_throw(new jSQL_Error("0016"));
+						}
+						pk_vals.push(row[primary_index]);
+					}
+					pk_vals = JSON.stringify(pk_vals);
+					if(this.table.keys.primary.map.hasOwnProperty(pk_vals)){
+						if(this.ignoreFlag === true) return this;
+						_throw(new jSQL_Error("0017"));
+					}
+				}
+				
+				// Check the unique keys, There may be multiple and they may be compound
+				var ukey, uni_vals = [];
+				for(var k=0; ukey=this.table.keys.unique[k]; k++){
+					var key_columns = Array.isArray(ukey.column) ? ukey.column : [ukey.column];
+					var col, vals = [];
+					for(var uk=0; col=key_columns[uk]; uk++){
+						var index = this.table.colmap[col];
+						if(null === row[index]){
+							if(this.ignoreFlag === true) return this;
+							_throw(new jSQL_Error("0018"));
+						}
+						vals.push(row[index]);
+					}
+					vals = JSON.stringify(vals);
+					if(ukey.map.hasOwnProperty(vals)){
+						if(this.ignoreFlag === true) return this;
+						_throw(new jSQL_Error("0019"));
+					}
+					uni_vals.push(vals);
+				}
+				
+				new_rows.push({
+					rowIndex: rowIndex,
+					row: row,
+					pk_vals: pk_vals,
+					uni_vals: uni_vals
+				});
+			}
+			
+			for(var i=0; i<new_rows.length; i++){
+				results.push(new_rows[i].row);
+				this.table.data[new_rows[i].rowIndex] = new_rows[i].row;
+				for(var col in this.table.keys.primary.map){
+					if(!this.table.keys.primary.map.hasOwnProperty(col) || 
+						this.table.keys.primary.map[col] != new_rows[i].rowIndex) continue;
+					delete this.table.keys.primary.map[col];
+					this.table.keys.primary.map[new_rows[i].pk_vals] = rowIndex;
+					break;
+				}
+				for(var k=0; ukey=this.table.keys.unique[k]; k++){
+					for(var col in this.table.keys.unique[k].map){
+						if(!this.table.keys.unique[k].map.hasOwnProperty(col) || 
+							this.table.keys.unique[k].map[col] != new_rows[i].rowIndex) continue;
+						delete this.table.keys.unique[k].map[col];
+						this.table.keys.unique[k].map[new_rows[i].uni_vals[k]] = rowIndex;
+						break;
+					}
+				}
 			}
 			
 			this.resultSet = results;
@@ -796,10 +916,10 @@
 		};
 		this.fetch = function(){ return null; };
 		this.fetchAll = function(){ return []; };
-		this.values = function(){ throw "values() is not a valid method for an update query"; };
-		this.ifNotExists = function(){ throw "ifNotExists() is not a valid method for an update query"; };
-		this.from = function(){ throw "from() is not a valid method for an update query"; };
-		this.ignore = function(){ throw "ignore() is not a valid method for an update query"; };
+		this.values = function(){ _throw(new jSQL_Error("0022")); };
+		this.ifNotExists = function(){ _throw(new jSQL_Error("0022")); };
+		this.from = function(){ _throw(new jSQL_Error("0022")); };
+		this.ignore = function(){ this.ignoreFlag=true; return this; };
 		this.orderBy = function(columns){
 			return this.whereClause.orderBy(columns);
 		};
@@ -835,16 +955,16 @@
 		};
 		this.fetch = function(){ return null; };
 		this.fetchAll = function(){ return []; };
-		this.values = function(){ throw "values() is not a valid method for a create query"; };
-		this.set = function(){ throw "set() is not a valid method for a create query"; };
-		this.where = function(){ throw "where() is not a valid method for a create query"; };
-		this.from = function(){ throw "from() is not a valid method for a create query"; };
-		this.orderBy = function(){ throw "orderBy() is not a valid method for a create query"; };
-		this.asc = function(){ throw "asc() is not a valid method for a create query"; };
-		this.desc = function(){ throw "desc() is not a valid method for a create query"; };
-		this.limit = function(){ throw "limit() is not a valid method for a create query"; };
-		this.distinct = function(){ throw "distinct() is not a valid method for a create query"; };
-		this.ignore = function(){ throw "ignore() is not a valid method for a create query"; };
+		this.values = function(){ _throw(new jSQL_Error("0022")); };
+		this.set = function(){ _throw(new jSQL_Error("0022")); };
+		this.where = function(){ _throw(new jSQL_Error("0022")); };
+		this.from = function(){ _throw(new jSQL_Error("0022")); };
+		this.orderBy = function(){ _throw(new jSQL_Error("0022")); };
+		this.asc = function(){ _throw(new jSQL_Error("0022")); };
+		this.desc = function(){ _throw(new jSQL_Error("0022")); };
+		this.limit = function(){ _throw(new jSQL_Error("0022")); };
+		this.distinct = function(){ _throw(new jSQL_Error("0022")); };
+		this.ignore = function(){ _throw(new jSQL_Error("0022")); };
 	}
 	
 	////////////////////////////////////////////////////////////////////////////
@@ -863,11 +983,11 @@
 		};
 		
 		// Predcit the correct casing for column and table names
-		var convertToCol = function(c){
+		var convertToCol = function(c, skipErrors){
 			for(var i=0; i<jSQL.tables[table].columns.length; i++)
 				if(removeQuotes(c.toUpperCase()) == jSQL.tables[table].columns[i].toUpperCase())
 					return jSQL.tables[table].columns[i];
-			throw c+" column not found in "+table+" table";
+			_throw(new jSQL_Error("0013"), skipErrors);
 		};
 				
 		// A helper function that extracts values from a string of
@@ -989,7 +1109,7 @@
 										newVals[removeQuotes(col)] = '?';
 										state = 3;
 									}else{
-										throw 'Expected number or quoted string';
+										_throw(new jSQL_Error("0024"));
 									}
 								}
 							break;
@@ -1044,12 +1164,12 @@
 					case "AND":
 						var ccc;
 						try{
-							ccc = convertToCol(words.shift());
+							ccc = convertToCol(words.shift(), true);
 						}catch(ex){
 							return new (function(error){
-								this.execute = function(){ throw error; };
-								this.fetch = function(){ throw error; };
-								this.fetchAll = function(){ throw error; };
+								this.execute = function(){ _throw(error); };
+								this.fetch = function(){ _throw(error); };
+								this.fetchAll = function(){ _throw(error); };
 							})(ex.message);
 						}
 						query = query.where(ccc);
@@ -1088,12 +1208,7 @@
 						}
 						break;
 					case "OR":
-						var ccc;
-						try{
-							ccc = convertToCol(words.shift());
-						}catch(ex){
-							throw ex.message;
-						}
+						var ccc = convertToCol(words.shift());
 						query = query.or(ccc);
 						break;
 					case "LIMIT":
@@ -1132,7 +1247,7 @@
 						query = query.limit(limit, offset);
 						break;
 					case "ORDER":
-						if(words.shift().toUpperCase() != "BY") throw "Expected 'ORDER BY', got something else.";
+						if(words.shift().toUpperCase() != "BY") throw "Expected 'ORDER BY'.";
 						while(words.length > 0){
 							var nextWord = words.shift();
 							try{
@@ -2355,6 +2470,7 @@
 		insertInto: insertInto,
 		types: new jSQLDataTypeList(),
 		load: persistenceManager.load,
+		onError: onError,
 		reset: jSQLReset,
 		minify: jSQLMinifier,
 		commit: persistenceManager.commit,
