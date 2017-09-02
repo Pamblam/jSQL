@@ -44,8 +44,10 @@
 				setInterval(function(){
 					var data = jSQL.query("SELECT * FROM `ServerTest` ORDER BY `Date` DESC").execute().fetchAll("ASSOC");
 					var html = ["<table>"];
-					for(var i=0; i<data.length; i++)
-						html.push("<tr><td>"+i+"</td><td>"+data[i].FileName+"</td><td>"+data[i].Date.getTime()+"</td></tr>");
+					for(var i=0; i<data.length; i++){
+						// console.log(data[i]);
+						html.push("<tr><td>"+i+"</td><td>"+data[i].FileName+"</td><td>"+data[i].Date.toString()+"</td></tr>");
+					}
 					ServerCount.innerHTML = html.join("")+"</table>";
 				},1500);
 			}

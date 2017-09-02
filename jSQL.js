@@ -1,5 +1,5 @@
 /**
- * jSQL.js v2.2
+ * jSQL.js v2.3
  * A Javascript Query Language Database Engine
  * @author Robert Parham
  * @website http://pamblam.github.io/jSQL/
@@ -82,6 +82,7 @@
 			case "0061": this.message = "Could not initiate a transaction."; break;
 			case "0062": this.message = "Could not initiate a request."; break;
 			case "0063": this.message = "Browser doesn't support Web SQL or IndexedDB."; break;
+			case "0064": this.message = "Invalid data type for column."; break;
 			default: this.message = "Unknown error."; break;
 		}
 		this.toString = function () {
@@ -166,7 +167,8 @@
 		},{
 			type: "DATE",
 			serialize: function(value, args){ 
-				return value instanceof Date ? value.getTime() : new Date(0).getTime(); 
+				if(!value instanceof Date) return new Date(0).getTime();
+				return value.getTime(); 
 			},
 			unserialize: function(value, args){ 
 				return new Date(value);
@@ -462,7 +464,7 @@
 
 		self.normalizeColumnStoreValue = function(colName, value){
 			var type = self.types[self.colmap[colName]];
-			var storeVal = jSQL.types.getByType(type.type.toUpperCase()).serialize(value, type.args)
+			var storeVal = jSQL.types.getByType(type.type.toUpperCase()).serialize(value, type.args);
 			if((!isNaN(parseFloat(storeVal)) && isFinite(storeVal)) || typeof storeVal === "string")
 				return storeVal;
 			return _throw(new jSQL_Error("0020"));
@@ -2496,7 +2498,7 @@
 	////////////////////////////////////////////////////////////////////////////
 	
 	return {
-		version: 2.2,
+		version: 2.3,
 		tables: {},
 		query: jSQLParseQuery,
 		createTable: createTable,
