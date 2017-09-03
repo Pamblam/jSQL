@@ -898,7 +898,7 @@
 						pk_vals.push(row[primary_index]);
 					}
 					pk_vals = JSON.stringify(pk_vals);
-					if(this.table.keys.primary.map.hasOwnProperty(pk_vals)){
+					if(this.table.keys.primary.map.hasOwnProperty(pk_vals) && this.table.keys.primary.map[pk_vals] !== rowIndex){
 						if(this.ignoreFlag === true) return this;
 						return _throw(new jSQL_Error("0017"));
 					}
@@ -918,7 +918,7 @@
 						vals.push(row[index]);
 					}
 					vals = JSON.stringify(vals);
-					if(ukey.map.hasOwnProperty(vals)){
+					if(ukey.map.hasOwnProperty(vals) && ukey.map[vals] !== rowIndex){
 						if(this.ignoreFlag === true) return this;
 						return _throw(new jSQL_Error("0019"));
 					}
