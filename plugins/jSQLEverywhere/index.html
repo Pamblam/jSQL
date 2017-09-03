@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+
+		<title>jSQL - Javascript Query Language - jSQLEverywhere</title>
+
+		<link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+		<link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+		<link href="../../css/style.css" rel="stylesheet">
+
+		<!--[if lt IE 9]>
+			<script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+			<script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+		<![endif]-->
+	</head>
+	<body>
+		
+		<div class="jumbotron">
+			<div class="container">
+				<div class="row">
+					<div class="col-lg-12 text-center">
+						<img src="http://i.imgur.com/VQlJKOc.png" class="img-responsive" style="width: 70%; margin: 0 auto;" /><br>
+						<a href='../../index.html' class='btn btn-default'><i class="fa fa-home" aria-hidden="true"></i> Home</a>
+						<a href='../../demo.html' class='btn btn-default'><i class="fa fa-magic" aria-hidden="true"></i> Demo</a>
+						<a href='../index.html' class='btn btn-default'><i class="fa fa-plug" aria-hidden="true"></i> Plugins</a>
+						<a href='https://github.com/Pamblam/jSQL/wiki' class='btn btn-default'><i class="fa fa-book" aria-hidden="true"></i> Docs</a>
+						<a href='https://github.com/Pamblam/jSQL' class='btn btn-default'><i class="fa fa-github-alt" aria-hidden="true"></i> Github</a>
+						<a href='https://github.com/Pamblam/jSQL/archive/master.zip' class='btn btn-default'><i class="fa fa-cloud-download" aria-hidden="true"></i> Download</a>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="container">
+			<div class="row">
+				<div class="col-lg-12">
+					<h1>jSQLEverywhere</h1>
+					<p>jSQLEverywhere allows you to use a single jSQL instance anywhere by loading a simple HTML page which includes jSQL in an invisible iFrame and then pointing the global <code>jSQL</code> variable to the one in the iFrame.</p>
+					<h3>Usage</h3>
+					<ol>
+						<li>Edit the script tag in <code>server.html</code> file to somewhere on your domain.</li>
+						<li>Include the <code>jSQLe.js</code> file in a <code>&lt;script></code> tag in each page that requires jSQL. You must <b>not</b> inlude <code>jSQL.js</code> as well.</li>
+						<li>Initiate the plugin by calling <code>jSQLe.load()</code> and passing it an object with 2 properties:
+							<ul>
+								<li><b>role</b> - Should always be "client". There will be other options in later versions.</li>
+								<li><b>server</b> - The URL of the <code>server.html</code> file which is hosting the jSQL instance you need to access.</li>
+							</ul>
+						</li>
+					</ol>
+					<div class='alert alert-warning' role='alert'><b>Note: </b> <code>jSQLe.load()</code> must be called before <code>jSQL.load()</code>. Until jSQL has loaded, none of it's other methods will be available when using this plugin.</div>
+					<h3>Example</h3>
+					<pre><code>jSQLe.load({
+  role: "client",
+  server: "http://mysite.com/path/to/server.html"
+});
+
+jSQL.load(function(){
+  // Do stuff with jSQL
+});</code></pre>
+					<h3>Demo</h3>
+					<p>These demo pages are available in the Github project as well.</p>
+					<p>
+						<a href='demo1.html' class='btn btn-info'><i class="fa fa-bolt" aria-hidden="true"></i> Demo Page 1</a>
+						<a href='demo2.html' class='btn btn-info'><i class="fa fa-bolt" aria-hidden="true"></i> Demo Page 2</a>
+						<a href='demo3.html' class='btn btn-info'><i class="fa fa-bolt" aria-hidden="true"></i> Demo Page 3</a>
+					</p>
+				</div>
+			</div>
+		</div>
+		<div class='footer'>
+			<p>jSQL &copy; Rob Parham 2016, 2017 | <a href="https://github.com/Pamblam/jSQL/wiki/License">Apache Licensed</a></p>
+		</div>
+		<script src="//code.jquery.com/jquery-2.2.4.min.js"></script>
+		<script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+	</body>
+</html>

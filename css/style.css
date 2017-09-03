@@ -1,0 +1,57 @@
+
+@font-face {
+    font-family: 'originals_is_outregular';
+    src: url('../fonts/originals_is_out-webfont.woff2') format('woff2'),
+         url('../fonts/originals_is_out-webfont.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+
+}
+
+@font-face {
+    font-family: 'syncopatebold';
+    src: url('../fonts/syncopate-bold-webfont.woff2') format('woff2'),
+         url('../fonts/syncopate-bold-webfont.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+
+}
+
+.footer{
+	background: #2E294E url("../imgs/background.png") no-repeat fixed 0 0;
+	background-size: cover;
+	color: #F1E9DA;
+	margin: 1em 0 0 0;
+	padding: 1.5em;
+	text-align: center;
+}
+
+.jumbotron p{
+	color: #F1E9DA;
+}
+
+.jumbotron{
+	background: #2E294E url("../imgs/background.png") no-repeat fixed 0 0;
+	background-size: cover;
+}
+
+body, .btn-primary{
+	background: #F1E9DA;
+	font-family: "Verdana", "Geneva", "sans-serif";
+	padding-bottom:0;
+	margin-bottom:0;
+}
+
+html{
+	padding-bottom:0;
+	margin-bottom:0;
+}
+
+p{
+	color: #3F4045;
+}
+
+h1, h2, h3, h4, h5{
+	color: #02111B;
+	font-family: 'syncopatebold';
+}

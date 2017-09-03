@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+
+		<title>jSQL - Javascript Query Language - xhrCache</title>
+
+		<link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+		<link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+		<link href="../../css/style.css" rel="stylesheet">
+
+		<!--[if lt IE 9]>
+			<script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+			<script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+		<![endif]-->
+	</head>
+	<body>
+		
+		<div class="jumbotron">
+			<div class="container">
+				<div class="row">
+					<div class="col-lg-12 text-center">
+						<img src="http://i.imgur.com/VQlJKOc.png" class="img-responsive" style="width: 70%; margin: 0 auto;" /><br>
+						<a href='../../index.html' class='btn btn-default'><i class="fa fa-home" aria-hidden="true"></i> Home</a>
+						<a href='../../demo.html' class='btn btn-default'><i class="fa fa-magic" aria-hidden="true"></i> Demo</a>
+						<a href='../index.html' class='btn btn-default'><i class="fa fa-plug" aria-hidden="true"></i> Plugins</a>
+						<a href='https://github.com/Pamblam/jSQL/wiki' class='btn btn-default'><i class="fa fa-book" aria-hidden="true"></i> Docs</a>
+						<a href='https://github.com/Pamblam/jSQL' class='btn btn-default'><i class="fa fa-github-alt" aria-hidden="true"></i> Github</a>
+						<a href='https://github.com/Pamblam/jSQL/archive/master.zip' class='btn btn-default'><i class="fa fa-cloud-download" aria-hidden="true"></i> Download</a>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="container">
+			<div class="row">
+				<div class="col-lg-12">
+					<h1>xhrCache</h1>
+					<p>xhrCache is a framework-agnostic jSQL plugin that caches AJAX responses, and it's the best one around. It caches ajax responses directly from the underlying native XHR object (or Active X for those of you stuck in 1995). Responses are stored in DOMStorage so they will be persisted between page reloads.</p>
+					<h3>Usage</h3>
+					<p>Usage is simple. Just include jSQL.js and jSQL.xhrCache.js in your app. Options are, well, optional. If you want to change them just throw them somewhere in your script.</p>
+					<h3>Options</h3>
+					<p>xhrCache is meant to be dropped into any project and just work. To that end, there are only 2 configurable options: cache expiration time and whether or not to show a fake XHR request in the console when using cached responses.</p>
+					<h4>jSQL.xhrCache.max_age</h4>
+					<p>You can set this to a the number of minutes a cached item is valid for. When any given cached responses is older than this number of minutes the request is made again and a fresh response will be cached. Default is 60.</p>
+					<pre><code>jSQL.xhrCache.max_age = 60;</code></pre>
+					<h4>jSQL.xhrCache.logging</h4>
+					<p>When this is set to <code>true</code>, the library will show a fake xhr request in the console for debugging. This is turned on by default.</p>
+					<pre><code>jSQL.xhrCache.logging = true;</code></pre>
+				</div>
+			</div>
+		</div>
+		<div class='footer'>
+			<p>jSQL &copy; Rob Parham 2016, 2017 | <a href="https://github.com/Pamblam/jSQL/wiki/License">Apache Licensed</a></p>
+		</div>
+		<script src="//code.jquery.com/jquery-2.2.4.min.js"></script>
+		<script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+	</body>
+</html>

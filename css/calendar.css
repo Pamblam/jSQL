@@ -1,0 +1,248 @@
+
+/*
+	Theme Colors...
+	Light Color: B8E6FF
+	Medium Light: 9FDDFF
+	Medium dark: 7FD2FF
+	Dark color: 2C7EAA
+
+	Event colors...
+	Default: rgba(0, 153, 153, .4)
+	Appointment: rgba(255, 0, 0, .4)
+	Meeting: rgba(255, 116, 0, .4)
+	Business: rgba(0, 204, 0, .4)
+*/
+
+.CalendarJS{
+	margin:0;
+	padding: 0;
+/*	position: relative;*/
+}
+
+.calHeader{
+	width:100%;
+	color: #2C7EAA;
+	margin:0;
+	padding:0 0 2px 0 !important;
+}
+
+.right{
+	border-right: 1px solid #7FD2FF;
+	box-sizing: border-box;
+}
+
+.top{
+	border-top: 1px solid #7FD2FF;
+	box-sizing: border-box;
+}
+
+.left{
+	border-left: 1px solid #7FD2FF;
+	box-sizing: border-box;
+}
+
+.bottom{
+	border-bottom: 1px solid #7FD2FF;
+	box-sizing: border-box;
+}
+
+.top-left{
+	border-top-left-radius: 3px;
+	box-sizing: border-box;
+}
+
+.top-right{
+	border-top-right-radius: 3px;
+	box-sizing: border-box;
+}
+
+.bottom-left{
+	border-bottom-left-radius: 3px;
+	box-sizing: border-box;
+}
+
+.bottom-right{
+	border-bottom-right-radius: 3px;
+	box-sizing: border-box;
+}
+
+.hidden{
+	display:none !important;
+}
+
+.dayCol{
+	float:left;
+    position: relative;
+    width: 14.2857142857%;
+    padding: 0% 0% 14.2857142857% 0%; /* = width for a 1:1 aspect ratio */
+    margin: 0;
+    background-position:center center;
+    background-repeat:no-repeat;
+    background-size:cover; 
+	overflow:hidden;
+	background-color: #B8E6FF;
+	text-align: left;
+}
+
+.dayHeader{
+	padding: 0;
+	margin:0;
+	font-size:0.8em;
+	background-color: #B8E6FF;
+	color: #2C7EAA;
+	text-align: center;
+}
+
+.dayHeaderCell{
+	padding:3px;
+	margin: 0; 
+}
+
+.dayContent{
+	color: #2C7EAA;
+	position:absolute;
+    height:90%; /* = 100% - 2*5% padding */
+    width:90%; /* = 100% - 2*5% padding */
+    padding: 0;
+	margin:0;
+}
+
+.dayTable{
+	display:table;
+    width:100%;
+    height:100%;
+	margin: 5px;
+	padding:0;
+}
+
+.dayCell{
+	display:table-cell;
+    vertical-align:top;
+	padding:0;
+	margin:0;
+}
+
+.blankday{
+	background-color: #9FDDFF;
+}
+
+.lastLink{
+	float:left;
+	font-size:0.8em;
+	margin:0;
+	background: #9FDDFF;
+	border-radius: 3px;
+	padding: 1px 5px;
+	color: #2C7EAA;
+	border: 1px solid #7FD2FF;
+	box-sizing: border-box;
+	font-weight:600;
+}
+
+.nextLink{
+	float:right;
+	font-size:0.8em;
+	margin:0;
+	background: #9FDDFF;
+	border-radius: 3px;
+	padding: 1px 5px;
+	color: #2C7EAA;
+	border: 1px solid #7FD2FF;
+	box-sizing: border-box;
+	font-weight:600;
+}
+
+.clearfix{
+	clear:both;
+	margin:-2px 0;
+	padding:1px;
+	height:0;
+	width:0;
+	border:0;
+}
+
+.moTitle{
+	text-align:center;
+	font-size:1em;
+	font-weight: bold;
+	margin:0;
+	padding:0;
+}
+
+.lastLink:hover, .nextLink:hover{
+	cursor: pointer;
+	color: #212121;
+}
+
+.calDay:hover{
+	background: #9FDDFF;
+	cursor: pointer;
+}
+
+.active{
+	background: #7FD2FF;
+	border-color: #B8E6FF;
+}
+
+.dateLabel{
+	font-size:0.8em;
+	margin:0;
+	padding:0;
+}
+
+.otherEvents{
+	margin:0;
+	padding:0;
+	float: right;
+	font-size:0.7em;
+	background: #7FD2FF;
+	border-radius: 99px;
+	padding: 1px 2px;
+	color: #212121;
+}
+
+.calEvent{
+	position: absolute;
+	top:0px;
+	left:0px;
+	width:10px;
+	font-size:0.7em;
+	background: rgba(0, 153, 153, .4);
+	border-radius: 3px;
+	padding: 1px 2px;
+	color: #212121;
+	text-align:center;
+	margin:initial;
+	cursor: pointer;
+	box-sizing: border-box;
+}
+
+.appointment{
+	background: rgba(255, 0, 0, .4);
+}
+
+.meeting{
+	background: rgba(255, 116, 0, .4);
+}
+
+.business{
+	background: rgba(0, 204, 0, .4);
+}
+
+.ellipse {
+    display: table;
+    table-layout: fixed;
+    width: 98%;
+    white-space: nowrap;
+}
+ 
+.ellipse > * {
+    display: table-cell;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.weekRow{
+	margin:0; padding:0; border:0;
+	position:relative;
+}

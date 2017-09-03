@@ -1,1 +1,79 @@
-My Page
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+
+		<title>jSQL - Javascript Query Language</title>
+
+		<link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+		<link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+		<link href="css/style.css" rel="stylesheet">
+
+		<!--[if lt IE 9]>
+			<script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+			<script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+		<![endif]-->
+	</head>
+	<body>
+		
+		<div class="jumbotron">
+			<div class="container">
+				<div class="row">
+					<div class="col-lg-12 text-center">
+						<img src="http://i.imgur.com/VQlJKOc.png" class="img-responsive" style="width: 70%; margin: 0 auto;" /><br>
+						<a href='index.html' class='btn btn-default'><i class="fa fa-home" aria-hidden="true"></i> Home</a>
+						<a href='demo.html' class='btn btn-default'><i class="fa fa-magic" aria-hidden="true"></i> Demo</a>
+						<a href='plugins/' class='btn btn-default'><i class="fa fa-plug" aria-hidden="true"></i> Plugins</a>
+						<a href='https://github.com/Pamblam/jSQL/wiki' class='btn btn-default'><i class="fa fa-book" aria-hidden="true"></i> Docs</a>
+						<a href='https://github.com/Pamblam/jSQL' class='btn btn-default'><i class="fa fa-github-alt" aria-hidden="true"></i> Github</a>
+						<a href='https://github.com/Pamblam/jSQL/archive/master.zip' class='btn btn-default'><i class="fa fa-cloud-download" aria-hidden="true"></i> Download</a>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="container">
+			<div class="row">
+				<div class="col-lg-12">
+					<h1>What is it?</h1>
+					<p>jSQL is a partial yet robust SQL implementation with features specific to Javascript. jSQL is based on mySQL, but does not implement the entire standard, for example, <code>JOIN</code> statements are not yet possible with jSQL but it can run without a server and store Javascript Dates and Functions.</p>
+					<h3>Features</h3>
+					<ul>
+						<li>Can persist data to the user's hard drive from a browser.</li>
+						<li>Cross browser compatible & works on old browsers.</li>
+						<li>Allows you to define your own data/column types.</li>
+						<li>If you say J-S-Q-L really fast it sounds like "j-squirrel."</li>
+						<li>Exposes the "lower-level" interface for those that value a slight performance boost or just prefer a pure Javascript interface to an SQL interface.</li>
+					</ul>
+					<h3>Use cases</h3>
+					<ul>
+						<li>Manipulating sorting and querying (fairly) large datasets in the browser.</li>
+						<li>A more robust alternative to browser cookies.</li>
+						<li>Ideal for Cordova/Phonegap applications since it implements both WebSQL and IndexedDB.</li>
+						<li>Server caching (see the xhrCache plugin).</li>
+						<li>Saving state in browser or canvas based games.</li>
+					</ul>
+					<h1>Installation</h1>
+					<p>Just include the jSQL.js file in a <code>&lt;script></code> tag. You can either download the <a href='https://raw.githubusercontent.com/Pamblam/jSQL/master/jSQL.min.js' target='_blank'>jSQL.js</a> file from github or you can use the CDN:</p>
+					<pre> https://cdn.rawgit.com/Pamblam/jSQL/632defcd/jSQL.min.js </pre>
+					<h1>Overview, Usage, Examples</h1>
+					<p>For basic usage and a quick-start guide, here's the latest version of <a href="https://github.com/Pamblam/jSQL/blob/master/README.md" target="_blank">the project's README</a>. You can also refer to the project's <a href='https://github.com/Pamblam/jSQL/wiki'>Wiki</a> for documentation.</p>
+					<div class="panel panel-default"><div class="panel-body" id='readme' style='max-height:75vh; overflow:scroll;'>Loading, please wait...</div></div>
+					<h1>Recent Updates</h1>
+					<p>jSQL is actively updated and maintained. jSQL was last updated <b><span id='lastud'>...</span> ago</b>.</p>
+					<ul id="updates"></ul>
+				</div>
+			</div>
+		</div>
+		<div class='footer'>
+			<p>jSQL &copy; Rob Parham 2016, 2017 | <a href="https://github.com/Pamblam/jSQL/wiki/License">Apache Licensed</a></p>
+		</div>
+		<script src="//code.jquery.com/jquery-2.2.4.min.js"></script>
+		<script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/0.3.6/marked.min.js"></script>
+		<script src="scripts/githubapi.js"></script>
+		<script src='scripts/index.js'></script>
+	</body>
+</html>

@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+
+		<title>jSQL - Javascript Query Language - Live Demo</title>
+
+		<link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+		<link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+		<link href="https://cdn.rawgit.com/xdan/datetimepicker/1525c130/jquery.datetimepicker.css" rel="stylesheet">
+		<link href="css/calendar.css" rel="stylesheet">
+		<link href="css/style.css" rel="stylesheet">
+
+		<!--[if lt IE 9]>
+			<script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+			<script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+		<![endif]-->
+	</head>
+	<body>
+		
+		<div class="jumbotron">
+			<div class="container">
+				<div class="row">
+					<div class="col-lg-12 text-center">
+						<img src="http://i.imgur.com/VQlJKOc.png" class="img-responsive" style="width: 70%; margin: 0 auto;" /><br>
+						<a href='index.html' class='btn btn-default'><i class="fa fa-home" aria-hidden="true"></i> Home</a>
+						<a href='demo.html' class='btn btn-default'><i class="fa fa-magic" aria-hidden="true"></i> Demo</a>
+						<a href='plugins/' class='btn btn-default'><i class="fa fa-plug" aria-hidden="true"></i> Plugins</a>
+						<a href='https://github.com/Pamblam/jSQL/wiki' class='btn btn-default'><i class="fa fa-book" aria-hidden="true"></i> Docs</a>
+						<a href='https://github.com/Pamblam/jSQL' class='btn btn-default'><i class="fa fa-github-alt" aria-hidden="true"></i> Github</a>
+						<a href='https://github.com/Pamblam/jSQL/archive/master.zip' class='btn btn-default'><i class="fa fa-cloud-download" aria-hidden="true"></i> Download</a>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="container">
+			<div class='row'>
+				<div class="col-sm-12">
+					<h1>Live Demo - Calendar</h1>
+					<div class="alert alert-info" role="alert">
+						<p>Use the form to add events to the calendar. Click an event to view or cancel it. Click on "Reset Calendar" to delete all events. If you navigate away from this page your calendar will be the same when you return. In addition to jSQL, this demo uses <a href="https://github.com/Pamblam/CalendarJS" target="_blank">calendarJS</a>, <a href="https://gist.github.com/Pamblam/4d33935d712903da10c7366c20157d21">jsDateFormatter</a>, and <a href="https://xdsoft.net/jqplugins/datetimepicker/" target="_blank">DateTimePicker</a>. There are more examples in the Github project you can check out.</p>
+					</div>
+				</div>
+			</div>
+			<div class="row">
+				<div class="col-sm-6">
+					<div id="cal"></div>
+				</div>
+				<div class="col-sm-6">
+					<div class="form-group input-group-lg">
+						<label for="desc">Title/Description</label>
+						<input type="text" class="form-control" id="desc">
+					</div>
+					<div class="form-group">
+						<label for="startTime">Start Date and Time</label>
+						<input type="text" class="form-control" id="startTime">
+					</div>
+					<div class="form-group">
+						<label for="endTime">End Date and Time</label>
+						<input type="text" class="form-control" id="endTime">
+					</div>
+					<button class="btn btn-info" id="addEvent"><i class="fa fa-calendar-plus-o" aria-hidden="true"></i> Add Event</button>
+					<button class="btn btn-info" id="reset"><i class="fa fa-trash" aria-hidden="true"></i> Reset Calendar</button>
+				</div>
+			</div>
+		</div>
+		<div class='footer'>
+			<p>jSQL &copy; Rob Parham 2016, 2017 | <a href="https://github.com/Pamblam/jSQL/wiki/License">Apache Licensed</a></p>
+		</div>
+		<script src="//code.jquery.com/jquery-2.2.4.min.js"></script>
+		<script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+		<script src='https://cdn.rawgit.com/Pamblam/jSQL/632defcd/jSQL.min.js'></script>
+		<script src='https://cdn.rawgit.com/xdan/datetimepicker/1525c130/build/jquery.datetimepicker.full.min.js'></script>
+		<script src='scripts/jsDateFormatter.js'></script>
+		<script src='scripts/calendar.js'></script>
+		<script src='scripts/demo.js'></script>
+	</body>
+</html>
