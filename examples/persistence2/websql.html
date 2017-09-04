@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+	</head>
+	<body>
+		<script>
+			function WebSQLAPI() {
+				var self = this;
+				self.db = null;
+
+				// private function to execute a query
+				var __runQuery = function(query, data, successCallback, failureCallback) {
+					if(typeof successCallback != "function") successCallback = function(){};
+					if(typeof failureCallback != "function") failureCallback = function(){ throw "Could not execute query: "+query; };
+
+					var i, l, remaining;
+
+					if(!Array.isArray(data[0])) data = [data];
+					remaining = data.length;
+					var innerSuccessCallback = function(tx, rs) {
+						var i, l, output = [];
+						remaining = remaining - 1;
+						if (!remaining) {
+							for (i = 0, l = rs.rows.length; i < l; i = i + 1){
+								var j = rs.rows.item(i).json;
+								//j = JSON.parse(j);
+								output.push(j);
+							}
+							successCallback(output);
+						}
+					}
+					self.db.transaction(function (tx) {
+						for (i = 0, l = data.length; i < l; i = i + 1) {
+							tx.executeSql(query, data[i], innerSuccessCallback, failureCallback);
+						}
+					});
+				};
+
+				// Check that datastores exist.
+				// If not, create and populate them.
+				self.init = function(modelData, successCallback){
+					if(typeof successCallback != "function") successCallback = function(){};
+
+					var installModels = function(){
+						try{
+							for(var i=modelData.length; i--;)
+								(function(n, r){
+									__runQuery("DROP TABLE IF EXISTS "+n, [], function(){
+										__runQuery("CREATE TABLE IF NOT EXISTS "+n+"(json TEXT)", [], function(){
+											self.insert(n, r);
+										});
+									});
+								})(modelData[i].name, modelData[i].rows);
+						}catch(e){ throw "Error creating table"; }
+					};
+
+					try {
+						var dbname = window.location.href.replace(/\W+/g, ""); // use the current url to keep it unique
+						self.db = openDatabase("jSQL_"+dbname, "1.0", "jSQL "+dbname, (5 * 1024 * 1024));
+					} catch(e){ throw "Error opening database"; }
+
+					__runQuery("SELECT COUNT(*) FROM "+modelData[0].name, [], null, function(){
+						installModels()
+					});
+
+					successCallback();
+				};
+
+				// Insert a group of rows
+				self.insert = function(model, data, successCallback) {
+					if(typeof successCallback != "function") successCallback = function(){};
+
+					var remaining = data.length, i, l, insertData = [];
+					if (remaining === 0) successCallback();
+
+					// Convert article array of objects to array of arrays
+					for (i = 0, l = data.length; i < l; i = i + 1) 
+						insertData[i] = [JSON.stringify(data[i])];
+					__runQuery("INSERT INTO "+model+" (json) VALUES (?);", insertData, successCallback);
+				};
+
+				// Delete all items from the database
+				self.delete = function(model, successCallback) {
+					if(typeof successCallback != "function") successCallback = function(){};
+					__runQuery("DELETE FROM "+model, [], successCallback);
+				};
+
+				// Get all data from the datastore
+				self.select = function(model, successCallback) {
+					__runQuery("SELECT json FROM "+model, [], function(res){
+						var r = [];
+						for(var i = res.length; i--;)
+							r.push(JSON.parse(res[i]));
+						successCallback(r);
+					});
+				};
+
+			}
+			
+			var tables = [
+				{
+					name: "customers",
+					rows: [
+						{ ssn: "444-44-4444", name: "Bill", age: 35, email: "bill@company.com" },
+						{ ssn: "555-55-5555", name: "Donna", age: 32, email: "donna@home.org" }
+					]
+				},
+				{
+					name: "cheeseburgers",
+					rows: [
+						{ cooked: "well done", cheese: "provolone", toasted: "no" },
+						{ cooked: "medium rare", cheese: "cheddar", toasted: "ye" }
+					]
+				}
+			];
+			
+			var db = new WebSQLAPI();
+			
+			try{
+				db.init(
+					tables,
+					function(){
+						console.log("db ready");
+					}
+				);
+			}catch(e){ alert("you are the suck"); }
+
+			function getData(){ 
+				for(var i=tables.length; i--;) 
+					db.select(tables[i].name, function(res){ console.log(res); }); 
+			}
+			function deleteData(){ 
+				for(var i=tables.length; i--;) 
+					db.delete(tables[i].name, function(){ console.log("deleted "); }); 
+			}
+			function addData(){
+				for(var i=tables.length; i--;) 
+					db.insert(tables[i].name, tables[i].rows, function(f){ console.log("inserted "+f); });
+			}
+			
+		</script>
+		
+		<h3>Web SQL template</h3>
+		<button onclick="getData()">get</button>
+		<button onclick="deleteData()">delete</button>
+		<button onclick="addData()">adddata</button>
+		
+	</body>
+</html>

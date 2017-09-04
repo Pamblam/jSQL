@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>jSQL test</title>
+    </head>
+    <body>
+		<script src="../../jSQL.js"></script>
+		<script>
+
+			// Create the database
+			loadData();
+			
+			// Add a record
+			function addRecord(){
+				var time = Math.floor(Date.now() / 1000); 
+				var str = prompt("Enter an arbitrary string: ");
+				jSQL.tables.randomStrings.insertRow({time:time, str:str});
+				resetView();
+			}
+			
+			// reset the page
+			function resetView(){
+				clear(); echo("<h3>Persistance Test</h3>");
+				echo(makeTable(jSQL.query("SELECT * FROM randomStrings").execute().fetchAll()));
+				drawButtons();
+			}
+			
+			// Draw the buttons
+			function drawButtons(){
+				echo('<button onclick="addRecord();">Add</button>');
+				echo('<button onclick="loadData();">Reset (to last save)</button>');
+				echo('<button onclick="jSQL.commit();">Save</button>');
+				// If the table exists and has records in it
+				if(undefined !== jSQL.tables.randomStrings && jSQL.tables.randomStrings.data.length > 0){
+					echo('<button onclick="deleteAll();">Clear</button>');
+				}
+			}
+			
+			function deleteAll(){
+				jSQL.tables.randomStrings.data = [];
+				resetView();
+			};
+			
+			// Load data if there is any
+			function loadData(){
+				// Load the data from internal storage
+				jSQL.load(function(){
+					// Create the table if there wasn't one already in internal storage
+					if(undefined === jSQL.tables.randomStrings)
+						jSQL.createTable("randomStrings", ["time", "str"]).execute();
+					// Show the page
+					resetView();
+				});
+			}
+			
+			// print to page
+			function echo(text){
+				document.getElementsByTagName('body')[0].insertAdjacentHTML('beforeend', text);
+			}
+			
+			// clear page
+			function clear(){
+				document.getElementsByTagName('body')[0].innerHTML = "";
+			}
+			
+			// create table markup
+			function makeTable(res){
+				var html = ["<table><thead><tr>"];
+				if('object' != typeof res[0]) 
+					return "No data.<br>";
+				for(var name in res[0])
+					if(res[0].hasOwnProperty(name))
+						html.push("<th>"+name+"</th>");
+				html.push("</tr></thead><tbody>");
+				for(var i=0; i<res.length; i++){
+					html.push("<tr>");
+					for(var name in res[i])
+						if(res[0].hasOwnProperty(name))
+							html.push("<td>"+res[i][name]+"</td>");
+					html.push("</tr>");
+				}
+				html.push("</tbody></table><hr>");
+				return html.join('');
+			}
+	
+		</script>
+    </body>
+</html>
