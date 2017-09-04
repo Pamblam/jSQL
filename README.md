@@ -1,10 +1,10 @@
 [![jSQL Logo](http://i.imgur.com/VQlJKOc.png)](http://pamblam.github.io/jSQL/)
 
-jSQL - Version 2.3  - *Now gluten free!*
+jSQL (Official) - Version 2.5  - *Now gluten free!*
 
 <hr>
 
-jSQL is a state and data management tool as well as a robust SQL engine. For complete documentation, please see [the jSQL Wiki](https://github.com/Pamblam/jSQL/wiki).
+jSQL is a state and data management tool as well as a robust SQL engine for both Node and the browser. For complete documentation, please see [the jSQL Wiki](https://github.com/Pamblam/jSQL/wiki). For plugins, live demos and other information see the [official website](http://pamblam.github.io/jSQL/).
 
 Under the hood, jSQL has 3 layers: 
 
@@ -20,11 +20,17 @@ jSQL is written with flexibility, ease of use, and efficiency in mind. It suppor
 
 ## Quick Start
 
-jSQL is implemented in a single JavaScript file. Save the [`jSQL.js`](https://github.com/Pamblam/jSQL/blob/master/jSQL.js) file (or the minified [`jSQL.min.js`](https://github.com/Pamblam/jSQL/blob/master/jSQL.min.js) file) to your project folder and include it.
+jSQL is implemented in a single JavaScript file. You only need either the [`jSQL.js`](https://github.com/Pamblam/jSQL/blob/master/jSQL.js) file or the minified [`jSQL.min.js`](https://github.com/Pamblam/jSQL/blob/master/jSQL.min.js) file. Feel free to download them directly or use [`npm`](https://www.npmjs.com/package/jsql-official/tutorial):
+
+    npm install jsql-official
+
+If you're running jSQL in a browser, include it in a script tag.
 
     <script src='jSQL.js'></script>
   
-  
+  If you're running jSQL in Node, `require` the jSQL module.
+
+    var jSQL = require("jSQL.js");
 
 #### Create a table
 
@@ -61,7 +67,7 @@ For more information and to read about other update, delete and other operations
 
 ## Documentation & Examples
 
-jSQL is fully documented in the [jSQL Wiki](https://github.com/Pamblam/jSQL/wiki#jsql-docs), which even includes more [simple usage examples](https://github.com/Pamblam/jSQL/wiki/Examples). The repository on GitHub also includes several more [complete and complex examples](https://github.com/Pamblam/jSQL/tree/master/examples).
+jSQL is fully documented in the [jSQL Wiki](https://github.com/Pamblam/jSQL/wiki#jsql-docs), which even includes more [simple usage examples](https://github.com/Pamblam/jSQL/wiki/Examples). The repository on GitHub also includes several more [complete and complex examples](https://github.com/Pamblam/jSQL/tree/master/examples). There is also a [live demo](http://pamblam.github.io/jSQL/demo.html) available on the official website.
 
 <hr>
 
