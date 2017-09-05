@@ -1,5 +1,5 @@
 /**
- * Testing primary keys, error handling, and "ignore"
+ * Testing unique keys, error handling, and "ignore"
  * @type Module jSQL|Module jSQL
  */
 
@@ -14,6 +14,8 @@ var data = [
 jSQL.onError(function(e){
 	//console.log(e.message);
 });
+
+
 
 jSQL.load(function(){
 
@@ -31,16 +33,16 @@ jSQL.load(function(){
 
 	// Create a non-compound key using high-level syntax
 	jSQL.query("create table if not exists test4table (ID int unique key, Name varchar, FOOD varchar)").execute(data);
-
+	
 	// Insert ignore low level syntax
 	// jSQL.insertInto('test4table').values({ID:0, Name:'Nerd', FOOD: "Bagels"}).ignore().execute();
 
-	// This will the primary key, adding "ignore" prevents it from throwing an error
+	// This will the unique key, adding "ignore" prevents it from throwing an error
 	//jSQL.query("insert ignore into test4table VALUES (0, 'nerd', 'bagel')").execute();
 
 	jSQL.update('test4table').ignore().set({ID:0}).where("Name").equals("bob").execute();
 
-	//jSQL.commit();
+	jSQL.commit();
 
 	console.log("done");
 });

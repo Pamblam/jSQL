@@ -496,156 +496,26 @@
 			self.newvals = {};
 			self.whereClause = new jSQLWhereClause(self);
 			self.resultSet = [];
-			self.init = function(){
-				switch(self.type){
-					case "CREATE": return (new jSQLCreateQuery).init.apply(self, arguments); break;
-					case "UPDATE": return (new jSQLUpdateQuery).init.apply(self, arguments); break;
-					case "SELECT": return (new jSQLSelectQuery).init.apply(self, arguments); break;
-					case "INSERT": return (new jSQLInsertQuery).init.apply(self, arguments); break;
-					case "DROP": return (new jSQLDropQuery).init.apply(self, arguments); break;
-					case "DELETE": return (new jSQLDeleteQuery).init.apply(self, arguments); break;
-				}
+			
+			// Methods that every query class should implement
+			var methods = ['init', 'ifNotExists', 'execute', 'fetch', 'ignore', 
+				'fetchAll', 'values', 'set', 'where', 'from', 'orderBy', 'asc',
+				'desc', 'limit', 'distinct'];
+			var queryTypeConstructors = {
+				CREATE: jSQLCreateQuery,
+				UPDATE: jSQLUpdateQuery,
+				SELECT: jSQLSelectQuery,
+				INSERT: jSQLInsertQuery,
+				DROP: jSQLDropQuery,
+				DELETE: jSQLDeleteQuery
 			};
-			self.ifNotExists = function(){
-				switch(self.type){
-					case "CREATE": return (new jSQLCreateQuery).ifNotExists.apply(self, arguments); break;
-					case "UPDATE": return (new jSQLUpdateQuery).ifNotExists.apply(self, arguments); break;
-					case "SELECT": return (new jSQLSelectQuery).ifNotExists.apply(self, arguments); break;
-					case "INSERT": return (new jSQLInsertQuery).ifNotExists.apply(self, arguments); break;
-					case "DROP": return (new jSQLDropQuery).ifNotExists.apply(self, arguments); break;
-					case "DELETE": return (new jSQLDeleteQuery).ifNotExists.apply(self, arguments); break;
-				}
-			};
-			self.execute = function(){
-				switch(self.type){
-					case "CREATE": return (new jSQLCreateQuery).execute.apply(self, arguments); break;
-					case "UPDATE": return (new jSQLUpdateQuery).execute.apply(self, arguments); break;
-					case "SELECT": return (new jSQLSelectQuery).execute.apply(self, arguments); break;
-					case "INSERT": return (new jSQLInsertQuery).execute.apply(self, arguments); break;
-					case "DROP": return (new jSQLDropQuery).execute.apply(self, arguments); break;
-					case "DELETE": return (new jSQLDeleteQuery).execute.apply(self, arguments); break;
-				}
-			};
-			self.fetch = function(){
-				switch(self.type){
-					case "CREATE": return (new jSQLCreateQuery).fetch.apply(self, arguments); break;
-					case "UPDATE": return (new jSQLUpdateQuery).fetch.apply(self, arguments); break;
-					case "SELECT": return (new jSQLSelectQuery).fetch.apply(self, arguments); break;
-					case "INSERT": return (new jSQLInsertQuery).fetch.apply(self, arguments); break;
-					case "DROP": return (new jSQLDropQuery).fetch.apply(self, arguments); break;
-					case "DELETE": return (new jSQLDeleteQuery).fetch.apply(self, arguments); break;
-				}
-			};
-			self.ignore = function(){
-				switch(self.type){
-					case "CREATE": return (new jSQLCreateQuery).ignore.apply(self, arguments); break;
-					case "UPDATE": return (new jSQLUpdateQuery).ignore.apply(self, arguments); break;
-					case "SELECT": return (new jSQLSelectQuery).ignore.apply(self, arguments); break;
-					case "INSERT": return (new jSQLInsertQuery).ignore.apply(self, arguments); break;
-					case "DROP": return (new jSQLDropQuery).ignore.apply(self, arguments); break;
-					case "DELETE": return (new jSQLDeleteQuery).ignore.apply(self, arguments); break;
-				}
-			};
-			self.fetchAll = function(){
-				switch(self.type){
-					case "CREATE": return (new jSQLCreateQuery).fetchAll.apply(self, arguments); break;
-					case "UPDATE": return (new jSQLUpdateQuery).fetchAll.apply(self, arguments); break;
-					case "SELECT": return (new jSQLSelectQuery).fetchAll.apply(self, arguments); break;
-					case "INSERT": return (new jSQLInsertQuery).fetchAll.apply(self, arguments); break;
-					case "DROP": return (new jSQLDropQuery).fetchAll.apply(self, arguments); break;
-					case "DELETE": return (new jSQLDeleteQuery).fetchAll.apply(self, arguments); break;
-				}
-			};
-			self.values = function(){
-				switch(self.type){
-					case "CREATE": return (new jSQLCreateQuery).values.apply(self, arguments); break;
-					case "UPDATE": return (new jSQLUpdateQuery).values.apply(self, arguments); break;
-					case "SELECT": return (new jSQLSelectQuery).values.apply(self, arguments); break;
-					case "INSERT": return (new jSQLInsertQuery).values.apply(self, arguments); break;
-					case "DROP": return (new jSQLDropQuery).values.apply(self, arguments); break;
-					case "DELETE": return (new jSQLDeleteQuery).values.apply(self, arguments); break;
-				}
-			};
-			self.set = function(){
-				switch(self.type){
-					case "CREATE": return (new jSQLCreateQuery).set.apply(self, arguments); break;
-					case "UPDATE": return (new jSQLUpdateQuery).set.apply(self, arguments); break;
-					case "SELECT": return (new jSQLSelectQuery).set.apply(self, arguments); break;
-					case "INSERT": return (new jSQLInsertQuery).set.apply(self, arguments); break;
-					case "DROP": return (new jSQLDropQuery).set.apply(self, arguments); break;
-					case "DELETE": return (new jSQLDeleteQuery).set.apply(self, arguments); break;
-				}
-			};
-			self.where = function(){
-				switch(self.type){
-					case "CREATE": return (new jSQLCreateQuery).where.apply(self, arguments); break;
-					case "UPDATE": return (new jSQLUpdateQuery).where.apply(self, arguments); break;
-					case "SELECT": return (new jSQLSelectQuery).where.apply(self, arguments); break;
-					case "INSERT": return (new jSQLInsertQuery).where.apply(self, arguments); break;
-					case "DROP": return (new jSQLDropQuery).where.apply(self, arguments); break;
-					case "DELETE": return (new jSQLDeleteQuery).where.apply(self, arguments); break;
-				}
-			};
-			self.from = function(){
-				switch(self.type){
-					case "CREATE": return (new jSQLCreateQuery).from.apply(self, arguments); break;
-					case "UPDATE": return (new jSQLUpdateQuery).from.apply(self, arguments); break;
-					case "SELECT": return (new jSQLSelectQuery).from.apply(self, arguments); break;
-					case "INSERT": return (new jSQLInsertQuery).from.apply(self, arguments); break;
-					case "DROP": return (new jSQLDropQuery).from.apply(self, arguments); break;
-					case "DELETE": return (new jSQLDeleteQuery).from.apply(self, arguments); break;
-				}
-			};
-			self.orderBy = function(columns){
-				switch(self.type){
-					case "CREATE": return (new jSQLCreateQuery).orderBy.apply(self, arguments); break;
-					case "UPDATE": return (new jSQLUpdateQuery).orderBy.apply(self, arguments); break;
-					case "SELECT": return (new jSQLSelectQuery).orderBy.apply(self, arguments); break;
-					case "INSERT": return (new jSQLInsertQuery).orderBy.apply(self, arguments); break;
-					case "DROP": return (new jSQLDropQuery).orderBy.apply(self, arguments); break;
-					case "DELETE": return (new jSQLDeleteQuery).orderBy.apply(self, arguments); break;
-				}
-			};
-			self.asc = function(){
-				switch(self.type){
-					case "CREATE": return (new jSQLCreateQuery).asc.apply(self, arguments); break;
-					case "UPDATE": return (new jSQLUpdateQuery).asc.apply(self, arguments); break;
-					case "SELECT": return (new jSQLSelectQuery).asc.apply(self, arguments); break;
-					case "INSERT": return (new jSQLInsertQuery).asc.apply(self, arguments); break;
-					case "DROP": return (new jSQLDropQuery).asc.apply(self, arguments); break;
-					case "DELETE": return (new jSQLDeleteQuery).asc.apply(self, arguments); break;
-				}
-			};
-			self.desc = function(){
-				switch(self.type){
-					case "CREATE": return (new jSQLCreateQuery).desc.apply(self, arguments); break;
-					case "UPDATE": return (new jSQLUpdateQuery).desc.apply(self, arguments); break;
-					case "SELECT": return (new jSQLSelectQuery).desc.apply(self, arguments); break;
-					case "INSERT": return (new jSQLInsertQuery).desc.apply(self, arguments); break;
-					case "DROP": return (new jSQLDropQuery).desc.apply(self, arguments); break;
-					case "DELETE": return (new jSQLDeleteQuery).desc.apply(self, arguments); break;
-				}
-			};
-			self.limit = function(){
-				switch(self.type){
-					case "CREATE": return (new jSQLCreateQuery).limit.apply(self, arguments); break;
-					case "UPDATE": return (new jSQLUpdateQuery).limit.apply(self, arguments); break;
-					case "SELECT": return (new jSQLSelectQuery).limit.apply(self, arguments); break;
-					case "INSERT": return (new jSQLInsertQuery).limit.apply(self, arguments); break;
-					case "DROP": return (new jSQLDropQuery).limit.apply(self, arguments); break;
-					case "DELETE": return (new jSQLDeleteQuery).limit.apply(self, arguments); break;
-				}
-			};
-			self.distinct = function(){
-				switch(self.type){
-					case "CREATE": return (new jSQLCreateQuery).distinct.apply(self, arguments); break;
-					case "UPDATE": return (new jSQLUpdateQuery).distinct.apply(self, arguments); break;
-					case "SELECT": return (new jSQLSelectQuery).distinct.apply(self, arguments); break;
-					case "INSERT": return (new jSQLInsertQuery).distinct.apply(self, arguments); break;
-					case "DROP": return (new jSQLDropQuery).distinct.apply(self, arguments); break;
-					case "DELETE": return (new jSQLDeleteQuery).distinct.apply(self, arguments); break;
-				}
-			};
+			for(var i=0; i<methods.length; i++)(function(i){
+				self[methods[i]] = function(){
+					var q = new queryTypeConstructors[self.type];
+					if(typeof q[methods[i]] == "function") return q[methods[i]].apply(self, arguments);
+					else return _throw(new jSQL_Error("0022"));
+				};
+			})(i);
 		}
 
 		////////////////////////////////////////////////////////////////////////////
@@ -663,7 +533,46 @@
 				var resultRowIndexes = this.whereClause.getResultRowIndexes();
 				var results = [], newData = []; 
 				for(var i=0; i<this.table.data.length; i++){
-					if(resultRowIndexes.indexOf(i)>-1) results.push(this.table.data[i]);
+					var row = this.table.data[i];
+					
+					// If there are any primary keys on this row, remove them...
+					var primary_key_columns = this.table.keys.primary.column;
+					var pk_vals = false;
+					if (primary_key_columns !== false) {
+						if (!Array.isArray(primary_key_columns)) primary_key_columns = [primary_key_columns];
+						var pk_col;
+						pk_vals = [];
+						for (var pk = 0; pk_col = primary_key_columns[pk]; pk++) {
+							var primary_index = this.table.colmap[pk_col];
+							if (null === row[primary_index]) return _throw(new jSQL_Error("0016"));
+							pk_vals.push(row[primary_index]);
+						}
+						pk_vals = JSON.stringify(pk_vals);
+						if (this.table.keys.primary.map.hasOwnProperty(pk_vals) && this.table.keys.primary.map[pk_vals] == i) {
+							if(resultRowIndexes.indexOf(i)>-1) delete this.table.keys.primary.map[pk_vals];
+							else this.table.keys.primary.map[pk_vals] = newData.length;;
+						}
+					}
+
+					// If there are any unique columns in this row, delete them
+					var ukey;
+					for(var k=0; ukey=this.table.keys.unique[k]; k++){
+						var key_columns = Array.isArray(ukey.column) ? ukey.column : [ukey.column];
+						var col, vals = [];
+						for(var uk=0; col=key_columns[uk]; uk++){
+							var index = this.table.colmap[col];
+							if(null === row[index]) return _throw(new jSQL_Error("0018"));
+							vals.push(row[index]);
+						}
+						vals = JSON.stringify(vals);
+						if(ukey.map.hasOwnProperty(vals) && ukey.map[vals] == i){
+							if(this.ignoreFlag === true) return this;
+							if(resultRowIndexes.indexOf(i)>-1) delete this.table.keys.unique[k].map[vals];
+							else this.table.keys.unique[k].map[vals] = newData.length;
+						}
+					}
+					
+					if(resultRowIndexes.indexOf(i)>-1) results.push(row);
 					else newData.push(this.table.data[i]);
 				}
 				this.table.data = newData;
@@ -675,11 +584,6 @@
 			};
 			this.fetch = function(){ return null; };
 			this.fetchAll = function(){ return []; };
-			this.values = function(){ return _throw(new jSQL_Error("0022")); };
-			this.ignore = function(){ return _throw(new jSQL_Error("0022")); };
-			this.ifNotExists = function(){ return _throw(new jSQL_Error("0022")); };
-			this.set = function(){ return _throw(new jSQL_Error("0022")); };
-			this.from = function(){ return _throw(new jSQL_Error("0022")); };
 			this.orderBy = function(columns){
 				return this.whereClause.orderBy(columns);
 			};
@@ -711,17 +615,6 @@
 			};
 			this.fetch = function(){ return null; };
 			this.fetchAll = function(){ return []; };
-			this.values = function(){ return _throw(new jSQL_Error("0022")); };
-			this.ifNotExists = function(){ return _throw(new jSQL_Error("0022")); };
-			this.set = function(){ return _throw(new jSQL_Error("0022")); };
-			this.where = function(){ return _throw(new jSQL_Error("0022")); };
-			this.from = function(){ return _throw(new jSQL_Error("0022")); };
-			this.orderBy = function(){ return _throw(new jSQL_Error("0022")); };
-			this.asc = function(){ return _throw(new jSQL_Error("0022")); };
-			this.desc = function(){ return _throw(new jSQL_Error("0022")); };
-			this.limit = function(){ return _throw(new jSQL_Error("0022")); };
-			this.distinct = function(){ return _throw(new jSQL_Error("0022")); };
-			this.ignore = function(){ return _throw(new jSQL_Error("0022")); };
 		}
 
 		function jSQLInsertQuery(){
@@ -753,15 +646,6 @@
 			this.ignore = function(){ this.ignoreFlag=true; return this; };
 			this.fetch = function(){ return null; };
 			this.fetchAll = function(){ return []; };
-			this.ifNotExists = function(){ return _throw(new jSQL_Error("0022")); };
-			this.set = function(){ return _throw(new jSQL_Error("0022")); };
-			this.where = function(){ return _throw(new jSQL_Error("0022")); };
-			this.from = function(){ return _throw(new jSQL_Error("0022")); };
-			this.orderBy = function(){ return _throw(new jSQL_Error("0022")); };
-			this.asc = function(){ return _throw(new jSQL_Error("0022")); };
-			this.desc = function(){ return _throw(new jSQL_Error("0022")); };
-			this.limit = function(){ return _throw(new jSQL_Error("0022")); };
-			this.distinct = function(){ return _throw(new jSQL_Error("0022")); };
 		}
 
 		function jSQLSelectQuery(){
@@ -830,10 +714,6 @@
 				}
 				return res;
 			};
-			this.ignore = function(){ return _throw(new jSQL_Error("0022")); };
-			this.values = function(){ return _throw(new jSQL_Error("0022")); };
-			this.ifNotExists = function(){ return _throw(new jSQL_Error("0022")); };
-			this.set = function(){ return _throw(new jSQL_Error("0022")); };
 			this.orderBy = function(columns){
 				return this.whereClause.orderBy(columns);
 			};
@@ -961,9 +841,6 @@
 			};
 			this.fetch = function(){ return null; };
 			this.fetchAll = function(){ return []; };
-			this.values = function(){ return _throw(new jSQL_Error("0022")); };
-			this.ifNotExists = function(){ return _throw(new jSQL_Error("0022")); };
-			this.from = function(){ return _throw(new jSQL_Error("0022")); };
 			this.ignore = function(){ this.ignoreFlag=true; return this; };
 			this.orderBy = function(columns){
 				return this.whereClause.orderBy(columns);
@@ -1000,16 +877,6 @@
 			};
 			this.fetch = function(){ return null; };
 			this.fetchAll = function(){ return []; };
-			this.values = function(){ return _throw(new jSQL_Error("0022")); };
-			this.set = function(){ return _throw(new jSQL_Error("0022")); };
-			this.where = function(){ return _throw(new jSQL_Error("0022")); };
-			this.from = function(){ return _throw(new jSQL_Error("0022")); };
-			this.orderBy = function(){ return _throw(new jSQL_Error("0022")); };
-			this.asc = function(){ return _throw(new jSQL_Error("0022")); };
-			this.desc = function(){ return _throw(new jSQL_Error("0022")); };
-			this.limit = function(){ return _throw(new jSQL_Error("0022")); };
-			this.distinct = function(){ return _throw(new jSQL_Error("0022")); };
-			this.ignore = function(){ return _throw(new jSQL_Error("0022")); };
 		}
 
 		////////////////////////////////////////////////////////////////////////////
