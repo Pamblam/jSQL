@@ -17,7 +17,7 @@
 
 		function jSQL_Error(error_no) {
 			this.error = error_no;
-			this.stack = undefined; new Error().stack;
+			this.stack = undefined;
 			var e = new Error();
 			if(e.stack) this.stack = e.stack;
 			switch(error_no){
