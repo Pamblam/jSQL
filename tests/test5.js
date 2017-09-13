@@ -12,7 +12,7 @@ var data = [
 ];
 
 jSQL.onError(function(e){
-	console.log(e.message);
+	console.log("\n\nERROR: "+e.message+"\n\n");
 });
 
 jSQL.load(function(){

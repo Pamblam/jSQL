@@ -96,8 +96,9 @@
 		}
 
 		var error_handler_function = function(){};
+		var mute_jsql_errors = false;
 		function _throw(e, skip){
-			if(skip !== true) error_handler_function(e);
+			if(skip !== true && mute_jsql_errors !== true) error_handler_function(e);
 			throw e;
 		};
 
@@ -2237,12 +2238,14 @@
 				if("function" !== typeof LoadCallback) LoadCallback = function(){};
 
 				// Wait for the schema to be set up
+				mute_jsql_errors = true;
 				(function waitForSchema(tries){
 					try{
-						self.api.select("jSQL_data_schema", function(r){
+						self.api.select("jSQL_data_schema", function(r){							
 							jSQL.tables = {};
 							if(r.length === 0){
-								LoadCallback()
+								mute_jsql_errors = false;
+								LoadCallback();
 								return;
 							}
 							for(var i=r.length; i--;){
@@ -2267,15 +2270,14 @@
 								jSQL.tables[tablename].insertRow(rowdata);
 							}
 
-							self.isLoading = false;
-							self.loaded = true;
-							while(self.loadingCallbacks.length) 
-								self.loadingCallbacks.shift()();
+							mute_jsql_errors = false;
+							LoadCallback();
 							return;
 						});
 
 					}catch(e){
 						if(tries > 500){
+							mute_jsql_errors = false;
 							self.isLoading = false;
 							self.loaded = true;
 							while(self.loadingCallbacks.length) 
