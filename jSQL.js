@@ -85,6 +85,8 @@
 				case "0062": this.message = "Could not initiate a request."; break;
 				case "0063": this.message = "Browser doesn't support Web SQL or IndexedDB."; break;
 				case "0064": this.message = "Unable towrite to datastore file."; break;
+				case "0065": this.message = "AUTO_INCREMENT column must be a key."; break;
+				case "0066": this.message = "AUTO_INCREMENT column must be an INT type."; break;
 				default: this.message = "Unknown error."; break;
 			}
 			this.toString = function () {
@@ -232,13 +234,15 @@
 		// jSQL Table constructor //////////////////////////////////////////////////
 		////////////////////////////////////////////////////////////////////////////
 
-		function jSQLTable(name, columns, data, types, keys){
+		function jSQLTable(name, columns, data, types, keys, auto_increment){
 			var self = this;	
-			self.name = "";		// Table name
-			self.columns = [];	// Array of column names
-			self.data = [];		// Array of arrays
-			self.colmap = {};	// Colmap
-			self.types = [];    // array of data types for each column [{type:"",args:[]}..]
+			self.name = "";				// Table name
+			self.columns = [];			// Array of column names
+			self.data = [];				// Array of arrays
+			self.colmap = {};			// Colmap
+			self.types = [];			// array of data types for each column [{type:"",args:[]}..]
+			self.auto_inc_col = false;	// If there's an auto_increment column, it's name
+			self.auto_inc_seq = 0;		// The next value in the auto increment sequence
 
 			// List of column keys on the table
 			self.keys = {
@@ -247,7 +251,7 @@
 			};
 
 			// Create the table and load the data, if there is any
-			self.init = function(name, columns, data, types, keys){
+			self.init = function(name, columns, data, types, keys, auto_increment){
 				self.name = name;
 
 				// If the types array does not exist, create it
@@ -309,6 +313,22 @@
 					if(type == "unique") self.keys.unique.push({column:key.column, map:{}});
 				}
 
+				// if there's an AI column
+				if(auto_increment){
+					var isInPKArray = Array.isArray(self.keys.primary.column) && self.keys.primary.column.indexOf(auto_increment) > -1;
+					var isPK = self.keys.primary.column === auto_increment;
+					var isInUKArrayArray = false;
+					for(var i=self.keys.unique.length; i--;){
+						var isInUKArray = Array.isArray(self.keys.unique[i].column) && self.keys.unique[i].column.indexOf(auto_increment) > -1;
+						var isUK = self.keys.unique[i].column === auto_increment;
+						if(isInUKArray || isUK) isInUKArrayArray = true;
+					}
+					if(isInPKArray || isPK || isInUKArrayArray){
+						if(self.types[self.colmap[auto_increment]].type !== "INT") return _throw(new jSQL_Error("0066"));
+						self.auto_inc_col = auto_increment;
+					}else return _throw(new jSQL_Error("0065"));
+				}
+
 				// Load the data, if there is any
 				if(data !== undefined) self.loadData(data);
 			};
@@ -337,6 +357,8 @@
 						if(col === oldname) colmap[newname] = self.colmap[col];
 						else colmap[col] = self.colmap[col];
 				self.colmap = colmap;
+				// Update the AI column
+				if(self.auto_inc_col === oldname) self.auto_inc_col = newname;
 			};
 
 			self.addColumn = function(name, defaultVal, type){
@@ -365,7 +387,6 @@
 
 				// Loop columns and insert the data
 				var i = data.length;
-				var c  = self.columns.length;
 				while(i--) self.insertRow(data[i]);
 			};
 
@@ -415,9 +436,18 @@
 				}else return _throw(new jSQL_Error("0015"));
 
 				// validate & cast each row type
-				for(var i=row.length; i--;)
+				for(var i=row.length; i--;){
+					// If it's the auto increment column and it's zero or undefined, update it
+					if(self.columns[i] === self.auto_inc_col){
+						if(!row[i]){
+							row[i] = self.auto_inc_seq;
+							self.auto_inc_seq++;
+						}
+						if(row[i] >= self.auto_inc_seq) self.auto_inc_seq = row[i]+1;
+					}
 					row[i] = self.normalizeColumnStoreValue(self.columns[i], row[i]);
-
+				}
+				
 				// Make sure the primary key(s) is/are not violated
 				// There can only be one primary key, but if it's an array it
 				// is treated as a compound key
@@ -441,8 +471,7 @@
 				}
 
 				// Check the unique keys, There may be multiple and they may be compound
-				var ukey;
-				for(var k=0; ukey=self.keys.unique[k]; k++){
+				for(var k=0, ukey; ukey=self.keys.unique[k]; k++){
 					var key_columns = Array.isArray(ukey.column) ? ukey.column : [ukey.column];
 					var col, vals = [];
 					for(var uk=0; col=key_columns[uk]; uk++){
@@ -477,7 +506,7 @@
 				return jSQL.types.getByType(type.type.toUpperCase()).unserialize(value, type.args);
 			};
 
-			self.init(name, columns, data, types, keys);
+			self.init(name, columns, data, types, keys, auto_increment);
 		}
 
 		////////////////////////////////////////////////////////////////////////////
@@ -861,18 +890,19 @@
 		}
 
 		function jSQLCreateQuery(){
-			this.init = function(tablename, columns, types, keys){
+			this.init = function(tablename, columns, types, keys, auto_increment){
 				this.tablename = tablename;
 				this.columns = columns;
 				this.coltypes = types;
 				this.keys = keys;
+				this.ai_col = auto_increment;
 				return this;
 			};
 			this.ifNotExists = function(){ this.INEFlag=true; return this; };
 			this.execute = function(data){ 
 				if(undefined !== data) this.data = data; 
 				if(!(this.INEFlag && jSQL.tables.hasOwnProperty(this.tablename)))
-					jSQL.tables[this.tablename] = new jSQLTable(this.tablename, this.columns, this.data, this.coltypes, this.keys);
+					jSQL.tables[this.tablename] = new jSQLTable(this.tablename, this.columns, this.data, this.coltypes, this.keys, this.ai_col);
 				return this;
 			};
 			this.fetch = function(){ return null; };
@@ -1209,7 +1239,6 @@
 					query = parseWhereClause(query, words);
 
 					return query;
-
 					break;
 
 				case "DROP":				
@@ -1235,11 +1264,9 @@
 					if(undefined === jSQL.tables[table]) return _throw(new jSQL_Error("0021"));
 
 					return jSQL.dropTable(table);
-
 					break;
 
 				case "INSERT": 
-
 					var table, cols=[], values = [], ignore = false;
 
 					var into = words.shift().toUpperCase();
@@ -1304,8 +1331,8 @@
 
 					var q = jSQL.insertInto(table).values(data);
 					return ignore ? q.ignore() : q;
-
 					break;
+					
 				case "CREATE": 
 					var params = {};
 					var table, c, cols = [],ine=false;
@@ -1373,7 +1400,8 @@
 					for(var i=0; i<cols.length; i++){
 						var colparts = cols[i].split(" ");
 						var colname = removeQuotes(colparts.shift());
-
+						var is_ai = false; // is this column an auto_increment column
+						
 						// If this line is actually a key definition rather tahn a column defintion
 						if(colname.toUpperCase() == "PRIMARY" || colname.toUpperCase() == "UNIQUE"){
 							var char, def_started = false, in_quote = false, key_cols = [], curr_col = "";
@@ -1417,13 +1445,14 @@
 						params[table][i] = {name: colname, type:"AMBI",args:[]};
 						if(colparts.length){
 
-							// If the column definition includes "primary [key]" or "unique [key]" remove those words now
+							// If the column definition includes "primary [key]" or "unique [key]" or "auto_increment" remove those words now
 							var colparts_new = [], colparts_primary_index = false, colparts_unique_index = false;
 							for(var n = 0; n<colparts.length; n++){
 								if(colparts[n].toUpperCase() === "PRIMARY") colparts_primary_index = n;
 								else if(colparts[n].toUpperCase() === "UNIQUE") colparts_unique_index = n;
 								else if(colparts[n].toUpperCase() === "KEY" && colparts_primary_index!==false && n === (1+colparts_primary_index)){ /* do nothing */ }
 								else if(colparts[n].toUpperCase() === "KEY" && colparts_unique_index!==false && n === (1+colparts_unique_index)){ /* do nothing */ }
+								else if(colparts[n].toUpperCase() === "AUTO_INCREMENT") is_ai = true;
 								else colparts_new.push(colparts[n]);
 							}
 							colparts = colparts_new;
@@ -1469,9 +1498,10 @@
 									  params[table][i].args.push(a[d].trim());
 							}
 							params[table][i].type = typename.split("(")[0].trim().toUpperCase();
+							if(is_ai) params[table][i].auto_increment = true;
 						}
 					}		
-
+					
 					var query = jSQL.createTable(params, keys);
 					if(ine) query.ifNotExists();
 					return query;
@@ -2283,7 +2313,7 @@
 		// Syntactic sugar /////////////////////////////////////////////////////////
 		////////////////////////////////////////////////////////////////////////////
 
-		function createTable(name, columnsOrData, types, keys){
+		function createTable(name, columnsOrData, types, keys, auto_increment){
 
 			// allow for all params to be passed in a single object
 			// jSQL.createTable({myTable: [
@@ -2291,41 +2321,57 @@
 			//		{ name: "Name", type: "VARCHAR", args: [30] }
 			// ]})
 			// 
-			// OR
+			// OR, for compund keys
 			// 
 			// jSQL.createTable({myTable: [
 			//		{ name: "ID", type: "INT", args: [] }, 
 			//		{ name: "Name", type: "VARCHAR", args: [30] }
 			// ]}, [
-			//		{ column: "ID", type: "primary" }	
+			//		{ column: ["ID", "Name"], type: "primary" }	
 			// ])
+			// 
+			// OR, for single-column keys
+			//
+			// jSQL.createTable({myTable: [
+			//		{ name: "ID", type: "INT", args: [], key: "primary", auto_increment: true }, 
+			//		{ name: "Name", type: "VARCHAR", args: [30] }
+			// ]})
 			var dataObjNoKeys = undefined === columnsOrData && undefined === types && "object" === typeof name && undefined === keys;
 			var dataObjWithKeys = Array.isArray(columnsOrData) && undefined === types && "object" === typeof name && undefined === keys;
 			if(dataObjNoKeys || dataObjWithKeys){
-				if(dataObjWithKeys) keys = columnsOrData;
+				if(dataObjWithKeys) keys = undefined === columnsOrData ? [] : columnsOrData; 
+				if(undefined === keys) keys = [];
 				columnsOrData = [];
 				types = [];
 				for(var tblname in name){
 					if(!name.hasOwnProperty(tblname))continue;
 					var columnDefs = name[tblname];
 					name = tblname;
-					for(var n=0; n<columnDefs.length; n++){
+					for(var n=0; n<columnDefs.length; n++){ 
 						var col = columnDefs[n].name;
 						columnsOrData.push(col);
 						types.push({
 							type: columnDefs[n].type, 
 							args: (undefined===columnDefs[n].args ? []:columnDefs[n].args)
 						});
+						// if a key is defined in the row column (only for single column keys)
+						if(columnDefs[n].hasOwnProperty("key") && Array.isArray(keys)){
+							keys.push({column: columnDefs[n].name, type: columnDefs[n].key});
+						}
+						// If auto_incerment is defined in the column definitions
+						if(columnDefs[n].hasOwnProperty("auto_increment") && columnDefs[n].auto_increment === true){
+							auto_increment = columnDefs[n].name;
+						}
 					}
 					break;
 				}
 			}
-
+			
 			// if a single column was provided
 			if(!Array.isArray(columnsOrData)) columnsOrData=[columnsOrData];
 			if(undefined === keys) keys = [];
 			if(!Array.isArray(keys)) keys=[keys];
-			return new jSQLQuery("CREATE").init(name, columnsOrData, types, keys);
+			return new jSQLQuery("CREATE").init(name, columnsOrData, types, keys, auto_increment);
 		}
 
 		function select(cols){
