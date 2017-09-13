@@ -12,10 +12,8 @@ var data = [
 ];
 
 jSQL.onError(function(e){
-	//console.log(e.message);
+	console.log(e.message);
 });
-
-
 
 jSQL.load(function(){
 
@@ -44,5 +42,5 @@ jSQL.load(function(){
 
 	jSQL.commit();
 
-	console.log("done");
+	console.log("done 4");
 });

@@ -56,7 +56,6 @@ jSQL.load(function(){
 	}]);
 	jSQL.commit();
 
-	console.log("There are "+jSQL.tables.hatTable.data.length+" total rows in `hatTable`");
-	var results = jSQL.query('SELECT * FROM `hatTable`').execute().fetchAll();
-	echo(makeTable(results));
+	// console.log("There are "+jSQL.tables.hatTable.data.length+" total rows in `hatTable`");
+	console.log("done 3");
 });

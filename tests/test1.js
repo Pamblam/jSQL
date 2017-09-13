@@ -14,11 +14,12 @@ jSQL.load(function(){
 	jSQL.query("insert into test values (?, ?)").execute([id, date]);
 	values.push({id:id, time:date});
 
-	var output = [];
-	for(var i=0; i<values.length; i++){
-		output.push(values[i].id+" "+values[i].time.toString());
-	}
-	console.log(output.join("\n"));
-
+//	var output = [];
+//	for(var i=0; i<values.length; i++){
+//		output.push(values[i].id+" "+values[i].time.toString());
+//	}
+//	console.log(output.join("\n"));
+	
 	jSQL.commit();
+	console.log("done 1");
 });
