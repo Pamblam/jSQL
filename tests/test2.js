@@ -30,12 +30,14 @@ var results;
 
 console.log("There are "+jSQL.tables.oTable.data.length+" total rows in `oTable`");
 results = jSQL.query('SELECT * FROM `oTable`').execute().fetchAll();
-console.log(JSON.stringify(results));
+//console.log(JSON.stringify(results));
 
 console.log("There are "+jSQL.tables.aTable.data.length+" total rows in `aTable`");
 results = jSQL.query('SELECT * FROM `aTable`').execute().fetchAll();
-console.log(JSON.stringify(results));
+//console.log(JSON.stringify(results));
 
 console.log("There are "+jSQL.tables.ceTable.data.length+" total rows in `ceTable`");
 results = jSQL.query('SELECT * FROM `ceTable`').execute().fetchAll();
-console.log(JSON.stringify(results));
+//console.log(JSON.stringify(results));
+
+console.log("done 2");

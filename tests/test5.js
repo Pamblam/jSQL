@@ -26,12 +26,11 @@ jSQL.load(function(){
 
 	// Create a non-compound key using high-level syntax
 	jSQL.query("create table if not exists test5table (ID int auto_increment primary key, Name varchar, FOOD varchar)").execute(data);
-
 	jSQL.query("insert into test5table (ID, Name, FOOD) values (?, ?, ?)").execute([10, 'nick', 'cake']);
 	jSQL.query("insert into test5table (ID, Name, FOOD) values (?, ?, ?)").execute([0, 'jimbo', 'fart sauce']); // ID field should be 11
 	jSQL.query("insert into test5table (Name, FOOD) values (?, ?)").execute(['lilly', 'poop burger']); // ID filed should be 12
+	jSQL.query("update test5table set ID = 70 where name = 'bob'").execute(); // this should make the next value in the auto increment sequence 71
+	jSQL.commit();
 
-	// jSQL.commit();
-
-	console.log(jSQL.tables.test5table);
+	console.log("done 5");
 });

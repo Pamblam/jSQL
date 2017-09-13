@@ -1,6 +1,6 @@
 [![jSQL Logo](http://i.imgur.com/VQlJKOc.png)](http://pamblam.github.io/jSQL/)
 
-jSQL (Official) - Version 2.5  - *Now gluten free!* 
+jSQL (Official) - Version 2.6  - *Now gluten free!* 
 [![npm version](https://badge.fury.io/js/jsql-official.svg)](https://badge.fury.io/js/jsql-official) [![Build Status](https://travis-ci.org/Pamblam/jSQL.svg?branch=master)](https://travis-ci.org/Pamblam/jSQL) [![Inline docs](http://inch-ci.org/github/Pamblam/jSQL.svg?branch=master)](http://inch-ci.org/github/Pamblam/jSQL)
 
 <hr>
@@ -72,7 +72,7 @@ For more information and to read about other update, delete and other operations
 
 ## Documentation & Examples
 
-jSQL is fully documented in the [jSQL Wiki](https://github.com/Pamblam/jSQL/wiki#jsql-docs), which even includes more [simple usage examples](https://github.com/Pamblam/jSQL/wiki/Examples). The repository on GitHub also includes several more [complete and complex examples](https://github.com/Pamblam/jSQL/tree/master/examples). There is also a [live demo](http://pamblam.github.io/jSQL/demo.html) available on the official website.
+jSQL is fully documented in the [jSQL Wiki](https://github.com/Pamblam/jSQL/wiki#jsql-docs), which even includes more [simple usage examples](https://github.com/Pamblam/jSQL/wiki/Examples). You may also refer to the package's tests for more [complete and complex examples](https://github.com/Pamblam/jSQL/tree/master/tests). There is also a [live demo](http://pamblam.github.io/jSQL/demo.html) available on the official website.
 
 <hr>
 

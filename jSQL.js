@@ -1,5 +1,5 @@
 /**
- * jSQL.js v2.5
+ * jSQL.js v2.6
  * A Javascript Query Language Database Engine
  * @author Robert Parham
  * @website http://pamblam.github.io/jSQL/
@@ -22,7 +22,7 @@
 			if(e.stack) this.stack = e.stack;
 			switch(error_no){
 				case "0001": this.message = "Corrupted function stored in data."; break;
-				case "0002": this.message = "Attempted to aaply a non-function as an error handler."; break;
+				case "0002": this.message = "Attempted to apply a non-function as an error handler."; break;
 				case "0003": this.message = "Invalid datatype definition."; break;
 				case "0004": this.message = "DataType must have a `type` property."; break;
 				case "0005": this.message = "DataType must have a `serialize` function."; break;
@@ -793,6 +793,13 @@
 					var row = this.table.data[rowIndex].slice(0);
 
 					for(var n=0; n<this.columns.length; n++){
+						if(this.columns[n] === this.table.auto_inc_col){
+							if(!this.newvals[this.columns[n]]){
+								this.newvals[this.columns[n]] = this.table.auto_inc_seq;
+								this.table.auto_inc_seq++;
+							}
+							if(this.newvals[this.columns[n]] >= this.table.auto_inc_seq) this.table.auto_inc_seq = this.newvals[this.columns[n]]+1;
+						}
 						row[this.table.colmap[this.columns[n]]] = this.table.normalizeColumnStoreValue(this.columns[n], this.newvals[this.columns[n]]);
 					}
 
@@ -2207,7 +2214,13 @@
 							if(!row.hasOwnProperty(n)) continue;
 							row[n] = jSQL.tables[tbl].normalizeColumnStoreValue(n, row[n]);
 						}
-						rows.push({table: tbl, data:JSON.stringify(row), colTypes: JSON.stringify(jSQL.tables[tbl].types), keys: JSON.stringify(keys)});
+						rows.push({
+							table: tbl, 
+							data: JSON.stringify(row), 
+							colTypes: JSON.stringify(jSQL.tables[tbl].types), 
+							keys: JSON.stringify(keys),
+							ai_col: jSQL.tables[tbl].auto_inc_col
+						});
 					}
 				}
 				self.api.delete("jSQL_data_schema", function(){
@@ -2253,13 +2266,15 @@
 								var rowdata = JSON.parse(r[i].data);
 								var colTypes = JSON.parse(r[i].colTypes);
 								var keys = JSON.parse(r[i].keys);
+								var ai_col = r[i].ai_col;
+										
 								// Create the table in memory if it doesn't exist yet
 								if(undefined === jSQL.tables[tablename]){
 									var cols = [];
 									for(var c in rowdata)
 										if(rowdata.hasOwnProperty(c))
 											cols.push(c);
-									jSQL.createTable(tablename, cols, colTypes, keys).execute();
+									jSQL.createTable(tablename, cols, colTypes, keys, ai_col).execute();
 								}
 
 								for(var c in rowdata){
@@ -2497,9 +2512,9 @@
 	})();
 	
 	// Determine if we're running Node or browser
-    if(isNode){
+	if (isNode) {
 		module.exports = jSQL;
-    }else{
+	} else {
 		window.jSQL = jSQL;
 	}
 	
