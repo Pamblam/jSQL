@@ -15,8 +15,6 @@ jSQL.onError(function(e){
 	console.log(e.message);
 });
 
-jSQL.reset();
-
 jSQL.load(function(){
 
 	// Create a compound key using low-level syntax

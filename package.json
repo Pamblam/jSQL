@@ -1,6 +1,6 @@
 {
   "name": "jsql-official",
-  "version": "2.5.2",
+  "version": "2.6.0",
   "description": "jSQL is a robust and persistent SQL engine written in Javascript for both Node and browser. See: pamblam.github.io/jSQL for details and usage.",
   "main": "jSQL.min.js",
   "directories": {

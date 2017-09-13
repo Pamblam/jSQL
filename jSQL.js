@@ -792,7 +792,7 @@
 					var row = this.table.data[rowIndex].slice(0);
 
 					for(var n=0; n<this.columns.length; n++){
-						row[this.table.colmap[this.columns[n]]] = this.table.normalizeColumnStoreValue(this.columns[i], this.newvals[this.columns[n]]);
+						row[this.table.colmap[this.columns[n]]] = this.table.normalizeColumnStoreValue(this.columns[n], this.newvals[this.columns[n]]);
 					}
 
 					var primary_key_columns = this.table.keys.primary.column;
@@ -1505,8 +1505,8 @@
 					var query = jSQL.createTable(params, keys);
 					if(ine) query.ifNotExists();
 					return query;
-
 					break;
+					
 				case "UPDATE":
 					// Do stuff to parse update query
 					var table, colValPairs, query, orderColumns = [];
@@ -2472,7 +2472,7 @@
 		////////////////////////////////////////////////////////////////////////////
 
 		return {
-			version: 2.5,
+			version: 2.6,
 			tables: {},
 			query: jSQLParseQuery,
 			createTable: createTable,
