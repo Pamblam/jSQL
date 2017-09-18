@@ -1,5 +1,5 @@
 /**
- * jSQL.js v2.6
+ * jSQL.js v2.7
  * A Javascript Query Language Database Engine
  * @author Robert Parham
  * @website http://pamblam.github.io/jSQL/
@@ -909,8 +909,9 @@
 			this.ifNotExists = function(){ this.INEFlag=true; return this; };
 			this.execute = function(data){ 
 				if(undefined !== data) this.data = data; 
-				if(!(this.INEFlag && jSQL.tables.hasOwnProperty(this.tablename)))
+				if(!(this.INEFlag && jSQL.tables.hasOwnProperty(this.tablename))){
 					jSQL.tables[this.tablename] = new jSQLTable(this.tablename, this.columns, this.data, this.coltypes, this.keys, this.ai_col);
+				}
 				return this;
 			};
 			this.fetch = function(){ return null; };
@@ -2208,6 +2209,16 @@
 						keys.push({column: jSQL.tables[tbl].keys.primary.column, type: "primary"});
 
 					var data = jSQL.select("*").from(tbl).execute().fetchAll();
+					if(!data.length){
+						// Save empty tables				
+						rows.push({
+							table: tbl, 
+							data: JSON.stringify(jSQL.tables[tbl].columns), 
+							colTypes: JSON.stringify(jSQL.tables[tbl].types), 
+							keys: JSON.stringify(keys),
+							ai_col: jSQL.tables[tbl].auto_inc_col
+						});
+					}
 					for(var i=data.length; i--;){
 						var row = data[i];
 						for(var n in row){
@@ -2254,7 +2265,7 @@
 				mute_jsql_errors = true;
 				(function waitForSchema(tries){
 					try{
-						self.api.select("jSQL_data_schema", function(r){							
+						self.api.select("jSQL_data_schema", function(r){
 							jSQL.tables = {};
 							if(r.length === 0){
 								mute_jsql_errors = false;
@@ -2270,26 +2281,32 @@
 										
 								// Create the table in memory if it doesn't exist yet
 								if(undefined === jSQL.tables[tablename]){
-									var cols = [];
-									for(var c in rowdata)
-										if(rowdata.hasOwnProperty(c))
-											cols.push(c);
-									jSQL.createTable(tablename, cols, colTypes, keys, ai_col).execute();
+									if(Array.isArray(rowdata)){
+										cols = rowdata;
+										jSQL.createTable(tablename, cols, colTypes, keys, ai_col).execute();
+									}else{
+										var cols = [];
+										for(var c in rowdata)
+											if(rowdata.hasOwnProperty(c))
+												cols.push(c);
+										jSQL.createTable(tablename, cols, colTypes, keys, ai_col).execute();
+									}
 								}
-
-								for(var c in rowdata){
-									if(!rowdata.hasOwnProperty(c)) continue;
-									rowdata[c] = jSQL.tables[tablename].normalizeColumnFetchValue(c, rowdata[c]);
+								// If it's an array it's just column names and the table is empty
+								// So, only do this if the rowdata is actually a rowdata object
+								if(!Array.isArray(rowdata)){
+									for(var c in rowdata){
+										if(!rowdata.hasOwnProperty(c)) continue;
+										rowdata[c] = jSQL.tables[tablename].normalizeColumnFetchValue(c, rowdata[c]);
+									}
+									jSQL.tables[tablename].insertRow(rowdata);
 								}
-
-								jSQL.tables[tablename].insertRow(rowdata);
 							}
 
 							mute_jsql_errors = false;
 							LoadCallback();
 							return;
 						});
-
 					}catch(e){
 						if(tries > 500){
 							mute_jsql_errors = false;
@@ -2489,7 +2506,7 @@
 		////////////////////////////////////////////////////////////////////////////
 
 		return {
-			version: 2.6,
+			version: 2.7,
 			tables: {},
 			query: jSQLParseQuery,
 			createTable: createTable,

@@ -3,11 +3,11 @@
 // @namespace   pamblam.com
 // @description A debugging tool for jSQL. Adds a button to the top of any webpage with jSQL which overlays a tool similar to mySQL's phpMyAdmin.
 // @include     *
-// @version     1.1
+// @version     1.6
 // @grant       none
 // ==/UserScript==
 void(function () {
-	var jSQLMyAdminVersion = 1.5;
+	var jSQLMyAdminVersion = 1.6;
 	
 	/**
 	 * Turn this userscript into a browser button..
@@ -18,18 +18,20 @@ void(function () {
 	 *		<a href="javascript:(minified, urlencoded userscript here)">jSQLMyAdmin</a>
 	 *  - Open HTML page in browser, drag link to bookmarks toolbar
 	 */
-	var isBtn = false;
+	var isBtn = true;
 	
 	var cm;
 	var drawnTables = [];
 	var resources = [];
-	var minJSQLVersion = 1.4;
+	var minJSQLVersion = 2.7;
 	
-	if (typeof window.jSQL === 'undefined') resources.push({
-		// jSQL v1.3
-		js: ['//cdn.rawgit.com/Pamblam/jSQL/00745f53193ab3d21a0c40dbba147de9dcb977ae/jSQL.js'],
-		css: []
-	});
+	if (typeof window.jSQL === 'undefined'){
+		resources.push({
+			// jSQL edge
+			js: ['//gitcdn.xyz/repo/Pamblam/jSQL/master/jSQL.min.js'],
+			css: []
+		});
+	}
 	if(typeof jQuery === 'undefined') resources.push({
 		js: ['//code.jquery.com/jquery-2.2.4.js'],
 		css: []
@@ -93,26 +95,29 @@ void(function () {
 				cm.getDoc().setValue(query);
 				$(this).val($(this).find("option:first").val());
 			});
-			$('#jSQLTableTabs').tabs({beforeActivate: function(event, ui) {
-				var tableName = $(ui.newPanel).data("tn");
-				if(tableName === undefined) return;
-				$(ui.newPanel).html("Loading...");
-			}, activate: function(event, ui){
-				setTimeout(function(){
+			$('#jSQLTableTabs').tabs({
+				beforeActivate: function(event, ui) {
 					var tableName = $(ui.newPanel).data("tn");
 					if(tableName === undefined) return;
-					var data = jSQL.select('*').from(tableName).execute().fetchAll('array');
-					var tableHTML = '<div style="overflow-x:auto; width:100%; margin:0; padding:0;"><table></table></div>';
-					$(ui.newPanel).html(tableHTML);
-					var cols = [];
-					for(var i=0; i<jSQL.tables[tableName].columns.length; i++) 
-						cols.push({title: jSQL.tables[tableName].columns[i]});
-					$(ui.newPanel).find('table').DataTable({
-						data: data,
-						columns: cols
-					});
-				}, 500);
-			}});
+					$(ui.newPanel).html("Loading...");
+				}, 
+				activate: function(event, ui){
+					setTimeout(function(){
+						var tableName = $(ui.newPanel).data("tn");
+						if(tableName === undefined) return;
+						var data = jSQL.select('*').from(tableName).execute().fetchAll('array');
+						var tableHTML = '<div style="overflow-x:auto; width:100%; margin:0; padding:0;"><table></table></div>';
+						$(ui.newPanel).html(tableHTML);
+						var cols = [];
+						for(var i=0; i<jSQL.tables[tableName].columns.length; i++) 
+							cols.push({title: jSQL.tables[tableName].columns[i]});
+						$(ui.newPanel).find('table').DataTable({
+							data: data,
+							columns: cols
+						});
+					}, 500);
+				}
+			});
 			$('#queryTypeSelect').css({"line-height": "0.9"});
 			$("#jSQLExecuteQueryButton").button({icons: { primary: "ui-icon-caret-1-e"}});
 			$('#jSQLExecuteQueryButton').css({"line-height": "0.9"});
@@ -153,7 +158,6 @@ void(function () {
 					$("#jSQLCommitButton").button("option", "label", "Commit");
 				},2000);
 			});
-			
 			addAllTables();
 			$("head").append("<style>.CodeMirror-hints, .CodeMirror-hint, .CodeMirror-hint-active { z-index:2147483647 !important;}</style>");
 			var tbls = {}; 
