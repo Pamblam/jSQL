@@ -18,7 +18,7 @@ void(function () {
 	 *		<a href="javascript:(minified, urlencoded userscript here)">jSQLMyAdmin</a>
 	 *  - Open HTML page in browser, drag link to bookmarks toolbar
 	 */
-	var isBtn = true;
+	var isBtn = false;
 	
 	var cm;
 	var drawnTables = [];
