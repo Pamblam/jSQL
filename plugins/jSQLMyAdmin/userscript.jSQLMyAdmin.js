@@ -28,30 +28,30 @@ void(function () {
 	if (typeof window.jSQL === 'undefined'){
 		resources.push({
 			// jSQL edge
-			js: ['//gitcdn.xyz/repo/Pamblam/jSQL/master/jSQL.min.js'],
+			js: ['https://gitcdn.xyz/repo/Pamblam/jSQL/master/jSQL.min.js'],
 			css: []
 		});
 	}
 	if(typeof jQuery === 'undefined') resources.push({
-		js: ['//code.jquery.com/jquery-2.2.4.js'],
+		js: ['https://code.jquery.com/jquery-2.2.4.js'],
 		css: []
 	});
 	if(typeof jQuery === 'undefined' || !jQuery.ui) resources.push({
-		js: ['//code.jquery.com/ui/1.12.0/jquery-ui.min.js'],
-		css: ['//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css'],
+		js: ['https://code.jquery.com/ui/1.12.0/jquery-ui.min.js'],
+		css: ['https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css'],
 	});
 	if(typeof jQuery === 'undefined' || !$.fn.dataTableExt) resources.push({
-		js: ['//cdn.datatables.net/1.10.13/js/jquery.dataTables.min.js',
-			'//cdn.datatables.net/1.10.13/js/dataTables.jqueryui.min.js'],
-		css: ['//cdn.datatables.net/1.10.13/css/dataTables.jqueryui.min.css'],
+		js: ['https://cdn.datatables.net/1.10.13/js/jquery.dataTables.min.js',
+			'https://cdn.datatables.net/1.10.13/js/dataTables.jqueryui.min.js'],
+		css: ['https://cdn.datatables.net/1.10.13/css/dataTables.jqueryui.min.css'],
 	});
 	if(typeof CodeMirror === "undefined") resources.push({
-		js: ['//cdnjs.cloudflare.com/ajax/libs/codemirror/5.22.0/codemirror.js',
-			'//cdnjs.cloudflare.com/ajax/libs/codemirror/5.22.0/mode/sql/sql.js',
-			'//cdnjs.cloudflare.com/ajax/libs/codemirror/5.22.0/addon/hint/show-hint.js',
-			'//cdnjs.cloudflare.com/ajax/libs/codemirror/5.22.0/addon/hint/sql-hint.js'],
-		css: ['//cdnjs.cloudflare.com/ajax/libs/codemirror/5.22.0/codemirror.css',
-			'//cdnjs.cloudflare.com/ajax/libs/codemirror/5.22.0/addon/hint/show-hint.css'],
+		js: ['https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.22.0/codemirror.js',
+			'https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.22.0/mode/sql/sql.js',
+			'https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.22.0/addon/hint/show-hint.js',
+			'https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.22.0/addon/hint/sql-hint.js'],
+		css: ['https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.22.0/codemirror.css',
+			'https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.22.0/addon/hint/show-hint.css'],
 	});
 	
 	showjSQLLoader();
