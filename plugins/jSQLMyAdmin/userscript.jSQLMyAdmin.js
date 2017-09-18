@@ -199,7 +199,7 @@ void(function () {
 			var tableHTML = data.length ? '<br><div><small><b>Results</b></small></div><div style="overflow-x:auto; width:100%; margin:0; padding:0;">'+makeTableHTML(data)+'</div>' : '<center><b>No results to show</b><br>Enter a query</center>';
 			addAllTables();
 			$("#jSQLMAQueryResults").html(tableHTML);
-			$('#jSQLMAQueryResults').find('table').DataTable({"order": []});
+			$('#jSQLMAQueryResults').find('table').DataTable({"order": [], "scrollX": true});
 		}catch(e){
 			var msg = e.message ? e.message+"" : e+"";
 			alert(msg);
