@@ -1,5 +1,5 @@
 /**
- * jSQL.js v2.7
+ * jSQL.js v2.81
  * A Javascript Query Language Database Engine
  * @author Robert Parham
  * @website http://pamblam.github.io/jSQL/
@@ -1394,10 +1394,11 @@
 					var parts = conlumnDef.split(",");
 					for(var i=0;i<parts.length;i++){
 						var str = parts[i];
-						while((str.match(/\(/g) || []).length !== (str.match(/\)/g) || []).length){
+						while((str.match(/\(/g) || []).length !== (str.match(/\)/g) || []).length && i<parts.length){
 							str += ","+parts[i+1];
 							parts[i+1] = "";
 							parts[i] = str;
+							i++;
 						}
 						if(str.trim()!=="") cols.push(str.trim());
 					}
@@ -2507,7 +2508,7 @@
 		////////////////////////////////////////////////////////////////////////////
 
 		return {
-			version: 2.8,
+			version: 2.81,
 			tables: {},
 			query: jSQLParseQuery,
 			createTable: createTable,
