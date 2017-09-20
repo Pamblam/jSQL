@@ -2204,7 +2204,7 @@
 
 					var keys = [];
 					for(var i=0; i<jSQL.tables[tbl].keys.unique.length; i++)
-						keys.push({column: jSQL.tables[tbl].keys.unique.column, type: "unique"});
+						keys.push({column: jSQL.tables[tbl].keys.unique[i].column, type: "unique"});
 					if(jSQL.tables[tbl].keys.primary.column)
 						keys.push({column: jSQL.tables[tbl].keys.primary.column, type: "primary"});
 
@@ -2292,6 +2292,7 @@
 										jSQL.createTable(tablename, cols, colTypes, keys, ai_col).execute();
 									}
 								}
+								
 								// If it's an array it's just column names and the table is empty
 								// So, only do this if the rowdata is actually a rowdata object
 								if(!Array.isArray(rowdata)){
@@ -2506,7 +2507,7 @@
 		////////////////////////////////////////////////////////////////////////////
 
 		return {
-			version: 2.7,
+			version: 2.8,
 			tables: {},
 			query: jSQLParseQuery,
 			createTable: createTable,
