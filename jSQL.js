@@ -1,5 +1,5 @@
 /**
- * jSQL.js v2.81
+ * jSQL.js v2.9
  * A Javascript Query Language Database Engine
  * @author Robert Parham
  * @website http://pamblam.github.io/jSQL/
