@@ -9,7 +9,7 @@ jSQL is a state and data management tool as well as a robust SQL engine for both
 
 ![jSQL Layers](https://i.imgur.com/WKEmFdB.jpg)
 
-Under the hood, jSQL has 3 layers:
+# Under the hood, jSQL has 3 layers...
 
  - **At the Lowest level**, jSQL automatically chooses the best method of storage to save state and interacts directly with it. This layer exposes a persistence method, [`jSQL.commit()`](https://github.com/Pamblam/jSQL/wiki/Persistence-Management#jsqlcommit), which is called to serialize and store all data currently in the jSQL database on the user's hard drive. While the app is open and loaded in the browser, this data is serialized and stored within reach in the [`jSQL.tables`](https://github.com/Pamblam/jSQL/wiki/Persistence-Management#jsqltables) object where the library is able to perform operations on it.
 
