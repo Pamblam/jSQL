@@ -1,13 +1,15 @@
 [![jSQL Logo](http://i.imgur.com/VQlJKOc.png)](http://pamblam.github.io/jSQL/)
 
-jSQL (Official) - Version 2.9  - *Now gluten free!* 
+jSQL (Official) - Version 2.9  - *Now gluten free!*
 [![npm version](https://badge.fury.io/js/jsql-official.svg)](https://badge.fury.io/js/jsql-official) [![Build Status](https://travis-ci.org/Pamblam/jSQL.svg?branch=master)](https://travis-ci.org/Pamblam/jSQL) [![Inline docs](http://inch-ci.org/github/Pamblam/jSQL.svg?branch=master)](http://inch-ci.org/github/Pamblam/jSQL)
 
 <hr>
 
 jSQL is a state and data management tool as well as a robust SQL engine for both Node and the browser. For complete documentation, please see [the jSQL Wiki](https://github.com/Pamblam/jSQL/wiki). For plugins, live demos and other information see the [official website](http://pamblam.github.io/jSQL/).
 
-Under the hood, jSQL has 3 layers: 
+![jSQL Layers](https://i.imgur.com/WKEmFdB.jpg)
+
+Under the hood, jSQL has 3 layers:
 
  - **At the Lowest level**, jSQL automatically chooses the best method of storage to save state and interacts directly with it. This layer exposes a persistence method, [`jSQL.commit()`](https://github.com/Pamblam/jSQL/wiki/Persistence-Management#jsqlcommit), which is called to serialize and store all data currently in the jSQL database on the user's hard drive. While the app is open and loaded in the browser, this data is serialized and stored within reach in the [`jSQL.tables`](https://github.com/Pamblam/jSQL/wiki/Persistence-Management#jsqltables) object where the library is able to perform operations on it.
 
@@ -32,7 +34,7 @@ If you're running jSQL in a browser, include it in a script tag.
 Or use the latest version from a CDN:
 
     https://gitcdn.xyz/repo/Pamblam/jSQL/master/jSQL.min.js
-  
+
 If you're running jSQL in Node, `require` the jSQL module.
 
     var jSQL = require("jSQL.js");
@@ -45,17 +47,17 @@ When the database has loaded into memory, you'll want to make sure you have a ta
 	    var sql = "create table if not exists users (name varchar(25), age int)";
         jSQL.query(sql).execute();
     });
-    
+
 #### Insert into table
 
 At some point, you might want to put some data in that table.
 
     jSQL.query("insert into users ('bob', 34)").execute();
-    
+
 Prefer prepared statements? Just replace values with question marks and pass the values to the execute method in an array.
-    
+
     jSQL.query("insert into users (?, ?)").execute(['bob', 34]);
-    
+
 #### Select from table
 
 Once you've got the data in there, you're probably going to want to get it back out.
@@ -64,7 +66,7 @@ Once you've got the data in there, you're probably going to want to get it back 
 
 #### Persisting changes in the browser
 
-When you've made changes or additions to the database, call [`jSQL.commit()`](https://github.com/Pamblam/jSQL/wiki/Persistence-Management#jsqlcommit) to commit your changes. 
+When you've made changes or additions to the database, call [`jSQL.commit()`](https://github.com/Pamblam/jSQL/wiki/Persistence-Management#jsqlcommit) to commit your changes.
 
 For more information and to read about other update, delete and other operations, see the [jSQL Wiki](https://github.com/Pamblam/jSQL/wiki#jsql-docs).
 
@@ -91,4 +93,3 @@ Works in all major browsers, even really old ones.
 License info is available [here](https://github.com/Pamblam/jSQL/wiki/License).
 
 <hr>
-
