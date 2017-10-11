@@ -1,5 +1,5 @@
 /**
- * jSQL.js v2.9
+ * jSQL.js v2.9.1
  * A Javascript Query Language Database Engine
  * @author Robert Parham
  * @website http://pamblam.github.io/jSQL/
@@ -124,21 +124,88 @@
 							parseFloat(value) : 0;
 				}
 			},{
+				type: "ENUM",
+				serialize: function(value, args){ return "tits";
+					for(var i=args.length; i--;)
+						if(value == removeQuotes(args[i])) return removeQuotes(args[i]);
+					return removeQuotes(args[0]);
+				},
+				unserialize: function(value, args){ return "tits";
+					for(var i=args.length; i--;)
+						if(value == removeQuotes(args[i])) return removeQuotes(args[i]);
+					return removeQuotes(args[0]);
+				}
+			},{
+				type: "TINYINT",
+				serialize: function(value, args){ 
+					return !isNaN(parseInt(value)) && isFinite(value) &&
+						value >= -128 && value <= 127 ?
+						parseInt(value) : 0; 
+				},
+				unserialize: function(value, args){ 
+					return !isNaN(parseInt(value)) && isFinite(value) ?
+						parseInt(value) : 0; 
+				}
+			},{
+				type: "SMALLINT",
+				serialize: function(value, args){ 
+					return !isNaN(parseInt(value)) && isFinite(value) &&
+						value >= -32768 && value <= 32767 ?
+						parseInt(value) : 0; 
+				},
+				unserialize: function(value, args){ 
+					return !isNaN(parseInt(value)) && isFinite(value) ?
+						parseInt(value) : 0; 
+				}
+			},{
+				type: "MEDIUMINT",
+				serialize: function(value, args){ 
+					return !isNaN(parseInt(value)) && isFinite(value) &&
+						value >= -8388608 && value <= 8388607 ?
+						parseInt(value) : 0; 
+				},
+				unserialize: function(value, args){ 
+					return !isNaN(parseInt(value)) && isFinite(value) ?
+						parseInt(value) : 0; 
+				}
+			},{
+				type: "INT",
+				serialize: function(value, args){ 
+					return !isNaN(parseInt(value)) && isFinite(value) &&
+						value >= -2147483648 && value <= 2147483647 ?
+						parseInt(value) : 0; 
+				},
+				unserialize: function(value, args){ 
+					return !isNaN(parseInt(value)) && isFinite(value) ?
+						parseInt(value) : 0; 
+				}
+			},{
+				type: "BIGINT",
+				serialize: function(value, args){ 
+					return !isNaN(parseInt(value)) && isFinite(value) &&
+						value >= -9007199254740991 && value <= 9007199254740991 ?
+						parseInt(value) : 0; 
+				},
+				unserialize: function(value, args){ 
+					return !isNaN(parseInt(value)) && isFinite(value) ?
+						parseInt(value) : 0; 
+				}
+			},{
 				type: "JSON",
-				aliases: ["ARRAY","OBJECT"],
-				serialize: function(value, args){
+				aliases: ["ARRAY", "OBJECT"],
+				serialize: function(value){
 					return JSON.stringify(value);
 				},
-				unserialize: function(value, args){
+				unserialize: function(value){
 					return JSON.parse(value);
 				}
 			},{
 				type: "FUNCTION",
-				serialize: function(value, args){
+				serialize: function(value){
 					if(typeof value !== "function") value=function(){};
 						return "jSQLFunct-"+value.toString();
 				},
-				unserialize: function(value, args){
+				unserialize: function(value){
 					var p = value.split("-");
 					if(p.shift() !== "jSQLFunct") return _throw(new jSQL_Error("0001"));
 					p = value.split("-");
@@ -153,41 +220,55 @@
 			},{
 				type: "BOOLEAN",
 				aliases: ['BOOL'],
-				serialize: function(value, args){ return !!value; },
-				unserialize: function(value, args){ return !!value; }
-			},{
-				type: "INT",
-				serialize: function(value, args){ 
-					return !isNaN(parseInt(value)) && isFinite(value) ?
-						parseInt(value) : 0; 
+				serialize: function(value){ 
+					return value ? "1" : "0"; 
 				},
-				unserialize: function(value, args){ 
-					return !isNaN(parseInt(value)) && isFinite(value) ?
-						parseInt(value) : 0; 
+				unserialize: function(value){ 
+					return value == "1"; 
 				}
 			},{
 				type: "CHAR",
-				aliases: ["VARCHAR", "LONGTEXT", "MEDIUMTEXT"],
-				serialize: function(value, args){ return ""+value; },
-				unserialize: function(value, args){ return ""+value; }
+				serialize: function(value, args){ 
+					return ""+value; 
+				},
+				unserialize: function(value, args){ 
+					var targetLength = args[0]>>0, padString = ' ';
+					if (value.length > targetLength) return value.substr(0, args[0]);
+					else {
+						targetLength = targetLength-value.length;
+						if (targetLength > padString.length)
+							padString += padString.repeat(targetLength/padString.length); 
+						return String(value) + padString.slice(0,targetLength);
+					}
+					return ""+value; 
+				}
+			},{
+				type: "VARCHAR",
+				aliases: ["LONGTEXT", "MEDIUMTEXT"],
+				serialize: function(value, args){ 
+					return ""+value; 
+				},
+				unserialize: function(value, args){ 
+					return ""+value; 
+				}
 			},{
 				type: "DATE",
-				serialize: function(value, args){ 
+				serialize: function(value){ 
 					if(!value instanceof Date) return new Date(0).getTime();
 					return value.getTime(); 
 				},
-				unserialize: function(value, args){ 
+				unserialize: function(value){ 
 					return new Date(value);
 				}
 			},{
 				type: "AMBI",
-				serialize: function(value, args){ 
+				serialize: function(value){
 					if(value instanceof Date) return value.getTime();
 					if(typeof value === "function") return "jSQLFunct-"+value.toString();
 					if(!isNaN(parseFloat(value)) && isFinite(value)) return value;
 					return ""+value;
 				},
-				unserialize: function(value, args){ 
+				unserialize: function(value){ 
 					if(typeof value === "string"){ 
 						if(value.split("-")[0] === "jSQLFunct"){
 							var p = value.split("-");
@@ -500,6 +581,7 @@
 				var storeVal = jSQL.types.getByType(type.type.toUpperCase()).serialize(value, type.args);
 				if((!isNaN(parseFloat(storeVal)) && isFinite(storeVal)) || typeof storeVal === "string")
 					return storeVal;
+				console.log(storeVal);
 				return _throw(new jSQL_Error("0020"));
 			};
 
@@ -671,6 +753,7 @@
 								this.data[i] = preparedVals.shift();
 					}
 				}
+				console.log(this.data);
 				jSQL.tables[this.table].insertRow(this.data, this.ignoreFlag);
 				return this;
 			};
@@ -924,15 +1007,6 @@
 		////////////////////////////////////////////////////////////////////////////
 
 		function jSQLParseQuery(query){
-
-			// Remove surrounding quotes from a string
-			var removeQuotes = function(str){
-				var quotes = ['"', "'", "`"];
-				for (var i = quotes.length; i--; )
-					if (str.substr(0, 1) == quotes[i] && str.substr(str.length - 1, 1) == quotes[i])
-						return str.substr(1, str.length - 2);
-				return str;
-			};
 
 			// Predcit the correct casing for column and table names
 			var convertToCol = function(c, skipErrors){
@@ -2656,12 +2730,20 @@
 				.trim();
 		}
 
+		function removeQuotes(str){
+			var quotes = ['"', "'", "`"];
+			for (var i = quotes.length; i--; )
+				if (str.substr(0, 1) == quotes[i] && str.substr(str.length - 1, 1) == quotes[i])
+					return str.substr(1, str.length - 2);
+			return str;
+		}
+
 		////////////////////////////////////////////////////////////////////////////
 		// Exposed Methods /////////////////////////////////////////////////////////
 		////////////////////////////////////////////////////////////////////////////
 
 		return {
-			version: 2.9,
+			version: 2.91,
 			tables: {},
 			query: jSQLParseQuery,
 			createTable: createTable,
