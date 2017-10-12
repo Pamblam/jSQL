@@ -229,10 +229,11 @@
 				type: "BOOLEAN",
 				aliases: ['BOOL'],
 				serialize: function(value){ 
-					return value ? "1" : "0"; 
+					return value === true || value.toUpperCase() == "TRUE" || value == 1 ? 
+						"1" : "0" ;
 				},
 				unserialize: function(value){ 
-					return value == "1"; 
+					return value === true || value.toUpperCase() == "TRUE" || value == 1 ; 
 				}
 			},{
 				type: "CHAR",
@@ -262,7 +263,7 @@
 			},{
 				type: "DATE",
 				serialize: function(value){ 
-					if(!value instanceof Date) return new Date(0).getTime();
+					if(!value instanceof Date) return new Date(value).getTime();
 					return value.getTime(); 
 				},
 				unserialize: function(value){ 
