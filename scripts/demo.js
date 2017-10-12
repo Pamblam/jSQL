@@ -1,4 +1,8 @@
 
+jSQL.onError(function(e){
+	console.log(e);
+});
+
 jSQL.load(function(){
 	
 	jSQL.query("create table if not exists `events` ( `id` int primary key, `desc` varchar, `startDate` date, `endDate` date, `deleted` int )").execute();
@@ -35,7 +39,9 @@ jSQL.load(function(){
 		$('#endTime').datetimepicker('reset');
 		$('#startTime').val("____/__/__ __:__");
 		$('#startTime').datetimepicker('reset');
-		jSQL.query("insert into `events` values (?, ?, ?, ?)").execute([id, desc, sd, ed]);
+		var p = [id, desc, sd, ed];
+		console.log(p);
+		jSQL.query("insert into `events` values (?, ?, ?, ?)").execute(p);
 		jSQL.commit();
 		drawCalendar();
 		return false;
