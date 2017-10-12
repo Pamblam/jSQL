@@ -6,7 +6,7 @@
 var jSQL = require("../jSQL.js");
 
 jSQL.load(function(){
-	
+
 	jSQL.query("create table typetest ("+
 		"id numeric(3), "+
 		"data json, "+
@@ -17,15 +17,13 @@ jSQL.load(function(){
 		"name varchar(4), "+
 		"created date, "+
 		"anything ambi, "+
-		"something enum('poop','pee')"+
+		"something enum('hello','goodbye')"+
 		" )").execute();
-	
+
 	var sql = "insert into typetest values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-	params = [2.1, {"3":3}, function(){alert("hello")}, true, 4, 'y12', 'bob', new Date(), 'poooo', 'pee'];
+	params = [2.1, {"3":3}, function(){}, true, 4, 'y12', 'bob', new Date(), 'something', 'hello'];
 	jSQL.query(sql).execute(params);
-	
-//	var data = jSQL.query("select * from typetest").execute().fetch();
-//	console.log(data);
-//	data.greet()
-	
+
+	var data = jSQL.query("select * from typetest").execute().fetch();
+	console.log("done 6");
 });

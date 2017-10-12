@@ -88,6 +88,8 @@
 				case "0065": this.message = "AUTO_INCREMENT column must be a key."; break;
 				case "0066": this.message = "AUTO_INCREMENT column must be an INT type."; break;
 				case "0067": this.message = "API is out of memory, cannot store more data."; break;
+				case "0068": this.message = "Invalid ENUM value."; break;
+				case "0069": this.message = "NUMERIC or INT type invalid or out of range."; break;
 				default: this.message = "Unknown error."; break;
 			}
 			this.toString = function () {
@@ -117,23 +119,25 @@
 				aliases: ["NUMBER", "DECIMAL", "FLOAT"],
 				serialize: function(value, args){
 					return !isNaN(parseFloat(value)) && isFinite(value) ?
-						parseFloat(value) : 0;
+						parseFloat(value) : 
+						_throw(new jSQL_Error("0069")) ;
 				},
 				unserialize: function(value, args){
 					return !isNaN(parseFloat(value)) && isFinite(value) ?
-							parseFloat(value) : 0;
+						parseFloat(value) : 
+						_throw(new jSQL_Error("0069")) ;
 				}
 			},{
 				type: "ENUM",
-				serialize: function(value, args){ return "tits";
+				serialize: function(value, args){ 
 					for(var i=args.length; i--;)
-						if(value == removeQuotes(args[i])) return removeQuotes(args[i]);
-					return removeQuotes(args[0]);
+						if(value.toUpperCase() == removeQuotes(args[i]).toUpperCase()) return removeQuotes(args[i]);
+					return _throw(new jSQL_Error("0068"));
 				},
-				unserialize: function(value, args){ return "tits";
+				unserialize: function(value, args){ 
 					for(var i=args.length; i--;)
-						if(value == removeQuotes(args[i])) return removeQuotes(args[i]);
-					return removeQuotes(args[0]);
+						if(value.toUpperCase() == removeQuotes(args[i]).toUpperCase()) return removeQuotes(args[i]);
+					return _throw(new jSQL_Error("0068"));
 				}
 			},{
 				type: "TINYINT",
@@ -151,44 +155,48 @@
 				serialize: function(value, args){ 
 					return !isNaN(parseInt(value)) && isFinite(value) &&
 						value >= -32768 && value <= 32767 ?
-						parseInt(value) : 0; 
+						parseInt(value) : 
+						_throw(new jSQL_Error("0069")) ; 
 				},
 				unserialize: function(value, args){ 
 					return !isNaN(parseInt(value)) && isFinite(value) ?
-						parseInt(value) : 0; 
+						parseInt(value) : 
+						_throw(new jSQL_Error("0069")) ; 
 				}
 			},{
 				type: "MEDIUMINT",
 				serialize: function(value, args){ 
 					return !isNaN(parseInt(value)) && isFinite(value) &&
 						value >= -8388608 && value <= 8388607 ?
-						parseInt(value) : 0; 
+						parseInt(value) : 
+						_throw(new jSQL_Error("0069")) ; 
 				},
 				unserialize: function(value, args){ 
 					return !isNaN(parseInt(value)) && isFinite(value) ?
-						parseInt(value) : 0; 
+						parseInt(value) : 
+						_throw(new jSQL_Error("0069")) ; 
 				}
 			},{
 				type: "INT",
 				serialize: function(value, args){ 
 					return !isNaN(parseInt(value)) && isFinite(value) &&
 						value >= -2147483648 && value <= 2147483647 ?
-						parseInt(value) : 0; 
+						parseInt(value) : _throw(new jSQL_Error("0069")); 
 				},
 				unserialize: function(value, args){ 
 					return !isNaN(parseInt(value)) && isFinite(value) ?
-						parseInt(value) : 0; 
+						parseInt(value) : _throw(new jSQL_Error("0069")); 
 				}
 			},{
 				type: "BIGINT",
 				serialize: function(value, args){ 
 					return !isNaN(parseInt(value)) && isFinite(value) &&
 						value >= -9007199254740991 && value <= 9007199254740991 ?
-						parseInt(value) : 0; 
+						parseInt(value) : _throw(new jSQL_Error("0069")); 
 				},
 				unserialize: function(value, args){ 
 					return !isNaN(parseInt(value)) && isFinite(value) ?
-						parseInt(value) : 0; 
+						parseInt(value) : _throw(new jSQL_Error("0069")); 
 				}
 			},{
 				type: "JSON",
@@ -581,7 +589,6 @@
 				var storeVal = jSQL.types.getByType(type.type.toUpperCase()).serialize(value, type.args);
 				if((!isNaN(parseFloat(storeVal)) && isFinite(storeVal)) || typeof storeVal === "string")
 					return storeVal;
-				console.log(storeVal);
 				return _throw(new jSQL_Error("0020"));
 			};
 
@@ -753,7 +760,6 @@
 								this.data[i] = preparedVals.shift();
 					}
 				}
-				console.log(this.data);
 				jSQL.tables[this.table].insertRow(this.data, this.ignoreFlag);
 				return this;
 			};
@@ -2561,7 +2567,6 @@
 							self.api.init([{name: "jSQL_data_schema", rows:[]}], successCallback);
 							APIIsSet = true;
 						}catch(ex){
-							console.log(ex);
 							APIIsSet = false;
 						}
 						if(!APIIsSet) loop(1+i);

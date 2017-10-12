@@ -1,6 +1,7 @@
 [![jSQL Logo](http://i.imgur.com/VQlJKOc.png)](http://pamblam.github.io/jSQL/)
 
-jSQL (Official) - Version 2.9  - *Now gluten free!*
+jSQL (Official) - Version 2.9.1  - *Now gluten free!*
+
 [![npm version](https://badge.fury.io/js/jsql-official.svg)](https://badge.fury.io/js/jsql-official) [![Build Status](https://travis-ci.org/Pamblam/jSQL.svg?branch=master)](https://travis-ci.org/Pamblam/jSQL) [![Inline docs](http://inch-ci.org/github/Pamblam/jSQL.svg?branch=master)](http://inch-ci.org/github/Pamblam/jSQL)
 
 <hr>
@@ -80,7 +81,9 @@ jSQL is fully documented in the [jSQL Wiki](https://github.com/Pamblam/jSQL/wiki
 
 ## Browser Support
 
-Works in all major browsers, even really old ones.
+Works in basically all browsers. jSQL degrades gracefully because it falls back on cookies for persistence if localStorage, IndexedDB and WebSQL are not available. To that end, the library itself does not take advantage of any ES6 features, if you want something that does, have a look at [alaSQL](https://github.com/agershun/alasql).
+
+While jSQL will work in basically all browsers, these ones are preferred:
 
 | **FireFox** | **Android** | **Safari** | **Chrome** | **Samsung** | **Blackberry** | **IE** | **Opera** | **Edge** |
 |-------------|-------------|------------|------------|-------------|----------------|--------|-----------|----------|
@@ -88,8 +91,8 @@ Works in all major browsers, even really old ones.
 
 <hr>
 
-## License & Legal
+## It's Official
 
-License info is available [here](https://github.com/Pamblam/jSQL/wiki/License).
+In the same way Fedex is Federal. 
 
 <hr>
