@@ -32,9 +32,9 @@ If you're running jSQL in a browser, include it in a script tag.
 
     <script src='jSQL.js'></script>
 
-Or use the latest version from a CDN:
+Or use the one hosted on the github.io site:
 
-    https://gitcdn.xyz/repo/Pamblam/jSQL/master/jSQL.min.js
+    http://pamblam.github.io/jSQL/scripts/jSQL.min.js
 
 If you're running jSQL in Node, `require` the jSQL module.
 
