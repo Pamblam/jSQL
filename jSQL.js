@@ -118,11 +118,13 @@
 				type: "NUMERIC",
 				aliases: ["NUMBER", "DECIMAL", "FLOAT"],
 				serialize: function(value, args){
+					if(value === null) value = 0;
 					return !isNaN(parseFloat(value)) && isFinite(value) ?
 						parseFloat(value) : 
 						_throw(new jSQL_Error("0069")) ;
 				},
 				unserialize: function(value, args){
+					if(value === null) value = 0;
 					return !isNaN(parseFloat(value)) && isFinite(value) ?
 						parseFloat(value) : 
 						_throw(new jSQL_Error("0069")) ;
@@ -142,23 +144,27 @@
 			},{
 				type: "TINYINT",
 				serialize: function(value, args){ 
+					if(value === null) value = 0;
 					return !isNaN(parseInt(value)) && isFinite(value) &&
 						value >= -128 && value <= 127 ?
 						parseInt(value) : 0; 
 				},
 				unserialize: function(value, args){ 
+					if(value === null) value = 0;
 					return !isNaN(parseInt(value)) && isFinite(value) ?
 						parseInt(value) : 0; 
 				}
 			},{
 				type: "SMALLINT",
 				serialize: function(value, args){ 
+					if(value === null) value = 0;
 					return !isNaN(parseInt(value)) && isFinite(value) &&
 						value >= -32768 && value <= 32767 ?
 						parseInt(value) : 
 						_throw(new jSQL_Error("0069")) ; 
 				},
 				unserialize: function(value, args){ 
+					if(value === null) value = 0;
 					return !isNaN(parseInt(value)) && isFinite(value) ?
 						parseInt(value) : 
 						_throw(new jSQL_Error("0069")) ; 
@@ -166,12 +172,14 @@
 			},{
 				type: "MEDIUMINT",
 				serialize: function(value, args){ 
+					if(value === null) value = 0;
 					return !isNaN(parseInt(value)) && isFinite(value) &&
 						value >= -8388608 && value <= 8388607 ?
 						parseInt(value) : 
 						_throw(new jSQL_Error("0069")) ; 
 				},
 				unserialize: function(value, args){ 
+					if(value === null) value = 0;
 					return !isNaN(parseInt(value)) && isFinite(value) ?
 						parseInt(value) : 
 						_throw(new jSQL_Error("0069")) ; 
@@ -179,22 +187,26 @@
 			},{
 				type: "INT",
 				serialize: function(value, args){ 
+					if(value === null) value = 0;
 					return !isNaN(parseInt(value)) && isFinite(value) &&
 						value >= -2147483648 && value <= 2147483647 ?
 						parseInt(value) : _throw(new jSQL_Error("0069")); 
 				},
 				unserialize: function(value, args){ 
+					if(value === null) value = 0;
 					return !isNaN(parseInt(value)) && isFinite(value) ?
 						parseInt(value) : _throw(new jSQL_Error("0069")); 
 				}
 			},{
 				type: "BIGINT",
 				serialize: function(value, args){ 
+					if(value === null) value = 0;
 					return !isNaN(parseInt(value)) && isFinite(value) &&
 						value >= -9007199254740991 && value <= 9007199254740991 ?
 						parseInt(value) : _throw(new jSQL_Error("0069")); 
 				},
 				unserialize: function(value, args){ 
+					if(value === null) value = 0;
 					return !isNaN(parseInt(value)) && isFinite(value) ?
 						parseInt(value) : _throw(new jSQL_Error("0069")); 
 				}
