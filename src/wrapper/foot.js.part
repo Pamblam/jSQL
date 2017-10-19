@@ -1,0 +1,32 @@
+
+		return {
+			version: {{ VERSION }},
+			tables: {},
+			query: jSQLParseQuery,
+			createTable: createTable,
+			dropTable: dropTable,
+			select: select,
+			update: update,
+			deleteFrom: deleteFrom,
+			insertInto: insertInto,
+			types: new jSQLDataTypeList(),
+			load: persistenceManager.load,
+			onError: onError,
+			reset: jSQLReset,
+			minify: jSQLMinifier,
+			commit: persistenceManager.commit,
+			rollback: persistenceManager.rollback,
+			setApiPriority: persistenceManager.setApiPriority,
+			getApi: persistenceManager.getApi
+		};
+
+	})();
+	
+	// Determine if we're running Node or browser
+	if (isNode) {
+		module.exports = jSQL;
+	} else {
+		window.jSQL = jSQL;
+	}
+	
+})();

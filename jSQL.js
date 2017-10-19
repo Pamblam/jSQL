@@ -1,9 +1,9 @@
 /**
- * jSQL.js v2.9.1
- * A Javascript Query Language Database Engine
- * @author Robert Parham
+ * jsql-official - v2.9.1
+ * A persistent SQL database.
+ * @author Rob Parham
  * @website http://pamblam.github.io/jSQL/
- * @license http://www.apache.org/licenses/LICENSE-2.0
+ * @license Apache-2.0
  */
 
 ;(function(){
@@ -11,10 +11,10 @@
 	var jSQL = (function(){
 		"use strict";
 
-		////////////////////////////////////////////////////////////////////////////
-		// jSQL Error Handling /////////////////////////////////////////////////////
-		////////////////////////////////////////////////////////////////////////////
-
+		/**
+		 * Error object constructor
+		 * @param {String} error_no
+		 */
 		function jSQL_Error(error_no) {
 			this.error = error_no;
 			this.stack = undefined;
@@ -97,6 +97,7 @@
 				return "jSQL Error #"+this.error+" - "+this.message;
 			};
 		}
+		
 
 		var error_handler_function = function(){};
 		var mute_jsql_errors = false;
@@ -108,12 +109,9 @@
 		function onError(funct){
 			if(typeof funct === "function") error_handler_function = funct;
 		}
+		
 
-		////////////////////////////////////////////////////////////////////////////
-		// jSQLDataTypeList ////////////////////////////////////////////////////////
-		////////////////////////////////////////////////////////////////////////////
-
-		function jSQLDataTypeList(){
+function jSQLDataTypeList(){
 			this.list = [{
 				type: "NUMERIC",
 				aliases: ["NUMBER", "DECIMAL", "FLOAT"],
@@ -333,10 +331,7 @@
 				return _throw(new jSQL_Error("0007"));
 			};
 		}
-
-		////////////////////////////////////////////////////////////////////////////
-		// jSQL Table constructor //////////////////////////////////////////////////
-		////////////////////////////////////////////////////////////////////////////
+		
 
 		function jSQLTable(name, columns, data, types, keys, auto_increment){
 			var self = this;	
@@ -612,10 +607,7 @@
 
 			self.init(name, columns, data, types, keys, auto_increment);
 		}
-
-		////////////////////////////////////////////////////////////////////////////
-		// jSQL Query constructor //////////////////////////////////////////////////
-		////////////////////////////////////////////////////////////////////////////
+		
 
 		function jSQLQuery(type){
 			var self = this;
@@ -650,10 +642,7 @@
 				};
 			})(i);
 		}
-
-		////////////////////////////////////////////////////////////////////////////
-		// jSQL Query Type constructors ////////////////////////////////////////////
-		////////////////////////////////////////////////////////////////////////////
+		
 
 		function jSQLDeleteQuery(){
 			this.init = function(tablename){
@@ -734,6 +723,7 @@
 				return this;
 			};
 		}
+		
 
 		function jSQLDropQuery(){
 			this.init = function(tablename){
@@ -749,6 +739,7 @@
 			this.fetch = function(){ return null; };
 			this.fetchAll = function(){ return []; };
 		}
+		
 
 		function jSQLInsertQuery(){
 			this.init = function(table){
@@ -780,6 +771,7 @@
 			this.fetch = function(){ return null; };
 			this.fetchAll = function(){ return []; };
 		}
+		
 
 		function jSQLSelectQuery(){
 			this.init = function(columns){
@@ -864,6 +856,7 @@
 				return this;
 			};
 		}
+		
 
 		function jSQLUpdateQuery(){
 			this.init = function(table){
@@ -1020,10 +1013,6 @@
 			this.fetch = function(){ return null; };
 			this.fetchAll = function(){ return []; };
 		}
-
-		////////////////////////////////////////////////////////////////////////////
-		// Parse String Query //////////////////////////////////////////////////////
-		////////////////////////////////////////////////////////////////////////////
 
 		function jSQLParseQuery(query){
 
@@ -1713,10 +1702,7 @@
 					return _throw(new jSQL_Error("0041"));
 			}
 		}
-
-		////////////////////////////////////////////////////////////////////////////
-		// Where caluse ////////////////////////////////////////////////////////////
-		////////////////////////////////////////////////////////////////////////////
+		
 
 		function jSQLWhereClause(context){
 			var self = this;
@@ -1981,10 +1967,7 @@
 				return resultRowIndexes;
 			};
 		}
-
-		////////////////////////////////////////////////////////////////////////////
-		// Data Storage APIs ///////////////////////////////////////////////////////
-		////////////////////////////////////////////////////////////////////////////
+		
 
 		var API = {
 			
@@ -2387,10 +2370,7 @@
 
 			}
 		};
-
-		////////////////////////////////////////////////////////////////////////////
-		// Persistence Manager /////////////////////////////////////////////////////
-		////////////////////////////////////////////////////////////////////////////
+		
 
 		var persistenceManager = new (function(){
 			var self = this;
@@ -2590,10 +2570,6 @@
 
 		})();
 
-		////////////////////////////////////////////////////////////////////////////
-		// Syntactic sugar /////////////////////////////////////////////////////////
-		////////////////////////////////////////////////////////////////////////////
-
 		function createTable(name, columnsOrData, types, keys, auto_increment){
 
 			// allow for all params to be passed in a single object
@@ -2654,15 +2630,18 @@
 			if(!Array.isArray(keys)) keys=[keys];
 			return new jSQLQuery("CREATE").init(name, columnsOrData, types, keys, auto_increment);
 		}
+		
 
 		function select(cols){
 			if(!Array.isArray(cols)) cols=[cols];
 			return new jSQLQuery("SELECT").init(cols);
 		}
+		
 
 		function update(table){
 			return new jSQLQuery("UPDATE").init(table);
 		}
+		
 
 		function insertInto(tablename){
 			return new jSQLQuery("INSERT").init(tablename);
@@ -2671,20 +2650,19 @@
 		function dropTable(tablename){
 			return new jSQLQuery("DROP").init(tablename);
 		}
+		
 
 		function deleteFrom(tablename){
 			return new jSQLQuery("DELETE").init(tablename);
 		}
-
-		////////////////////////////////////////////////////////////////////////////
-		// Helper/Misc Methods /////////////////////////////////////////////////////
-		////////////////////////////////////////////////////////////////////////////
+		
 
 		function jSQLReset(){ 
 			jSQL.tables = {};
 			jSQL.commit(); 
 		}
-
+		
+		
 		function jSQLMinifier(sql){
 			var cleanSQL = "";
 			var lines = sql.split("\n");
@@ -2756,12 +2734,8 @@
 			return str;
 		}
 
-		////////////////////////////////////////////////////////////////////////////
-		// Exposed Methods /////////////////////////////////////////////////////////
-		////////////////////////////////////////////////////////////////////////////
-
 		return {
-			version: 2.91,
+			version: "2.9.1",
 			tables: {},
 			query: jSQLParseQuery,
 			createTable: createTable,
