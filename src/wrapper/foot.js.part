@@ -1,6 +1,6 @@
 
 		return {
-			version: 0,
+			version: {{ VERSION }},
 			tables: {},
 			query: jSQLParseQuery,
 			createTable: createTable,
