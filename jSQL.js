@@ -1,16 +1,15 @@
 /**
- * jSQL.js v2.9.1
- * A Javascript Query Language Database Engine
- * @author Robert Parham
+ * jsql-official - v2.9.1
+ * A persistent SQL database.
+ * @author Rob Parham
  * @website http://pamblam.github.io/jSQL/
- * @license http://www.apache.org/licenses/LICENSE-2.0
+ * @license Apache-2.0
  */
 
 ;(function(){
 	var isNode = !!(typeof module !== 'undefined' && module.exports);
 	var jSQL = (function(){
 		"use strict";
-
 		////////////////////////////////////////////////////////////////////////////
 		// jSQL Error Handling /////////////////////////////////////////////////////
 		////////////////////////////////////////////////////////////////////////////
@@ -2756,12 +2755,8 @@
 			return str;
 		}
 
-		////////////////////////////////////////////////////////////////////////////
-		// Exposed Methods /////////////////////////////////////////////////////////
-		////////////////////////////////////////////////////////////////////////////
-
 		return {
-			version: 2.91,
+			version: 0,
 			tables: {},
 			query: jSQLParseQuery,
 			createTable: createTable,

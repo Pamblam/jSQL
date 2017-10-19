@@ -1,7 +1,7 @@
 {
   "name": "jsql-official",
   "version": "2.9.1",
-  "description": "jSQL is a robust and persistent SQL engine written in Javascript for both Node and browser. See: pamblam.github.io/jSQL for details and usage.",
+  "description": "A persistent SQL database.",
   "main": "jSQL.min.js",
   "directories": {
     "example": "tests"
@@ -32,5 +32,10 @@
   "bugs": {
     "url": "https://github.com/Pamblam/jSQL/issues"
   },
-  "homepage": "http://pamblam.github.io/jSQL/"
+  "homepage": "http://pamblam.github.io/jSQL/",
+  "devDependencies": {
+    "grunt": "^1.0.1",
+    "grunt-contrib-concat": "^1.0.1",
+    "grunt-contrib-uglify": "^3.1.0"
+  }
 }
