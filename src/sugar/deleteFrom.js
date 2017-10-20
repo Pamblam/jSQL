@@ -1,5 +1,4 @@
 
-		function deleteFrom(tablename){
-			return new jSQLQuery("DELETE").init(tablename);
-		}
-		
+function deleteFrom(tablename){
+	return new jSQLQuery("DELETE").init(tablename);
+}

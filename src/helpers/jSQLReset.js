@@ -1,5 +1,5 @@
 
-		function jSQLReset(){ 
-			jSQL.tables = {};
-			jSQL.commit(); 
-		}
+function jSQLReset(){ 
+	jSQL.tables = {};
+	jSQL.commit(); 
+}

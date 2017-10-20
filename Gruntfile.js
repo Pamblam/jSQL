@@ -1,3 +1,4 @@
+
 module.exports = function(grunt) {
 	
 	grunt.initConfig({
@@ -44,7 +45,7 @@ module.exports = function(grunt) {
 			},
 		},
 		'string-replace': {
-			version: {
+			source: {
 				files: {
 					"jSQL.js": "jSQL.js"
 				},
@@ -52,6 +53,17 @@ module.exports = function(grunt) {
 					replacements: [{
 						pattern: /{{ VERSION }}/g,
 						replacement: '"<%= pkg.version %>"'
+					}]
+				}
+			},
+			readme: {
+				files: {
+					"README.md": "README.md"
+				},
+				options: {
+					replacements: [{
+						pattern: /\d.\d.\d/g,
+						replacement: '<%= pkg.version %>'
 					}]
 				}
 			}
@@ -76,4 +88,5 @@ module.exports = function(grunt) {
 		'string-replace',
 		'uglify'
 	]);
+	
 };
