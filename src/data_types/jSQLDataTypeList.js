@@ -10,7 +10,7 @@ function jSQLDataTypeList(){
 				_throw(new jSQL_Error("0069")) ;
 		},
 		unserialize: function(value, args){
-			if(value === null) value = 0;
+			if(!value) value = 0;
 			return !isNaN(parseFloat(value)) && isFinite(value) ?
 				parseFloat(value) : 
 				_throw(new jSQL_Error("0069")) ;
@@ -18,13 +18,15 @@ function jSQLDataTypeList(){
 	},{
 		type: "ENUM",
 		serialize: function(value, args){ 
+			if(value === null) return "-null-";
 			for(var i=args.length; i--;)
-				if(value.toUpperCase() == removeQuotes(args[i]).toUpperCase()) return removeQuotes(args[i]);
+				if(value === removeQuotes(args[i])) return value;
 			return _throw(new jSQL_Error("0068"));
 		},
 		unserialize: function(value, args){ 
+			if(value === "-null-") return null;
 			for(var i=args.length; i--;)
-				if(value.toUpperCase() == removeQuotes(args[i]).toUpperCase()) return removeQuotes(args[i]);
+				if(value === removeQuotes(args[i])) return value;
 			return _throw(new jSQL_Error("0068"));
 		}
 	},{
@@ -36,7 +38,7 @@ function jSQLDataTypeList(){
 				parseInt(value) : 0; 
 		},
 		unserialize: function(value, args){ 
-			if(value === null) value = 0;
+			if(!value) value = 0;
 			return !isNaN(parseInt(value)) && isFinite(value) ?
 				parseInt(value) : 0; 
 		}
@@ -50,7 +52,7 @@ function jSQLDataTypeList(){
 				_throw(new jSQL_Error("0069")) ; 
 		},
 		unserialize: function(value, args){ 
-			if(value === null) value = 0;
+			if(!value) value = 0;
 			return !isNaN(parseInt(value)) && isFinite(value) ?
 				parseInt(value) : 
 				_throw(new jSQL_Error("0069")) ; 
@@ -65,7 +67,7 @@ function jSQLDataTypeList(){
 				_throw(new jSQL_Error("0069")) ; 
 		},
 		unserialize: function(value, args){ 
-			if(value === null) value = 0;
+			if(!value) value = 0;
 			return !isNaN(parseInt(value)) && isFinite(value) ?
 				parseInt(value) : 
 				_throw(new jSQL_Error("0069")) ; 
@@ -79,7 +81,7 @@ function jSQLDataTypeList(){
 				parseInt(value) : _throw(new jSQL_Error("0069")); 
 		},
 		unserialize: function(value, args){ 
-			if(value === null) value = 0;
+			if(!value) value = 0;
 			return !isNaN(parseInt(value)) && isFinite(value) ?
 				parseInt(value) : _throw(new jSQL_Error("0069")); 
 		}
@@ -92,7 +94,7 @@ function jSQLDataTypeList(){
 				parseInt(value) : _throw(new jSQL_Error("0069")); 
 		},
 		unserialize: function(value, args){ 
-			if(value === null) value = 0;
+			if(!value) value = 0;
 			return !isNaN(parseInt(value)) && isFinite(value) ?
 				parseInt(value) : _throw(new jSQL_Error("0069")); 
 		}
@@ -100,18 +102,30 @@ function jSQLDataTypeList(){
 		type: "JSON",
 		aliases: ["ARRAY", "OBJECT"],
 		serialize: function(value){
+			if(value === null) return "null";
+			if(typeof value === "string") return value;
 			return JSON.stringify(value);
 		},
 		unserialize: function(value){
+			if(value === "null") return null;
 			return JSON.parse(value);
 		}
 	},{
 		type: "FUNCTION",
 		serialize: function(value){
-			if(typeof value !== "function") value=function(){};
-				return "jSQLFunct-"+value.toString();
+			if(value === null) return "null";
+			if(typeof value !== "function"){
+				var f = null;
+				try{
+					eval("f = "+value);
+				}catch(e){};
+				if("function" === typeof f) value = f;
+				else _throw(new jSQL_Error("0001"));
+			}
+			return "jSQLFunct-"+value.toString();
 		},
 		unserialize: function(value){
+			if(value === "null") return null;
 			var p = value.split("-");
 			if(p.shift() !== "jSQLFunct") return _throw(new jSQL_Error("0001"));
 			p = value.split("-");
@@ -126,19 +140,23 @@ function jSQLDataTypeList(){
 	},{
 		type: "BOOLEAN",
 		aliases: ['BOOL'],
-		serialize: function(value){ 
+		serialize: function(value){
+			if(value === null) return "null";
 			return value === true || value.toUpperCase() == "TRUE" || value == 1 ? 
 				"1" : "0" ;
 		},
-		unserialize: function(value){ 
+		unserialize: function(value){
+			if(value === "null") return null;
 			return value === true || value.toUpperCase() == "TRUE" || value == 1 ; 
 		}
 	},{
 		type: "CHAR",
 		serialize: function(value, args){ 
+			if(value === null) return "-null-";
 			return ""+value; 
 		},
 		unserialize: function(value, args){ 
+			if(value === "-null-") return null;
 			var targetLength = args[0]>>0, padString = ' ';
 			if (value.length > targetLength) return value.substr(0, args[0]);
 			else {
@@ -153,29 +171,35 @@ function jSQLDataTypeList(){
 		type: "VARCHAR",
 		aliases: ["LONGTEXT", "MEDIUMTEXT"],
 		serialize: function(value, args){ 
+			if(value === null) return "-null-";
 			return ""+value; 
 		},
 		unserialize: function(value, args){ 
+			if(value === "-null-") return null;
 			return ""+value; 
 		}
 	},{
 		type: "DATE",
 		serialize: function(value){ 
-			if(!value instanceof Date) return new Date(value).getTime();
+			if(value === null) return "-null-";
+			if(!(value instanceof Date)) return new Date(value).getTime();
 			return value.getTime(); 
 		},
 		unserialize: function(value){ 
+			if(value === "-null-") return null;
 			return new Date(value);
 		}
 	},{
 		type: "AMBI",
 		serialize: function(value){
+			if(value === null) return "-null-";
 			if(value instanceof Date) return value.getTime();
 			if(typeof value === "function") return "jSQLFunct-"+value.toString();
 			if(!isNaN(parseFloat(value)) && isFinite(value)) return value;
 			return ""+value;
 		},
 		unserialize: function(value){ 
+			if(value === "-null-") return null;
 			if(typeof value === "string"){ 
 				if(value.split("-")[0] === "jSQLFunct"){
 					var p = value.split("-");

@@ -74,6 +74,8 @@ function jSQL_Error(error_no) {
 		case "0067": this.message = "API is out of memory, cannot store more data."; break;
 		case "0068": this.message = "Invalid ENUM value."; break;
 		case "0069": this.message = "NUMERIC or INT type invalid or out of range."; break;
+		case "0070": this.message = "Unknown Lexer Error."; break;
+		case "0071": this.message = "Unknown Parser Error."; break;
 		default: this.message = "Unknown error."; break;
 	}
 	this.toString = function () {
