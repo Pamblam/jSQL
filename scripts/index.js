@@ -22,12 +22,6 @@ marked.setOptions({
   smartypants: false
 });
 
-$.ajax({
-	url: "https://raw.githubusercontent.com/Pamblam/jSQL/master/README.md"
-}).done(function(md){
-	$("#readme").html(marked(md)).find("img").addClass("img-responsive");
-});
-
 var gh = new GithubAPI("Pamblam");
 gh.getCommits("jSQL", function(commits){
 	var now = new Date();
