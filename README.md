@@ -1,6 +1,6 @@
 [![jSQL Logo](http://i.imgur.com/VQlJKOc.png)](http://pamblam.github.io/jSQL/)
 
-jSQL (Official) - Version 3.0.0  - *Now gluten free!*
+jSQL (Official) - Version 3.0.0  - *Now available without a prescription!*
 
 [![npm version](https://badge.fury.io/js/jsql-official.svg)](https://badge.fury.io/js/jsql-official) [![Build Status](https://travis-ci.org/Pamblam/jSQL.svg?branch=master)](https://travis-ci.org/Pamblam/jSQL) [![Inline docs](http://inch-ci.org/github/Pamblam/jSQL.svg?branch=master)](http://inch-ci.org/github/Pamblam/jSQL)
 
@@ -94,6 +94,12 @@ While jSQL will work in basically all browsers, these ones are preferred:
 ## It's Official
 
 In the same way Fedex is Federal. 
+
+<hr>
+
+## Thanks to
+
+ - [**outofgamut**](https://github.com/outofgamut) for the cool "3 layers" graphic.
 
 <hr>
 
