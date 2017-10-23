@@ -16,7 +16,7 @@ ratings:
   - "**.js"
 exclude_paths:
 - "plugins/"
-- "jSQL.js"
+- "src/"
 - "tests/"
 - "Gruntfile.js"
 - "LICENSE"
