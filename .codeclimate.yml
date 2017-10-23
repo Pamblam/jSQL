@@ -1,9 +1,9 @@
 exclude_paths:
-- "plugins/"
-- "src/"
-- "tests/"
-- "Gruntfile.js"
-- "LICENSE"
-- "README.md"
-- "jSQL.min.js"
-- "package.json"
+- plugins/
+- src/
+- tests/
+- Gruntfile.js
+- LICENSE
+- README.md
+- jSQL.min.js
+- package.json
