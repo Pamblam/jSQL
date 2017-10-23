@@ -170,33 +170,35 @@ function jSQLWhereClause(context){
 					while(ii--){
 						// LOOP THROUGH EACH CONDITION IN THE SET
 						var condition = conditions[ii];
+						var col_index = self.context.table.colmap[condition.col];
+						var col_value = self.context.table.data[i][col_index];
 						switch(condition.type){
 							case ">": 
-								if(isNaN(parseFloat(self.context.table.data[i][self.context.table.colmap[condition.col]])) || self.context.table.data[i][self.context.table.colmap[condition.col]] < condition.value)
+								if(isNaN(parseFloat(col_value)) || col_value <= condition.value)
 									safeCondition = false;
 								break;
 							case "<": 
-								if(isNaN(parseFloat(self.context.table.data[i][self.context.table.colmap[condition.col]])) || self.context.table.data[i][self.context.table.colmap[condition.col]] > condition.value)
+								if(isNaN(parseFloat(col_value)) || col_value >= condition.value)
 									safeCondition = false;
 								break;
 							case "=": 
-								if(self.context.table.data[i][self.context.table.colmap[condition.col]] != condition.value)
+								if(col_value != condition.value)
 									safeCondition = false;
 								break;
 							case "!=": break;
-								if(self.context.table.data[i][self.context.table.colmap[condition.col]] == condition.value)
+								if(col_value == condition.value)
 									safeCondition = false;
 								break;
 							case "%%": 
-								if(self.context.table.data[i][self.context.table.colmap[condition.col]].indexOf(condition.value) < 0)
+								if(col_value.indexOf(condition.value) < 0)
 									safeCondition = false;
 								break;
 							case "%-": 
-								if(self.context.table.data[i][self.context.table.colmap[condition.col]].indexOf(condition.value) != self.context.table.data[i][self.context.table.colmap[condition.col]].length - condition.value.length)
+								if(col_value.indexOf(condition.value) != col_value.length - condition.value.length)
 									safeCondition = false;
 								break;
 							case "-%": 
-								if(self.context.table.data[i][self.context.table.colmap[condition.col]].indexOf(condition.value) != 0)
+								if(col_value.indexOf(condition.value) != 0)
 									safeCondition = false;
 								break;
 						}

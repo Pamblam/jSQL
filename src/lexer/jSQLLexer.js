@@ -83,6 +83,12 @@ jSQLLexer.token_types = [
 		name: "IF NOT EXISTS"},
 
 	// SYMBOLs
+	{pattern: /!=/gi,
+		type: 'SYMBOL',
+		name: "NOT EQUAL"},
+	{pattern: /<>/gi,
+		type: 'SYMBOL',
+		name: "NOT EQUAL"},
 	{pattern: /\(/gi,
 		type: 'SYMBOL',
 		name: "LEFT PEREN"},
@@ -104,6 +110,15 @@ jSQLLexer.token_types = [
 	{pattern: /;/gi,
 		type: 'SYMBOL',
 		name: "SEMICOLON"},
+	{pattern: /=/gi,
+		type: 'SYMBOL',
+		name: "EQUALS"},
+	{pattern: />/gi,
+		type: 'SYMBOL',
+		name: "GREATER THAN"},
+	{pattern: /</gi,
+		type: 'SYMBOL',
+		name: "LESS THAN"},
 
 	// KEYWORDs
 	{pattern: /primary key/gi,
@@ -127,6 +142,45 @@ jSQLLexer.token_types = [
 	{pattern: /into/gi,
 		type: 'KEYWORD',
 		name: "INTO"},
+	{pattern: /all/gi,
+		type: 'KEYWORD',
+		name: "ALL"},
+	{pattern: /distinct/gi,
+		type: 'KEYWORD',
+		name: "DISTINCT"},
+	{pattern: /distinctrow/gi,
+		type: 'KEYWORD',
+		name: "DISTINCTROW"},
+	{pattern: /where/gi,
+		type: 'KEYWORD',
+		name: "WHERE"},
+	{pattern: /and/gi,
+		type: 'KEYWORD',
+		name: "AND"},
+	{pattern: /like/gi,
+		type: 'KEYWORD',
+		name: "LIKE"},
+	{pattern: /or/gi,
+		type: 'KEYWORD',
+		name: "OR"},
+	{pattern: /limit/gi,
+		type: 'KEYWORD',
+		name: "LIMIT"},
+	{pattern: /order by/gi,
+		type: 'KEYWORD',
+		name: "ORDER BY"},
+	{pattern: /offset/gi,
+		type: 'KEYWORD',
+		name: "OFFSET"},
+	{pattern: /asc/gi,
+		type: 'KEYWORD',
+		name: "ASC"},
+	{pattern: /desc/gi,
+		type: 'KEYWORD',
+		name: "DESC"},
+	{pattern: /set/gi,
+		type: 'KEYWORD',
+		name: "SET"},
 
 	// DIRECTIVEs
 	{pattern: /create table/gi,
@@ -135,7 +189,7 @@ jSQLLexer.token_types = [
 	{pattern: /insert/gi,
 		type: 'DIRECTIVE',
 		name: "INSERT"},
-	{pattern: /devare from/gi,
+	{pattern: /delete from/gi,
 		type: 'DIRECTIVE',
 		name: "DELETE FROM"},
 	{pattern: /drop table/gi,
@@ -161,10 +215,18 @@ function jSQLToken(pos, literal, tok_index){
 	this.type_id = tok_index;
 	this.input_pos = pos;
 	this.literal = literal;
+	this.value = literal;
 	this.length = literal.length;
 	this.type = jSQLLexer.token_types[tok_index].type;
 	this.name = jSQLLexer.token_types[tok_index].name;
-	this.isDataType = this.type === "IDENTIFIER" 
-		&& this.name === "UNQTD IDENTIFIER"
-		&& jSQL.types.exists(this.literal);
+	
+	if(this.type === "IDENTIFIER" && this.name === "UNQTD IDENTIFIER" && jSQL.types.exists(this.literal)) 
+		this.name = "DATA TYPE";
+	if(this.type === "IDENTIFIER" && this.name === "QTD IDENTIFIER")
+		this.value = literal.replace(/`/g,'');
+	if(this.type === "STRING" && this.name === "DQ STRING")
+		this.value = literal.substr(1, literal.length - 2).replace(/\"/g, '"');
+	if(this.type === "STRING" && this.name === "SQ STRING")
+		this.value = literal.substr(1, literal.length - 2).replace(/\'/g, "'");
+	if(this.type === "NUMBER") this.value = parseFloat(this.literal);
 }

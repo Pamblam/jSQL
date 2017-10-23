@@ -13,9 +13,7 @@ function jSQLParseInsertTokens(tokens){
 		return _throw(new jSQL_Parse_Error(token, "INTO"));
 	
 	token = tokens.shift();
-	table_name = jSQLParseQuery.validateIdentifierToken(token, "TABLE NAME");
-	
-	if(undefined === jSQL.tables[table_name]) return _throw(new jSQL_Error("0021"));
+	table_name = jSQLParseQuery.validateTableNameToken(token);
 	
 	token = tokens.shift();
 	if(token.type !== "KEYWORD" && token.name !== "VALUES"){
@@ -30,8 +28,11 @@ function jSQLParseInsertTokens(tokens){
 				token = tokens.shift();
 				break;
 			}
-			var colname = jSQLParseQuery.validateIdentifierToken(token, "COLUMN NAME");
-			if(undefined === jSQL.tables[table_name].colmap[colname]) return _throw(new jSQL_Error("0032"));
+			
+			if(token.type === "IDENTIFIER") 
+				var colname = jSQLParseQuery.validateColumnName(token.value, table_name);
+			else return _throw(new jSQL_Parse_Error(token, "COLUMN NAME"));
+			
 			cols.push(colname);
 		}
 	}
@@ -47,7 +48,7 @@ function jSQLParseInsertTokens(tokens){
 		token = tokens.shift();
 		if(token.type === "SYMBOL" && token.name === "COMMA") continue;
 		if(token.type === "SYMBOL" && token.name === "RIGHT PEREN") break;
-		values.push(removeQuotes(token.literal));
+		values.push(token.value);
 	}
 	
 	if(tokens.length){

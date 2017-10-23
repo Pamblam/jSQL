@@ -1,77 +1,39 @@
 
-function jSQLParseInsertTokens(tokens){
-	var table_name, cols=[], values = [], ignore = false;
+function jSQLParseSelectTokens(tokens){
+	var table_name, columns = [], query, orderColumns = [], isDistinct = false;
 	
 	var token = tokens.shift();
-	
-	if(token.type === "KEYWORD" && token.name === "IGNORE"){
-		ignore = true;
+	if(token.type === "KEYWORD" && token.name === "ALL") token = tokens.shift();
+	if(token.type === "KEYWORD" && (token.name === "DISTINCT" || token.name === "DISTINCTROW")){
+		isDistinct = true;
 		token = tokens.shift();
 	}
-	
-	if(token.type !== "KEYWORD" && token.name === "INTO")
-		return _throw(new jSQL_Parse_Error(token, "INTO"));
-	
-	token = tokens.shift();
-	table_name = jSQLParseQuery.validateIdentifierToken(token, "TABLE NAME");
-	
-	if(undefined === jSQL.tables[table_name]) return _throw(new jSQL_Error("0021"));
-	
-	token = tokens.shift();
-	if(token.type !== "KEYWORD" && token.name !== "VALUES"){
-		
-		if(token.type !== "SYMBOL" || token.name !== "LEFT PEREN") 
-			return _throw(new jSQL_Parse_Error(token, "COLUMN LIST OR VALUES"));
-		
-		while(tokens.length){
-			token = tokens.shift();
-			if(token.type === "SYMBOL" && token.name === "COMMA") continue;
-			if(token.type === "SYMBOL" && token.name === "RIGHT PEREN"){
-				token = tokens.shift();
-				break;
-			}
-			var colname = jSQLParseQuery.validateIdentifierToken(token, "COLUMN NAME");
-			if(undefined === jSQL.tables[table_name].colmap[colname]) return _throw(new jSQL_Error("0032"));
-			cols.push(colname);
-		}
-	}
-	
-	if(token.type !== "KEYWORD" && token.name !== "VALUES")
-		return _throw(new jSQL_Parse_Error(token, "VALUES"));
-	
-	token = tokens.shift();
-	if(token.type !== "SYMBOL" || token.name !== "LEFT PEREN") 
-		return _throw(new jSQL_Parse_Error(token, "VALUES LIST"));
 	
 	while(tokens.length){
+		columns.push(token.value);
 		token = tokens.shift();
-		if(token.type === "SYMBOL" && token.name === "COMMA") continue;
-		if(token.type === "SYMBOL" && token.name === "RIGHT PEREN") break;
-		values.push(removeQuotes(token.literal));
-	}
-	
-	if(tokens.length){
-		token = tokens.shift();
-		if(token.type !== "SYMBOL" || token.name !== "SEMICOLON") 
-			return _throw(new jSQL_Parse_Error(token, "END OF STATEMENT"));
-	}
-	
-	if(!cols.length){
-		for(var i=0;  i<values.length; i++){
-			if(undefined === jSQL.tables[table_name].columns[i]) return _throw(new jSQL_Error("0032"));
-			cols.push(jSQL.tables[table_name].columns[i]);
+		if(token.type === "SYMBOL" && token.name === "COMMA"){
+			token = tokens.shift();
+			continue;
 		}
+		if(token.type === "KEYWORD" && token.name === "FROM") break;
 	}
 	
-	if(values.length !== cols.length) return _throw(new jSQL_Error("0033"));
+	if(token.type !== "KEYWORD" && token.name !== "FROM")
+		return _throw(new jSQL_Parse_Error(token, "FROM"));
 	
-	var data = {};
-	for(var i=0; i<cols.length; i++){
-		data[cols[i]] = values[i];
+	token = tokens.shift();
+	table_name =  jSQLParseQuery.validateTableNameToken(token);
+	
+	if(columns.length == 1 && columns[0] == "*") columns = '*';
+	else for(var i=0;i<columns.length;i++){
+		columns[i] = jSQLParseQuery.validateColumnName(columns[i], table_name);
 	}
+	
+	query = jSQL.select(columns).from(table_name);
+	if(isDistinct) query = query.distinct();
+	query = jSQLParseWhereClause(query, tokens, table_name);
 
-	var q = jSQL.insertInto(table_name).values(data);
-	return ignore ? q.ignore() : q;
-	
+	return query;
 }
 

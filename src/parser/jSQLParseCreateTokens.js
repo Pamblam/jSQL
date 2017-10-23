@@ -13,9 +13,7 @@ function jSQLParseCreateTokens(tokens){
 		token = tokens.shift();
 	}
 	
-	if(token.type === "IDENTIFIER"){
-		table_name = jSQLParseQuery.validateIdentifierToken(token, "TABLE NAME");
-	}
+	if(token.type === "IDENTIFIER") table_name = token.value;
 	
 	if(!table_name) return _throw(new jSQL_Parse_Error(token, "TABLE NAME"));
 	
@@ -43,7 +41,9 @@ function jSQLParseCreateTokens(tokens){
 				if(token.type === "SYMBOL" && token.name === "COMMA") continue;
 				if(token.type === "SYMBOL" && token.name === "RIGHT PEREN") break;
 				
-				var key_col_name = jSQLParseQuery.validateIdentifierToken(token, "COLUMN NAME");
+				if(token.type === "IDENTIFIER") var key_col_name = token.value;
+				else return _throw(new jSQL_Parse_Error(token, "COLUMN NAME"));
+				
 				key_cols.push(key_col_name);
 			}
 			
@@ -53,14 +53,15 @@ function jSQLParseCreateTokens(tokens){
 			continue;
 		}
 		
-		var col_name = jSQLParseQuery.validateIdentifierToken(token, "COLUMN NAME");
+		if(token.type === "IDENTIFIER") var col_name = token.value;
+		else return _throw(new jSQL_Parse_Error(token, "COLUMN NAME"));
 		
 		var column = {name: col_name, type:"AMBI", args:[]};
 		
 		token = tokens.shift();
 		
 		// column definition
-		if(token.isDataType){
+		if(token.name === "DATA TYPE"){
 			column.type = token.literal.toUpperCase();
 			token = tokens.shift();
 			
@@ -70,7 +71,7 @@ function jSQLParseCreateTokens(tokens){
 					if(token.type === "SYMBOL" && token.name === "COMMA") continue;
 					if(token.type === "SYMBOL" && token.name === "RIGHT PEREN") break;
 					if(token.type === "STRING" || token.type === "NUMBER"){
-						column.args.push(removeQuotes(token.literal));
+						column.args.push(token.value);
 						continue;
 					}
 					return _throw(new jSQL_Parse_Error(token, "DATA TYPE PARAM OR CLOSING PEREN"));

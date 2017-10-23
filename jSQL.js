@@ -842,11 +842,10 @@ function jSQLSelectQuery(){
 	};
 	this.execute = function(){
 		var resultRowIndexes = this.whereClause.getResultRowIndexes();
-
+		
 		var resultRows = [];
 		for(var i=0; i<resultRowIndexes.length; i++)
 			resultRows.push(this.table.data[resultRowIndexes[i]]);
-
 		var results = []; 
 		for(var i=0; i<resultRows.length; i++){
 			var row = {};
@@ -1150,6 +1149,12 @@ jSQLLexer.token_types = [
 		name: "IF NOT EXISTS"},
 
 	// SYMBOLs
+	{pattern: /!=/gi,
+		type: 'SYMBOL',
+		name: "NOT EQUAL"},
+	{pattern: /<>/gi,
+		type: 'SYMBOL',
+		name: "NOT EQUAL"},
 	{pattern: /\(/gi,
 		type: 'SYMBOL',
 		name: "LEFT PEREN"},
@@ -1171,6 +1176,15 @@ jSQLLexer.token_types = [
 	{pattern: /;/gi,
 		type: 'SYMBOL',
 		name: "SEMICOLON"},
+	{pattern: /=/gi,
+		type: 'SYMBOL',
+		name: "EQUALS"},
+	{pattern: />/gi,
+		type: 'SYMBOL',
+		name: "GREATER THAN"},
+	{pattern: /</gi,
+		type: 'SYMBOL',
+		name: "LESS THAN"},
 
 	// KEYWORDs
 	{pattern: /primary key/gi,
@@ -1194,6 +1208,45 @@ jSQLLexer.token_types = [
 	{pattern: /into/gi,
 		type: 'KEYWORD',
 		name: "INTO"},
+	{pattern: /all/gi,
+		type: 'KEYWORD',
+		name: "ALL"},
+	{pattern: /distinct/gi,
+		type: 'KEYWORD',
+		name: "DISTINCT"},
+	{pattern: /distinctrow/gi,
+		type: 'KEYWORD',
+		name: "DISTINCTROW"},
+	{pattern: /where/gi,
+		type: 'KEYWORD',
+		name: "WHERE"},
+	{pattern: /and/gi,
+		type: 'KEYWORD',
+		name: "AND"},
+	{pattern: /like/gi,
+		type: 'KEYWORD',
+		name: "LIKE"},
+	{pattern: /or/gi,
+		type: 'KEYWORD',
+		name: "OR"},
+	{pattern: /limit/gi,
+		type: 'KEYWORD',
+		name: "LIMIT"},
+	{pattern: /order by/gi,
+		type: 'KEYWORD',
+		name: "ORDER BY"},
+	{pattern: /offset/gi,
+		type: 'KEYWORD',
+		name: "OFFSET"},
+	{pattern: /asc/gi,
+		type: 'KEYWORD',
+		name: "ASC"},
+	{pattern: /desc/gi,
+		type: 'KEYWORD',
+		name: "DESC"},
+	{pattern: /set/gi,
+		type: 'KEYWORD',
+		name: "SET"},
 
 	// DIRECTIVEs
 	{pattern: /create table/gi,
@@ -1202,7 +1255,7 @@ jSQLLexer.token_types = [
 	{pattern: /insert/gi,
 		type: 'DIRECTIVE',
 		name: "INSERT"},
-	{pattern: /devare from/gi,
+	{pattern: /delete from/gi,
 		type: 'DIRECTIVE',
 		name: "DELETE FROM"},
 	{pattern: /drop table/gi,
@@ -1228,12 +1281,20 @@ function jSQLToken(pos, literal, tok_index){
 	this.type_id = tok_index;
 	this.input_pos = pos;
 	this.literal = literal;
+	this.value = literal;
 	this.length = literal.length;
 	this.type = jSQLLexer.token_types[tok_index].type;
 	this.name = jSQLLexer.token_types[tok_index].name;
-	this.isDataType = this.type === "IDENTIFIER" 
-		&& this.name === "UNQTD IDENTIFIER"
-		&& jSQL.types.exists(this.literal);
+	
+	if(this.type === "IDENTIFIER" && this.name === "UNQTD IDENTIFIER" && jSQL.types.exists(this.literal)) 
+		this.name = "DATA TYPE";
+	if(this.type === "IDENTIFIER" && this.name === "QTD IDENTIFIER")
+		this.value = literal.replace(/`/g,'');
+	if(this.type === "STRING" && this.name === "DQ STRING")
+		this.value = literal.substr(1, literal.length - 2).replace(/\"/g, '"');
+	if(this.type === "STRING" && this.name === "SQ STRING")
+		this.value = literal.substr(1, literal.length - 2).replace(/\'/g, "'");
+	if(this.type === "NUMBER") this.value = parseFloat(this.literal);
 }
 
 function jSQLParseQuery(query){
@@ -1254,16 +1315,16 @@ function jSQLParseQuery(query){
 		case "INSERT":
 			return jSQLParseInsertTokens(tokens);
 			break;
-		case "DELETE FROM":
-			
-			break;
-		case "DROP TABLE":
-			
+		case "SELECT":
+			return jSQLParseSelectTokens(tokens);
 			break;
 		case "UPDATE":
-			
+			return jSQLParseUpdateTokens(tokens);
 			break;
-		case "SELECT":
+		case "DELETE FROM":
+			return jSQLParseDeleteTokens(tokens);
+			break;
+		case "DROP TABLE":
 			
 			break;
 	}
@@ -1271,13 +1332,22 @@ function jSQLParseQuery(query){
 	return _throw(new jSQL_Error("0041"));
 }
 
-// make sure its not a data type name and trim quotes
-jSQLParseQuery.validateIdentifierToken = function(token, exp){
-	if (token.name !== "QTD IDENTIFIER" && jSQL.types.exists(removeQuotes(token.literal))) {
-		token.name = "DATA TYPE";
-		return _throw(new jSQL_Parse_Error(token, exp));
+jSQLParseQuery.validateTableNameToken = function(token){
+	for(var name in jSQL.tables){
+		if(!jSQL.tables.hasOwnProperty(name)) continue;
+		if(token.value.toUpperCase() == name.toUpperCase()){
+			return name;
+		}
 	}
-	return removeQuotes(token.literal);
+	return _throw(new jSQL_Error("0021"));
+};
+
+jSQLParseQuery.validateColumnName = function(column_name, table_name){
+	for(var i = jSQL.tables[table_name].columns.length; i--;){
+		if(column_name.toUpperCase() === jSQL.tables[table_name].columns[i].toUpperCase())
+			return jSQL.tables[table_name].columns[i];
+	}
+	return _throw(new jSQL_Error("0013"));
 };
 
 function jSQLParseCreateTokens(tokens){
@@ -1294,9 +1364,7 @@ function jSQLParseCreateTokens(tokens){
 		token = tokens.shift();
 	}
 	
-	if(token.type === "IDENTIFIER"){
-		table_name = jSQLParseQuery.validateIdentifierToken(token, "TABLE NAME");
-	}
+	if(token.type === "IDENTIFIER") table_name = token.value;
 	
 	if(!table_name) return _throw(new jSQL_Parse_Error(token, "TABLE NAME"));
 	
@@ -1324,7 +1392,9 @@ function jSQLParseCreateTokens(tokens){
 				if(token.type === "SYMBOL" && token.name === "COMMA") continue;
 				if(token.type === "SYMBOL" && token.name === "RIGHT PEREN") break;
 				
-				var key_col_name = jSQLParseQuery.validateIdentifierToken(token, "COLUMN NAME");
+				if(token.type === "IDENTIFIER") var key_col_name = token.value;
+				else return _throw(new jSQL_Parse_Error(token, "COLUMN NAME"));
+				
 				key_cols.push(key_col_name);
 			}
 			
@@ -1334,14 +1404,15 @@ function jSQLParseCreateTokens(tokens){
 			continue;
 		}
 		
-		var col_name = jSQLParseQuery.validateIdentifierToken(token, "COLUMN NAME");
+		if(token.type === "IDENTIFIER") var col_name = token.value;
+		else return _throw(new jSQL_Parse_Error(token, "COLUMN NAME"));
 		
 		var column = {name: col_name, type:"AMBI", args:[]};
 		
 		token = tokens.shift();
 		
 		// column definition
-		if(token.isDataType){
+		if(token.name === "DATA TYPE"){
 			column.type = token.literal.toUpperCase();
 			token = tokens.shift();
 			
@@ -1351,7 +1422,7 @@ function jSQLParseCreateTokens(tokens){
 					if(token.type === "SYMBOL" && token.name === "COMMA") continue;
 					if(token.type === "SYMBOL" && token.name === "RIGHT PEREN") break;
 					if(token.type === "STRING" || token.type === "NUMBER"){
-						column.args.push(removeQuotes(token.literal));
+						column.args.push(token.value);
 						continue;
 					}
 					return _throw(new jSQL_Parse_Error(token, "DATA TYPE PARAM OR CLOSING PEREN"));
@@ -1401,9 +1472,7 @@ function jSQLParseInsertTokens(tokens){
 		return _throw(new jSQL_Parse_Error(token, "INTO"));
 	
 	token = tokens.shift();
-	table_name = jSQLParseQuery.validateIdentifierToken(token, "TABLE NAME");
-	
-	if(undefined === jSQL.tables[table_name]) return _throw(new jSQL_Error("0021"));
+	table_name = jSQLParseQuery.validateTableNameToken(token);
 	
 	token = tokens.shift();
 	if(token.type !== "KEYWORD" && token.name !== "VALUES"){
@@ -1418,8 +1487,11 @@ function jSQLParseInsertTokens(tokens){
 				token = tokens.shift();
 				break;
 			}
-			var colname = jSQLParseQuery.validateIdentifierToken(token, "COLUMN NAME");
-			if(undefined === jSQL.tables[table_name].colmap[colname]) return _throw(new jSQL_Error("0032"));
+			
+			if(token.type === "IDENTIFIER") 
+				var colname = jSQLParseQuery.validateColumnName(token.value, table_name);
+			else return _throw(new jSQL_Parse_Error(token, "COLUMN NAME"));
+			
 			cols.push(colname);
 		}
 	}
@@ -1435,7 +1507,7 @@ function jSQLParseInsertTokens(tokens){
 		token = tokens.shift();
 		if(token.type === "SYMBOL" && token.name === "COMMA") continue;
 		if(token.type === "SYMBOL" && token.name === "RIGHT PEREN") break;
-		values.push(removeQuotes(token.literal));
+		values.push(token.value);
 	}
 	
 	if(tokens.length){
@@ -1464,6 +1536,184 @@ function jSQLParseInsertTokens(tokens){
 }
 
 
+
+function jSQLParseSelectTokens(tokens){
+	var table_name, columns = [], query, orderColumns = [], isDistinct = false;
+	
+	var token = tokens.shift();
+	if(token.type === "KEYWORD" && token.name === "ALL") token = tokens.shift();
+	if(token.type === "KEYWORD" && (token.name === "DISTINCT" || token.name === "DISTINCTROW")){
+		isDistinct = true;
+		token = tokens.shift();
+	}
+	
+	while(tokens.length){
+		columns.push(token.value);
+		token = tokens.shift();
+		if(token.type === "SYMBOL" && token.name === "COMMA"){
+			token = tokens.shift();
+			continue;
+		}
+		if(token.type === "KEYWORD" && token.name === "FROM") break;
+	}
+	
+	if(token.type !== "KEYWORD" && token.name !== "FROM")
+		return _throw(new jSQL_Parse_Error(token, "FROM"));
+	
+	token = tokens.shift();
+	table_name =  jSQLParseQuery.validateTableNameToken(token);
+	
+	if(columns.length == 1 && columns[0] == "*") columns = '*';
+	else for(var i=0;i<columns.length;i++){
+		columns[i] = jSQLParseQuery.validateColumnName(columns[i], table_name);
+	}
+	
+	query = jSQL.select(columns).from(table_name);
+	if(isDistinct) query = query.distinct();
+	query = jSQLParseWhereClause(query, tokens, table_name);
+
+	return query;
+}
+
+
+
+function jSQLParseUpdateTokens(tokens){
+	var table_name, query, newVals = {};
+	var token = tokens.shift();
+	
+	table_name = jSQLParseQuery.validateTableNameToken(token);
+	token = tokens.shift();
+	
+	if(token.type !== "KEYWORD" && token.name !== "SET")
+		return _throw(new jSQL_Parse_Error(token, "SET"));
+	
+	while(tokens.length){
+		var column_name = jSQLParseQuery.validateColumnName(tokens.shift().value, table_name);
+		token = tokens.shift();
+		if(token.type !== 'SYMBOL' && token.name !== 'EQUALS')
+			return _throw(new jSQL_Parse_Error(token, "EQUALS"));
+		var value = tokens.shift().value;
+		newVals[column_name] = value;
+		if(!tokens.length) break;
+		token = tokens.shift();
+		if(token.type === "SYMBOL" && token.name === "COMMA") continue;
+		if(token.type === "KEYWORD" && token.name === "WHERE"){
+			tokens.unshift(token);
+			break;
+		}
+	}
+	
+	query = jSQL.update(table_name).set(newVals);
+	query = jSQLParseWhereClause(query, tokens, table_name);
+	return query;
+}
+
+function jSQLParseDeleteTokens(tokens){
+	var token = tokens.shift();
+	var table_name = jSQLParseQuery.validateTableNameToken(token);
+	var query = jSQL.deleteFrom(table_name);
+	query = jSQLParseWhereClause(query, tokens, table_name);
+	return query;
+}
+
+function jSQLParseWhereClause(query, tokens, table_name){
+	var orderColumns = [];
+	while(tokens.length){
+		var token = tokens.shift();
+		switch(token.type){
+			case "KEYWORD":
+				switch(token.name){
+					case "WHERE":
+					case "AND":
+						query = query.where(jSQLParseQuery.validateColumnName(tokens.shift().value, table_name));
+						break;
+					case "LIKE":
+						var substr = tokens.shift().value;
+						// "%text%" - Contains text
+						if(substr.substr(0,1)=="%" && substr.substr(substr.length-1,1)=="%"){
+							query = query.contains(substr.substr(1,substr.length-2));
+						// "%text" - Ends with text
+						}else if(substr.substr(0,1)=="%"){
+							query = query.endsWith(substr.substr(1,substr.length-1));
+						// "text%" - Begins with text
+						}else if(substr.substr(substr.length-1,1)=="%"){
+							query = query.beginsWith(substr.substr(0,substr.length-1));
+						}else if(substr === "?"){
+							// Is a pepared statement, no value available at this time
+							query = query.preparedLike();
+						}else{
+							// no "%" on either side. jSQL only supports % when 
+							// the string begins or ends with it, so treat it like an equal
+							query = query.equals(substr);
+						}
+						break;
+					case "OR":
+						query = query.or(jSQLParseQuery.validateColumnName(tokens.shift().value, table_name));
+						break;
+					case "LIMIT":
+						var limit = tokens.shift().value, offset, commaFound=false;
+						token = tokens.shift();
+						if(token.type === "SYMBOL" && token.name === "COMMA") commaFound = true;
+						else tokens.unshift(token);
+						if(commaFound){
+							offset = limit;
+							limit = tokens.shift().value;
+						}
+						if(tokens.length && !commaFound){
+							var token = tokens.shift();
+							if(token.type === "KEYWORD" && token.name === "OFFSET"){
+								offset = tokens.shift().value;
+							}else tokens.unshift(token);
+						}
+						query = query.limit(limit, offset);
+						break;
+					case "ORDER BY":
+						while(tokens.length){
+							var token = tokens.shift();
+							if(token.type === "SYMBOL" && token.name === "COMMA") continue;
+							try{
+								var column_name = jSQLParseQuery.validateColumnName(token.value, table_name);
+								orderColumns.push(column_name);
+							}catch(e){
+								tokens.unshift(token); 
+								break;
+							}
+						}
+						query = query.orderBy(orderColumns);
+						break;
+					case "ASC":
+						if(!orderColumns.length) return _throw(new jSQL_Error("0026"));
+						query = query.asc();
+						break;
+					case "DESC":
+						if(!orderColumns.length) return _throw(new jSQL_Error("0027"));
+						query = query.desc();
+						break;	
+					default: return _throw(new jSQL_Parse_Error(token));
+				}
+				break;
+			case "SYMBOL":
+				switch(token.name){
+					case "EQUALS":
+						query = query.equals(tokens.shift().value);
+						break;
+					case "GREATER THAN":
+						query = query.greaterThan(tokens.shift().value);
+						break;
+					case "LESS THAN":
+						query = query.lessThan(tokens.shift().value);
+						break;
+					case "NOT EQUAL":
+						query = query.doesNotEqual(tokens.shift().value);
+						break;
+					default: return _throw(new jSQL_Parse_Error(token));
+				}
+				break;
+			default: return _throw(new jSQL_Parse_Error(token, "SYMBOL OR KEYWORD"));
+		}
+	}
+	return query;
+}
 
 function jSQLWhereClause(context){
 	var self = this;
@@ -1636,33 +1886,35 @@ function jSQLWhereClause(context){
 					while(ii--){
 						// LOOP THROUGH EACH CONDITION IN THE SET
 						var condition = conditions[ii];
+						var col_index = self.context.table.colmap[condition.col];
+						var col_value = self.context.table.data[i][col_index];
 						switch(condition.type){
 							case ">": 
-								if(isNaN(parseFloat(self.context.table.data[i][self.context.table.colmap[condition.col]])) || self.context.table.data[i][self.context.table.colmap[condition.col]] < condition.value)
+								if(isNaN(parseFloat(col_value)) || col_value <= condition.value)
 									safeCondition = false;
 								break;
 							case "<": 
-								if(isNaN(parseFloat(self.context.table.data[i][self.context.table.colmap[condition.col]])) || self.context.table.data[i][self.context.table.colmap[condition.col]] > condition.value)
+								if(isNaN(parseFloat(col_value)) || col_value >= condition.value)
 									safeCondition = false;
 								break;
 							case "=": 
-								if(self.context.table.data[i][self.context.table.colmap[condition.col]] != condition.value)
+								if(col_value != condition.value)
 									safeCondition = false;
 								break;
 							case "!=": break;
-								if(self.context.table.data[i][self.context.table.colmap[condition.col]] == condition.value)
+								if(col_value == condition.value)
 									safeCondition = false;
 								break;
 							case "%%": 
-								if(self.context.table.data[i][self.context.table.colmap[condition.col]].indexOf(condition.value) < 0)
+								if(col_value.indexOf(condition.value) < 0)
 									safeCondition = false;
 								break;
 							case "%-": 
-								if(self.context.table.data[i][self.context.table.colmap[condition.col]].indexOf(condition.value) != self.context.table.data[i][self.context.table.colmap[condition.col]].length - condition.value.length)
+								if(col_value.indexOf(condition.value) != col_value.length - condition.value.length)
 									safeCondition = false;
 								break;
 							case "-%": 
-								if(self.context.table.data[i][self.context.table.colmap[condition.col]].indexOf(condition.value) != 0)
+								if(col_value.indexOf(condition.value) != 0)
 									safeCondition = false;
 								break;
 						}

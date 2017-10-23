@@ -20,13 +20,13 @@ function jSQLParseQuery(query){
 		case "SELECT":
 			return jSQLParseSelectTokens(tokens);
 			break;
+		case "UPDATE":
+			return jSQLParseUpdateTokens(tokens);
+			break;
 		case "DELETE FROM":
-			
+			return jSQLParseDeleteTokens(tokens);
 			break;
 		case "DROP TABLE":
-			
-			break;
-		case "UPDATE":
 			
 			break;
 	}
@@ -34,11 +34,20 @@ function jSQLParseQuery(query){
 	return _throw(new jSQL_Error("0041"));
 }
 
-// make sure its not a data type name and trim quotes
-jSQLParseQuery.validateIdentifierToken = function(token, exp){
-	if (token.name !== "QTD IDENTIFIER" && jSQL.types.exists(removeQuotes(token.literal))) {
-		token.name = "DATA TYPE";
-		return _throw(new jSQL_Parse_Error(token, exp));
+jSQLParseQuery.validateTableNameToken = function(token){
+	for(var name in jSQL.tables){
+		if(!jSQL.tables.hasOwnProperty(name)) continue;
+		if(token.value.toUpperCase() == name.toUpperCase()){
+			return name;
+		}
 	}
-	return removeQuotes(token.literal);
+	return _throw(new jSQL_Error("0021"));
+};
+
+jSQLParseQuery.validateColumnName = function(column_name, table_name){
+	for(var i = jSQL.tables[table_name].columns.length; i--;){
+		if(column_name.toUpperCase() === jSQL.tables[table_name].columns[i].toUpperCase())
+			return jSQL.tables[table_name].columns[i];
+	}
+	return _throw(new jSQL_Error("0013"));
 };
