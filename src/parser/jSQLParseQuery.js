@@ -27,7 +27,7 @@ function jSQLParseQuery(query){
 			return jSQLParseDeleteTokens(tokens);
 			break;
 		case "DROP TABLE":
-			
+			return jSQLParseDropTokens(tokens);
 			break;
 	}
 	

@@ -35,6 +35,7 @@ module.exports = function(grunt) {
 					'src/parser/jSQLParseSelectTokens.js',
 					'src/parser/jSQLParseUpdateTokens.js',
 					'src/parser/jSQLParseDeleteTokens.js',
+					'src/parser/jSQLParseDropTokens.js',
 					'src/parser/jSQLParseWhereClause.js',
 					'src/parser/jSQLWhereClause.js',
 					'src/persistence/API.js',
