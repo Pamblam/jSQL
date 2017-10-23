@@ -16,11 +16,10 @@ function jSQLSelectQuery(){
 	};
 	this.execute = function(){
 		var resultRowIndexes = this.whereClause.getResultRowIndexes();
-
+		
 		var resultRows = [];
 		for(var i=0; i<resultRowIndexes.length; i++)
 			resultRows.push(this.table.data[resultRowIndexes[i]]);
-
 		var results = []; 
 		for(var i=0; i<resultRows.length; i++){
 			var row = {};

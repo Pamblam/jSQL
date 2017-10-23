@@ -156,6 +156,7 @@ function jSQLTable(name, columns, data, types, keys, auto_increment){
 	};
 
 	self.insertRow = function(data, ignore){
+		
 		var row = [];
 
 		// If the row is an Array
@@ -207,8 +208,8 @@ function jSQLTable(name, columns, data, types, keys, auto_increment){
 				if(!row[i]){
 					row[i] = self.auto_inc_seq;
 					self.auto_inc_seq++;
-				}
-				if(row[i] >= self.auto_inc_seq) self.auto_inc_seq = row[i]+1;
+				} 
+				if(row[i] >= self.auto_inc_seq) self.auto_inc_seq = parseInt(row[i])+1;
 			}
 			row[i] = self.normalizeColumnStoreValue(self.columns[i], row[i]);
 		}

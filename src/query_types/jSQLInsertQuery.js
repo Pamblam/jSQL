@@ -11,7 +11,7 @@ function jSQLInsertQuery(){
 		this.data = data;
 		return this;
 	};
-	this.execute = function(preparedVals){
+	this.execute = function(preparedVals){ 
 		if(preparedVals !== undefined && Array.isArray(preparedVals) && preparedVals.length>0){
 			if(Array.isArray(this.data)){
 				for(var i=this.data.length; i-- && preparedVals.length;)
