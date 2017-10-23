@@ -13,7 +13,7 @@ engines:
     enabled: true 
 exclude_paths:
 - "plugins/"
-- "src/"
+- "jSQL.js"
 - "tests/"
 - "Gruntfile.js"
 - "LICENSE"
