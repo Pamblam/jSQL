@@ -7,7 +7,7 @@
     "example": "tests"
   },
   "scripts": {
-    "test": "node ./tests/test1.js && node ./tests/test2.js && node ./tests/test3.js && node ./tests/test4.js && node ./tests/test5.js && node ./tests/test6.js"
+    "test": "node ./tests/test1.js && node ./tests/test2.js && node ./tests/test3.js && node ./tests/test4.js && node ./tests/test5.js && node ./tests/test6.js && node ./tests/test7.js"
   },
   "repository": {
     "type": "git",

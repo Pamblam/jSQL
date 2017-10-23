@@ -3,6 +3,7 @@
 function jSQLLexer(input) {
 	this.input = input;
 	this.pos = 0;
+	this.real_pos = 0;
 	this.tokens = [];
 	this.token_matches = [];
 }
@@ -31,27 +32,24 @@ jSQLLexer.prototype.getTokens = function(){
 			var r = matches[type_id][match_index];
 			if(r.index !== this.pos) continue;
 			var token = new jSQLToken(this.pos, r[0], type_id);
-			if(throwaway.indexOf(token.type) === -1) this.tokens.push(token);
 			this.pos += token.length;
-			type_id=0;
+			if(throwaway.indexOf(token.type) === -1) this.tokens.push(token);
+			type_id=-1;
 			break;
 		}
 	}
-	if(this.pos !== this.input.length)
-		return _throw(new jSQL_Lexer_Error(this.pos, this.input)); 
-	
+	if(this.pos !== this.input.length){
+		var pos;
+		if(this.tokens.length){
+			var lastToken = this.tokens[this.tokens.length-1];
+			pos = lastToken.input_pos + lastToken.length;
+		}else pos = 0;
+		return _throw(new jSQL_Lexer_Error(pos, this.input)); 
+	}
 	return this.tokens;
 };
 
 jSQLLexer.token_types = [
-	
-	// WHITESPACE
-	{pattern: /[\n\r]/g,
-		type: 'WHITESPACE',
-		name: "LINEBREAK"},
-	{pattern: /[ \t]/g,
-		type: 'WHITESPACE',
-		name: "WHITESPACE"},
 	
 	// STRINGs
 	{pattern: /"(?:[^"\\]|\\.)*"/g,
@@ -68,6 +66,14 @@ jSQLLexer.token_types = [
 	{pattern: /\/\*([\s\S]*?)\*\//g,
 		type: 'COMMENT',
 		name: "MULTI LINE COMMENT"},
+
+	// WHITESPACE
+	{pattern: /\r?\n|\r/g,
+		type: 'WHITESPACE',
+		name: "LINEBREAK"},
+	{pattern: /[ \t]/g,
+		type: 'WHITESPACE',
+		name: "WHITESPACE"},
 
 	// NUMBERs
 	{pattern: /\d+/g,

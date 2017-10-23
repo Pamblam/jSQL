@@ -90,17 +90,5 @@ jSQL.load(function(){
 		}
 	}
 	
-	console.log(jSQL.minify("\
- \
-insert into    `typetest` \
-values (\
-  11, '{\
-      \"greeting\":\"hello\"\
-}', 'function(){\
-  console.log(\"hello world\")\
-}', true, 3, '72', 'rob', \
-'Mon, 25 Dec 1995 13:30:00 +0430', \
-'scooby doo', \"hello\")"));
-	
 	console.log("\n\nsuccess");
 });
