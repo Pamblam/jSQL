@@ -11,6 +11,9 @@ engines:
     enabled: true
   rubocop:
     enabled: true 
+ratings:
+  paths:
+  - "**.js"
 exclude_paths:
 - "plugins/"
 - "jSQL.js"
