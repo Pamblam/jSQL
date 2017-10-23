@@ -1,5 +1,7 @@
 /nbproject/
-/tests/.jsqldatastore
+/test/.jsqldatastore
 .jsqldatastore
 package-lock.json
 node_modules
+coverage
+.coveralls.yml
