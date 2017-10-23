@@ -1,14 +1,16 @@
 
 engines:
-  rubocop:
-    enabled: true
-  eslint:
-    enabled: true
   duplication:
     enabled: true
     config:
       languages:
       - javascript:
+  eslint:
+    enabled: true
+  fixme:
+    enabled: true
+  rubocop:
+    enabled: true 
 exclude_paths:
 - "plugins/"
 - "src/"
