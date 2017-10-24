@@ -1,4 +1,5 @@
 
+/* istanbul ignore next */
 var persistenceManager = new (function(){
 	var self = this;
 	self.api = null;

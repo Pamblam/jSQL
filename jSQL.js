@@ -16,6 +16,7 @@ function jSQL_Error(error_no) {
 	this.stack = undefined;
 	var e = new Error();
 	if(e.stack) this.stack = e.stack;
+	/* istanbul ignore next */
 	switch(error_no){
 		case "0001": this.message = "Corrupted function stored in data."; break;
 		case "0002": this.message = "Attempted to apply a non-function as an error handler."; break;
@@ -2399,6 +2400,7 @@ var API = {
 };
 
 
+/* istanbul ignore next */
 var persistenceManager = new (function(){
 	var self = this;
 	self.api = null;
