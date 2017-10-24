@@ -98,6 +98,7 @@ function jSQLTable(name, columns, data, types, keys, auto_increment){
 		if(data !== undefined) self.loadData(data);
 	};
 
+	/* istanbul ignore next */
 	self.renameColumn = function(oldname, newname){
 		if(undefined === oldname || "string" != typeof newname) return _throw(new jSQL_Error("0012"));
 		if(self.columns.indexOf(oldname) < 0) return _throw(new jSQL_Error("0013"));

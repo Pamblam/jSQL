@@ -9,7 +9,7 @@
   "scripts": {
     "test": "node node_modules/.bin/mocha",
     "coverage": "node node_modules/.bin/istanbul cover _mocha -- -R spec",
-	"coveralls": "cat ./coverage/lcov.info | node node_modules/.bin/coveralls"
+    "coveralls": "cat ./coverage/lcov.info | node node_modules/.bin/coveralls"
   },
   "repository": {
     "type": "git",

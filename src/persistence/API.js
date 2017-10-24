@@ -1,4 +1,5 @@
 
+/* istanbul ignore next */
 var API = {
 
 	cookieAPI: function(){
