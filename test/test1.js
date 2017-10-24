@@ -29,6 +29,11 @@ jSQL.load(function () {
 			expect((jSQL.tables.keytest2.keys.primary.column[0] === 'id' && jSQL.tables.keytest2.keys.primary.column[1] === 'name' && jSQL.tables.keytest2.auto_inc_col === 'id')).to.be.true;
 		});
 		
+		it('create keytest3 table', function(){
+			jSQL.query("create table keytest3 (id int auto_increment, name, num1 int, num2 int, primary key(`id`, name), unique key(num1, num2) )").execute();
+			expect(!!jSQL.tables.keytest3).to.be.true;
+		});
+		
 		it('create smalltest table', function(){
 			jSQL.query("create table `smalltest` (id int, str varchar)").execute();
 			expect((!!jSQL.tables.smalltest)).to.be.true;
@@ -60,7 +65,7 @@ jSQL.load(function () {
 		});
 		
 		it('select from typetest table', function(){
-			var res = jSQL.query("select * from `typetest`").execute().fetchAll("ARRAY");
+			var res = jSQL.query("select * from `typetest` limit 1 offset 0").execute().fetchAll("ARRAY");
 			expect((res[0][7] instanceof Date && "function" === typeof res[0][2])).to.be.true;
 		});
 		
@@ -92,6 +97,16 @@ jSQL.load(function () {
 		it('select from keytest2 table again once again', function(){
 			var q = jSQL.query("SELECT * FROM `keytest2` WHERE `greet` LIKE ?").execute(['%olla']);
 			expect((q.fetch("ASSOC").greet === "holla")).to.be.true;
+		});
+		
+		it('select from keytest2 table again once again', function(){
+			var q = jSQL.query("SELECT * FROM `keytest2` order by id asc").execute();
+			expect((q.fetchAll("ASSOC").length === 2)).to.be.true;
+		});
+		
+		it('select from keytest2 table again once again', function(){
+			var q = jSQL.query("SELECT * FROM `keytest2` order by id, greet desc").execute();
+			expect((q.fetchAll("ASSOC").length === 2)).to.be.true;
 		});
 		
 		it('select from keytest2 table again once again once', function(){
@@ -132,6 +147,26 @@ jSQL.load(function () {
 		it('drop keytest2 table', function(){
 			var q = jSQL.query("drop table `keytest2`").execute();
 			expect((jSQL.tables.keytest2 === undefined)).to.be.true;
+		});
+		
+		it("should create a table with a bunch of numbers", function(){
+			jSQL.query(`CREATE TABLE IF NOT EXISTS nmbrs (
+				numba1 tinyint(3),
+				numba2 smallint(3),
+				numba3 mediumint(3),
+				numba4 bigint(3)
+			)`).execute();
+			expect((jSQL.tables.nmbrs !== undefined)).to.be.true;
+		});
+		
+		it("should insert into a table with a bunch of numbers", function(){
+			jSQL.query(`insert into nmbrs values (?, ?, ?, ?)`).execute([3,3,3,3]);
+			expect((jSQL.tables.nmbrs !== undefined)).to.be.true;
+		});
+		
+		it("should select from a table with a bunch of numbers", function(){
+			var r = jSQL.query(`select * from nmbrs`).execute().fetch("ARRAY");
+			expect((r[0] === 3)).to.be.true;
 		});
 		
 	});

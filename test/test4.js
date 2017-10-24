@@ -13,6 +13,7 @@ jSQL.load(function () {
 			try{
 				q.execute(["not a function"]);
 			}catch(e){
+				console.log(e.toString());
 				e_ = e.error === "0001";
 			}
 			expect(e_).to.be.true;
