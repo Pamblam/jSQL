@@ -89,13 +89,28 @@ jSQL.load(function () {
 			expect((q.fetch("ASSOC").greet === "holla")).to.be.true;
 		});
 		
+		it('select from keytest2 table again once again', function(){
+			var q = jSQL.query("SELECT * FROM `keytest2` WHERE `greet` LIKE ?").execute(['%olla']);
+			expect((q.fetch("ASSOC").greet === "holla")).to.be.true;
+		});
+		
 		it('select from keytest2 table again once again once', function(){
 			var q = jSQL.query("SELECT * FROM `keytest2` WHERE `greet` LIKE '%o%'").execute();
 			expect((q.fetchAll("ASSOC").length === 2)).to.be.true;
 		});
 		
+		it('select from keytest2 table again once again once', function(){
+			var q = jSQL.query("SELECT * FROM `keytest2` WHERE `greet` LIKE ?").execute(['%o%']);
+			expect((q.fetchAll("ASSOC").length === 2)).to.be.true;
+		});
+		
 		it('select from keytest2 table again once again once more', function(){
 			var q = jSQL.query("SELECT * FROM `keytest2` WHERE `greet` LIKE 'p%'").execute();
+			expect((q.fetchAll("ASSOC").length === 1)).to.be.true;
+		});
+		
+		it('select from keytest2 table again once again once more', function(){
+			var q = jSQL.query("SELECT * FROM `keytest2` WHERE `greet` LIKE ?").execute(['p%']);
 			expect((q.fetchAll("ASSOC").length === 1)).to.be.true;
 		});
 		
