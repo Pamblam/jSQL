@@ -2,7 +2,7 @@
 
 jSQL (Official) - Version 3.0.0  - *Now available without a prescription!*
 
-[![npm version](https://badge.fury.io/js/jsql-official.svg)](https://badge.fury.io/js/jsql-official) [![Build Status](https://travis-ci.org/Pamblam/jSQL.svg?branch=master)](https://travis-ci.org/Pamblam/jSQL) [![Inline docs](http://inch-ci.org/github/Pamblam/jSQL.svg?branch=master)](http://inch-ci.org/github/Pamblam/jSQL)
+[![npm version](https://badge.fury.io/js/jsql-official.svg)](https://badge.fury.io/js/jsql-official) [![Build Status](https://travis-ci.org/Pamblam/jSQL.svg?branch=master)](https://travis-ci.org/Pamblam/jSQL) [![Inline docs](http://inch-ci.org/github/Pamblam/jSQL.svg?branch=master)](https://github.com/Pamblam/jSQL/wiki) [![Code Climate](https://codeclimate.com/github/Pamblam/jSQL/badges/gpa.svg)](https://codeclimate.com/github/Pamblam/jSQL) [![Coverage Status](https://coveralls.io/repos/github/Pamblam/jSQL/badge.svg?branch=master)](https://coveralls.io/github/Pamblam/jSQL?branch=master)
 
 <hr>
 
