@@ -8,7 +8,7 @@ jSQL (Official) - Version 3.0.1  - *Now available without a prescription!*
 
 jSQL is a state and data management tool as well as a robust SQL engine for both Node and the browser. For complete documentation, please see [the jSQL Wiki](https://github.com/Pamblam/jSQL/wiki). For plugins, live demos and other information see the [official website](http://pamblam.github.io/jSQL/).
 
-![jSQL Layers](https://i.imgur.com/WKEmFdB.jpg)
+![jSQL Layers](http://pamblam.github.io/jSQL/imgs/3layers.png)
 
 # Under the hood, jSQL has 3 layers...
 
