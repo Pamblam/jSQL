@@ -18,43 +18,73 @@
 	</head>
 	<body>
 		
-		<div class="jumbotron">
-			<div class="container">
-				<div class="row">
-					<div class="col-lg-12 text-center">
-						<img src="http://i.imgur.com/VQlJKOc.png" class="img-responsive" style="width: 70%; margin: 0 auto;" /><br>
-						<a href='index.html' class='btn btn-default'><i class="fa fa-home" aria-hidden="true"></i> Home</a>
-						<a href='demo.html' class='btn btn-default'><i class="fa fa-magic" aria-hidden="true"></i> Demo</a>
-						<a href='plugins/' class='btn btn-default'><i class="fa fa-plug" aria-hidden="true"></i> Plugins</a>
-						<a href='https://github.com/Pamblam/jSQL/wiki' class='btn btn-default'><i class="fa fa-book" aria-hidden="true"></i> Docs</a>
-						<a href='https://github.com/Pamblam/jSQL' class='btn btn-default'><i class="fa fa-github-alt" aria-hidden="true"></i> Github</a>
-						<a href='https://github.com/Pamblam/jSQL/archive/master.zip' class='btn btn-default'><i class="fa fa-cloud-download" aria-hidden="true"></i> Download</a>
-					</div>
+		<nav class="navbar navbar-default navbar-fixed-top">
+			<div class="container-fluid">
+				<div class="navbar-header">
+					<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+						<span class="sr-only">Toggle navigation</span>
+						<span class="icon-bar"></span>
+						<span class="icon-bar"></span>
+						<span class="icon-bar"></span>
+					</button>
+					<a class="navbar-brand" href="#">
+						<img src="http://i.imgur.com/VQlJKOc.png" />
+					</a>
+				</div>
+				<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+					<ul class="nav navbar-nav navbar-right">
+						<li><a href="index.html"><i class="fa fa-home" aria-hidden="true"></i> Home</a></li>
+						<li><a href="demo.html"><i class="fa fa-magic" aria-hidden="true"></i> Demo</a></li>
+						<li><a href="plugins/"><i class="fa fa-plug" aria-hidden="true"></i> Plugins</a></li>
+						<li><a href="https://github.com/Pamblam/jSQL/wiki"><i class="fa fa-book" aria-hidden="true"></i> Docs</a></li>
+						<li><a href="https://github.com/Pamblam/jSQL"><i class="fa fa-github-alt" aria-hidden="true"></i> Github</a></li>
+						<li><a href="https://github.com/Pamblam/jSQL/archive/master.zip"><i class="fa fa-cloud-download" aria-hidden="true"></i> Download</a></li>
+					</ul>
 				</div>
 			</div>
-		</div>
+		</nav>
 
 		<div class="container">
 			<div class="row">
 				<div class="col-lg-12">
+					<a href="https://badge.fury.io/js/jsql-official"><img src="https://badge.fury.io/js/jsql-official.svg"></a>
+					<a href="https://travis-ci.org/Pamblam/jSQL"><img src="https://travis-ci.org/Pamblam/jSQL.svg?branch=master"></a>
+					<a href="https://github.com/Pamblam/jSQL/wiki"><img src="http://inch-ci.org/github/Pamblam/jSQL.svg?branch=master"></a>
+					<a href="https://codeclimate.com/github/Pamblam/jSQL"><img src="https://codeclimate.com/github/Pamblam/jSQL/badges/gpa.svg"></a>
+					<a href="https://coveralls.io/github/Pamblam/jSQL?branch=master"><img src="https://coveralls.io/repos/github/Pamblam/jSQL/badge.svg?branch=master"></a>
+					<br><br>
+					
 					<h3>What is it?</h3>
 					<p>jSQL is a partial yet robust SQL implementation with features specific to Javascript. jSQL is based on mySQL, but does not implement the entire standard, for example, <code>JOIN</code> statements are not yet possible with jSQL but it can run without a server and store Javascript Dates and Functions.</p>
-					<h3>Features</h3>
-					<ul>
-						<li>Can persist data to the user's hard drive from a browser.</li>
-						<li>Cross browser compatible & works on old browsers.</li>
-						<li>Allows you to define your own data/column types.</li>
-						<li>If you say J-S-Q-L really fast it sounds like "j-squirrel."</li>
-						<li>Exposes the "lower-level" interface for those that value a slight performance boost or just prefer a pure Javascript interface to an SQL interface.</li>
-					</ul>
-					<h3>Use cases</h3>
-					<ul>
-						<li>Manipulating sorting and querying (fairly) large datasets in the browser.</li>
-						<li>A more robust alternative to browser cookies.</li>
-						<li>Ideal for Cordova/Phonegap applications since it implements both WebSQL and IndexedDB.</li>
-						<li>Server caching (see the xhrCache plugin).</li>
-						<li>Saving state in browser or canvas based games.</li>
-					</ul>
+					<p>jSQL is completely hand written and has no dependencies.</p>
+					<br>
+					<div class="well">
+						<div class="row" style="font-size:90%;">
+							<div class="col-sm-6">	
+								<h5>Features</h5>
+								<ul class="star-bullet">
+									<li>Can persist data to the user's hard drive from a browser.</li>
+									<li>Cross browser compatible & works on old browsers.</li>
+									<li>Allows you to define your own data/column types.</li>
+									<li>If you say J-S-Q-L really fast it sounds like "j-squirrel."</li>
+									<li>Exposes the "lower-level" interface for those that value a slight performance boost or just prefer a pure Javascript interface to an SQL interface.</li>
+								</ul>
+							</div>
+							<div class="col-sm-6">
+								<h5>Use cases</h5>
+								<ul class="star-bullet">
+									<li>Manipulating sorting and querying (fairly) large datasets in the browser.</li>
+									<li>A more robust alternative to browser cookies.</li>
+									<li>Ideal for Cordova/Phonegap applications since it implements both WebSQL and IndexedDB.</li>
+									<li>Server caching (see the xhrCache plugin).</li>
+									<li>Saving state in browser or canvas based games.</li>
+								</ul>
+							</div>
+						</div>
+					</div>
+				</div>	
+				
+				<div class="col-lg-12">
 					<h3>Installation</h3>
 					<p>Download the jSQL.js file from Github or use <code>npm</code></p>
 					<pre><code>npm install jsql-official</code></pre>
@@ -62,9 +92,11 @@
 					<pre> https://gitcdn.xyz/repo/Pamblam/jSQL/master/jSQL.min.js </pre>
 					<p>For use in a Node environment, require it like so:</p>
 					<pre><code>var jSQL = require("jSQL.js");</code></pre>
-					
-					<h1 id="under-the-hood-jsql-has-3-layers-">Under the hood, jSQL has 3 layers...</h1>
-					<p><img src="https://i.imgur.com/WKEmFdB.jpg" alt="jSQL Layers" class="img-responsive"></p>
+				</div><br>
+				<div class="col-lg-12">
+					<h3>How does it work?</h3>
+					<center><img src="imgs/3layers.png" alt="jSQL Layers" class="img-responsive"></center>
+					<h5>Under the hood, jSQL has 3 layers...</h5>
 					<ul>
 						<li><p><strong>At the Lowest level</strong>, jSQL automatically chooses the best method of storage to save state and interacts directly with it. This layer exposes a persistence method, <a href="https://github.com/Pamblam/jSQL/wiki/Persistence-Management#jsqlcommit"><code>jSQL.commit()</code></a>, which is called to serialize and store all data currently in the jSQL database on the user&#39;s hard drive. While the app is open and loaded in the browser, this data is serialized and stored within reach in the <a href="https://github.com/Pamblam/jSQL/wiki/Persistence-Management#jsqltables"><code>jSQL.tables</code></a> object where the library is able to perform operations on it.</p>
 						</li>
@@ -76,9 +108,16 @@
 					<p>jSQL is written with flexibility, ease of use, and efficiency in mind. It supports prepared statements, column typing, and can store any kind of data you need it to, including functions and instances of custom objects. It&#39;s applications include caching server-sourced data, state persistence, data management and querying and more.</p>
 					<hr>
 					
-					<h1>Recent Updates</h1>
-					<p>jSQL is actively updated and maintained. jSQL was last updated <b><span id='lastud'>...</span> ago</b>.</p>
-					<ul id="updates"></ul>
+					<div class="panel panel-default">
+						<div class="panel-heading">
+							<h3 class="panel-title">Recent Updates</h3>
+						</div>
+						<div class="panel-body">
+							<p>jSQL is actively updated and maintained. jSQL was last updated <b><span id='lastud'>...</span> ago</b>.</p>
+							<ul id="updates"></ul>
+						</div>
+					</div>
+					
 				</div>
 			</div>
 		</div>

@@ -17,6 +17,21 @@
 
 }
 
+.star-bullet li {
+    display: block;
+}
+
+.star-bullet li:before
+{
+    content: "\e080";
+    font-family: 'Glyphicons Halflings';
+    font-size: 9px;
+    float: left;
+    margin-top: 4px;
+    margin-left: -17px;
+    color: #CCCCCC;
+}
+
 .footer{
 	background: #2E294E url("../imgs/background.png") no-repeat fixed 0 0;
 	background-size: cover;
@@ -36,12 +51,14 @@
 }
 
 body, .btn-primary{
+	
 	background: #F1E9DA;
 	font-family: "Verdana", "Geneva", "sans-serif";
 	padding-bottom:0;
 	margin-bottom:0;
 }
 
+body{padding-top:60px;}
 html{
 	padding-bottom:0;
 	margin-bottom:0;
@@ -54,4 +71,15 @@ p{
 h1, h2, h3, h4, h5{
 	color: #02111B;
 	font-family: 'syncopatebold';
+}
+
+.navbar-brand
+{
+    margin: 0;
+    padding: 0;
+}
+
+.navbar-brand img
+{
+    max-height: 100%;
 }
