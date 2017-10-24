@@ -34,6 +34,21 @@ jSQL.load(function () {
 			expect(!!jSQL.tables.keytest3).to.be.true;
 		});
 		
+		it('insert into keytest3 table', function(){
+			jSQL.query("insert ignore into keytest3 (name, num1, num2) values (?, ?, ?)").execute(['bob', 3, 5]);
+			expect(jSQL.tables.keytest3.data.length === 1).to.be.true;
+		});
+		
+		it('insert into keytest3 table', function(){
+			jSQL.query("insert ignore into keytest3 (name, num1, num2) values (?, ?, ?)").execute(['bill', 3, 5]);
+			expect(jSQL.tables.keytest3.data.length === 1).to.be.true;
+		});
+		
+		it('insert into keytest3 table', function(){
+			jSQL.query("insert ignore into keytest3 (name, num1, num2) values (?, ?, ?)").execute(['bill', 3, 7]);
+			expect(jSQL.tables.keytest3.data.length === 2).to.be.true;
+		});
+		
 		it('create smalltest table', function(){
 			jSQL.query("create table `smalltest` (id int, str varchar)").execute();
 			expect((!!jSQL.tables.smalltest)).to.be.true;
@@ -150,12 +165,14 @@ jSQL.load(function () {
 		});
 		
 		it("should create a table with a bunch of numbers", function(){
-			jSQL.query(`CREATE TABLE IF NOT EXISTS nmbrs (
+			var sql = jSQL.minify(`CREATE TABLE IF NOT EXISTS nmbrs (
 				numba1 tinyint(3),
 				numba2 smallint(3),
 				numba3 mediumint(3),
 				numba4 bigint(3)
-			)`).execute();
+			)`);
+			
+			jSQL.query(sql).execute();
 			expect((jSQL.tables.nmbrs !== undefined)).to.be.true;
 		});
 		
@@ -167,6 +184,22 @@ jSQL.load(function () {
 		it("should select from a table with a bunch of numbers", function(){
 			var r = jSQL.query(`select * from nmbrs`).execute().fetch("ARRAY");
 			expect((r[0] === 3)).to.be.true;
+		});
+		
+		
+		it("should create a table with a function", function(){
+			jSQL.query(`CREATE TABLE IF NOT EXISTS fff (fff)`).execute();
+			expect((jSQL.tables.fff !== undefined)).to.be.true;
+		});
+		
+		it("should insert into a table with a function", function(){
+			jSQL.query(`insert into fff values (?)`).execute([function(){return "poop"}]);
+			expect((jSQL.tables.fff !== undefined)).to.be.true;
+		});
+		
+		it("should select from a table with a function", function(){
+			var r = jSQL.query(`select * from fff`).execute().fetch("ARRAY");
+			expect((r[0]() === "poop")).to.be.true;
 		});
 		
 	});

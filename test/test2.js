@@ -19,7 +19,7 @@ jSQL.load(function () {
 		});
 		
 		it('dynamically adding columns', function(){
-			jSQL.createTable("aTable", ["a", "b", "c"]).execute([
+			jSQL.createTable("aTable", ["u0", "b", "c"]).execute([
 				[12, 34, 56, 78],
 				[23, 45, 67, 89, 78, 78],
 				[7]
@@ -28,7 +28,7 @@ jSQL.load(function () {
 		});
 		
 		it('mixing arrays and objects', function(){
-			jSQL.createTable("ceTable", ['a', 'b', 'c', 'd', 'e', 'f', 'g']).execute([
+			jSQL.createTable("ceTable", ['u0', 'b', 'c', 'd', 'e', 'f', 'g']).execute([
 				[12, 34, 56, 78],
 				[23, 45, 67, 89, 78, 78],
 				[7], {"a": 1, "b": 2, "g": 3}
