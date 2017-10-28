@@ -17,7 +17,8 @@ return {
 	commit: persistenceManager.commit,
 	rollback: persistenceManager.rollback,
 	setApiPriority: persistenceManager.setApiPriority,
-	getApi: persistenceManager.getApi
+	getApi: persistenceManager.getApi,
+	tokenize: tokenize
 };
 
 })();

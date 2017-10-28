@@ -1,5 +1,5 @@
 /**
- * jsql-official - v3.0.1
+ * jsql-official - v3.0.2
  * A persistent SQL database.
  * @author Rob Parham
  * @website http://pamblam.github.io/jSQL/
@@ -1076,36 +1076,26 @@ function jSQLLexer(input) {
 	this.token_matches = [];
 }
 
-jSQLLexer.prototype.getTokenMatches = function(){
-	if(this.token_matches.length) return this.token_matches;
-	this.token_matches = []
+jSQLLexer.prototype.getNextToken = function(){
 	var r;
 	for(var i=0; i<jSQLLexer.token_types.length; i++){
-		this.token_matches[i] = [];
 		while ((r = jSQLLexer.token_types[i].pattern.exec(this.input)) != null) {
-			this.token_matches[i].push(r);
+			if(r.index !== this.pos) continue;
+			var token = new jSQLToken(this.pos, r[0], i);
+			this.pos += token.length;
+			return token;
 		}
 	}
-	return this.token_matches;
+	return false;
 };
 
 jSQLLexer.prototype.getTokens = function(){	
 	if(this.tokens.length) return this.tokens;
-	this.pos = 0;
-	var matches = this.getTokenMatches(),
-	throwaway = ["COMMENT", "WHITESPACE"];
-	for(var type_id=0; type_id<matches.length; type_id++){
-		if(this.pos >= this.input.length) break;
-		for(var match_index=0; match_index<matches[type_id].length; match_index++){
-			var r = matches[type_id][match_index];
-			if(r.index !== this.pos) continue;
-			var token = new jSQLToken(this.pos, r[0], type_id);
-			this.pos += token.length;
-			if(throwaway.indexOf(token.type) === -1) this.tokens.push(token);
-			type_id=-1;
-			break;
-		}
-	}
+	this.pos = 0; this.tokens = [];
+	var throwaway = ["COMMENT", "WHITESPACE"], token;
+	while ((token = this.getNextToken()) != false) 
+		if(throwaway.indexOf(token.type) === -1)
+			this.tokens.push(token);
 	if(this.pos !== this.input.length){
 		var pos;
 		if(this.tokens.length){
@@ -2686,6 +2676,10 @@ function deleteFrom(tablename){
 }
 
 
+function tokenize(sql){
+	return new jSQLLexer(sql).getTokens();
+}
+
 function jSQLReset(){ 
 	jSQL.tables = {};
 	jSQL.commit(); 
@@ -2707,7 +2701,7 @@ function removeQuotes(str){
 }
 
 return {
-	version: "3.0.1",
+	version: "3.0.2",
 	tables: {},
 	query: jSQLParseQuery,
 	createTable: createTable,
@@ -2724,7 +2718,8 @@ return {
 	commit: persistenceManager.commit,
 	rollback: persistenceManager.rollback,
 	setApiPriority: persistenceManager.setApiPriority,
-	getApi: persistenceManager.getApi
+	getApi: persistenceManager.getApi,
+	tokenize: tokenize
 };
 
 })();

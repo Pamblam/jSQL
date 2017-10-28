@@ -46,6 +46,7 @@ module.exports = function(grunt) {
 					'src/sugar/insertInto.js',
 					'src/sugar/dropTable.js',
 					'src/sugar/deleteFrom.js',
+					'src/sugar/tokenize.js',
 					'src/helpers/jSQLReset.js',
 					'src/helpers/jSQLMinifier.js',
 					'src/helpers/removeQuotes.js',
