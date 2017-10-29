@@ -1,5 +1,5 @@
 /**
- * jsql-official - v3.1.0
+ * jsql-official - v3.1.1
  * A persistent SQL database.
  * @author Rob Parham
  * @website http://pamblam.github.io/jSQL/
@@ -2727,7 +2727,7 @@ function removeQuotes(str){
 }
 
 return {
-	version: "3.1.0",
+	version: "3.1.1",
 	tables: {},
 	query: jSQLParseQuery,
 	createTable: createTable,
