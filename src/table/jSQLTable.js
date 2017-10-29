@@ -15,39 +15,36 @@ function jSQLTable(name, columns, data, types, keys, auto_increment){
 		unique: []
 	};
 
-	// Create the table and load the data, if there is any
-	self.init = function(name, columns, data, types, keys, auto_increment){
-		self.name = name;
+	self.name = name;
 
-		// If the types array does not exist, create it
-		if(undefined === types) types = [];
+	// If the types array does not exist, create it
+	if(undefined === types) types = [];
 
-		// If first param is array, no third param
-		if(Array.isArray(columns) && undefined === data)
-			// Create the data parameter from column param
-			{data = columns; columns = [];}
+	// If first param is array, no third param
+	if(Array.isArray(columns) && undefined === data)
+		// Create the data parameter from column param
+		{data = columns; columns = [];}
 
-		// If second param is array of objects
-		// - Create table from first object
-		// - Generate data (3rd) param
-		if(Array.isArray(columns) && !Array.isArray(columns[0]) && typeof columns[0]==="object"){
-			var cols = [], n;
-			for(n in columns[0])
-				if(columns[0].hasOwnProperty(n))
-					cols.push(n);
-			data = columns;
-			columns = cols;
-		}
+	// If second param is array of objects
+	// - Create table from first object
+	// - Generate data (3rd) param
+	if(Array.isArray(columns) && !Array.isArray(columns[0]) && typeof columns[0]==="object"){
+		var cols = [], n;
+		for(n in columns[0])
+			if(columns[0].hasOwnProperty(n))
+				cols.push(n);
+		data = columns;
+		columns = cols;
+	}
 
-		self.initColumns(columns, types);
+	self.initColumns(columns, types);
 
-		self.initKeys(keys, auto_increment);
+	self.initKeys(keys, auto_increment);
 
-		// Load the data, if there is any
-		if(data !== undefined) self.loadData(data);
-	};
+	self.initAI(auto_increment);
 
-	self.init(name, columns, data, types, keys, auto_increment);
+	// Load the data, if there is any
+	if(data !== undefined) self.loadData(data);
 }
 
 jSQLTable.prototype.initColumns = function(columns, types){
@@ -73,7 +70,7 @@ jSQLTable.prototype.initColumns = function(columns, types){
 	for(i=0; i<columns.length; i++) this.colmap[columns[i]] = i;
 };
 
-jSQLTable.prototype.initKeys = function(keys, auto_increment){
+jSQLTable.prototype.initKeys = function(keys){
 	// Set up keys if key data is provided
 	var key;
 	var keyTypes = ["primary", "unique"];
@@ -90,7 +87,9 @@ jSQLTable.prototype.initKeys = function(keys, auto_increment){
 		if(type === "primary") this.keys.primary.column = key.column;
 		if(type === "unique") this.keys.unique.push({column:key.column, map:{}});
 	}
+};
 
+jSQLTable.prototype.initAI = function(auto_increment){
 	// if there's an AI column
 	if(auto_increment){
 		var isInPKArray = Array.isArray(this.keys.primary.column) && this.keys.primary.column.indexOf(auto_increment) > -1;
