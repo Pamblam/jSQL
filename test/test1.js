@@ -202,5 +202,10 @@ jSQL.load(function () {
 			expect((r[0]() === "poop")).to.be.true;
 		});
 		
+		it("should test the null and defult stuff", function(){
+			var r = jSQL.query("create table popopopopo (ID int() not null auto_increment primary key, Name varchar(30) default 'bob' )").execute();
+			expect(jSQL.tables.popopopopo.types[0].null === false && jSQL.tables.popopopopo.types[1].default === "bob").to.be.true;
+		});
+		
 	});
 });

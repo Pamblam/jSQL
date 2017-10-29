@@ -38,7 +38,9 @@ function createTable(name, columnsOrData, types, keys, auto_increment){
 				columnsOrData.push(col);
 				types.push({
 					type: columnDefs[n].type, 
-					args: (undefined===columnDefs[n].args ? []:columnDefs[n].args)
+					args: (undefined===columnDefs[n].args ? []:columnDefs[n].args),
+					default: (undefined===columnDefs[n].default?undefined:columnDefs[n].default),
+					null: (undefined===columnDefs[n].null?true:columnDefs[n].null),
 				});
 				// if a key is defined in the row column (only for single column keys)
 				if(columnDefs[n].hasOwnProperty("key") && Array.isArray(keys)){

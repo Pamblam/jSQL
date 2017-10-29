@@ -7,14 +7,11 @@ function jSQL_Error(error_no) {
 	/* istanbul ignore next */
 	switch(error_no){
 		case "0001": this.message = "Corrupted function stored in data."; break;
-		case "0002": this.message = "Attempted to apply a non-function as an error handler."; break;
 		case "0003": this.message = "Invalid datatype definition."; break;
 		case "0004": this.message = "DataType must have a `type` property."; break;
 		case "0005": this.message = "DataType must have a `serialize` function."; break;
 		case "0006": this.message = "DataType must have an `unserialize` function."; break;
 		case "0007": this.message = "Unsupported data type."; break;
-		case "0008": this.message = "Invalid table types array."; break;
-		case "0009": this.message = "Unable to convert columns to array."; break;
 		case "0010": this.message = "Invalid constraint."; break;
 		case "0011": this.message = "This table already has a primary key."; break;
 		case "0012": this.message = "renameColumn expects and old column name and a new one, both must be strings."; break;
@@ -77,6 +74,7 @@ function jSQL_Error(error_no) {
 		case "0069": this.message = "NUMERIC or INT type invalid or out of range."; break;
 		case "0070": this.message = "Unknown Lexer Error."; break;
 		case "0071": this.message = "Unknown Parser Error."; break;
+		case "0072": this.message = "Inserting null into a non-null column."; break;
 		default: this.message = "Unknown error."; break;
 	}
 	this.toString = function () {
