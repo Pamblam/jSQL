@@ -4,7 +4,6 @@ function jSQL_Error(error_no) {
 	this.stack = undefined;
 	var e = new Error();
 	if(e.stack) this.stack = e.stack;
-	/* istanbul ignore next */
 	if(jSQL_Error.message_codes[error_no]) this.message = jSQL_Error.message_codes[error_no];
 	else this.message = "Unknown error.";
 	this.toString = function () {

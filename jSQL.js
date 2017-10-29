@@ -1,5 +1,5 @@
 /**
- * jsql-official - v3.1.1
+ * jsql-official - v3.1.2
  * A persistent SQL database.
  * @author Rob Parham
  * @website http://pamblam.github.io/jSQL/
@@ -16,7 +16,6 @@ function jSQL_Error(error_no) {
 	this.stack = undefined;
 	var e = new Error();
 	if(e.stack) this.stack = e.stack;
-	/* istanbul ignore next */
 	if(jSQL_Error.message_codes[error_no]) this.message = jSQL_Error.message_codes[error_no];
 	else this.message = "Unknown error.";
 	this.toString = function () {
@@ -2750,7 +2749,7 @@ function removeQuotes(str){
 }
 
 return {
-	version: "3.1.1",
+	version: "3.1.2",
 	tables: {},
 	query: jSQLParseQuery,
 	createTable: createTable,
