@@ -1,5 +1,5 @@
 /**
- * jsql-official - v3.0.2
+ * jsql-official - v3.1.0
  * A persistent SQL database.
  * @author Rob Parham
  * @website http://pamblam.github.io/jSQL/
@@ -19,14 +19,11 @@ function jSQL_Error(error_no) {
 	/* istanbul ignore next */
 	switch(error_no){
 		case "0001": this.message = "Corrupted function stored in data."; break;
-		case "0002": this.message = "Attempted to apply a non-function as an error handler."; break;
 		case "0003": this.message = "Invalid datatype definition."; break;
 		case "0004": this.message = "DataType must have a `type` property."; break;
 		case "0005": this.message = "DataType must have a `serialize` function."; break;
 		case "0006": this.message = "DataType must have an `unserialize` function."; break;
 		case "0007": this.message = "Unsupported data type."; break;
-		case "0008": this.message = "Invalid table types array."; break;
-		case "0009": this.message = "Unable to convert columns to array."; break;
 		case "0010": this.message = "Invalid constraint."; break;
 		case "0011": this.message = "This table already has a primary key."; break;
 		case "0012": this.message = "renameColumn expects and old column name and a new one, both must be strings."; break;
@@ -89,6 +86,7 @@ function jSQL_Error(error_no) {
 		case "0069": this.message = "NUMERIC or INT type invalid or out of range."; break;
 		case "0070": this.message = "Unknown Lexer Error."; break;
 		case "0071": this.message = "Unknown Parser Error."; break;
+		case "0072": this.message = "Inserting null into a non-null column."; break;
 		default: this.message = "Unknown error."; break;
 	}
 	this.toString = function () {
@@ -407,7 +405,6 @@ function jSQLTable(name, columns, data, types, keys, auto_increment){
 
 		// If the types array does not exist, create it
 		if(undefined === types) types = [];
-		if(!Array.isArray(types)) return _throw(new jSQL_Error("0008"));
 
 		// If first param is array, no third param
 		if(Array.isArray(columns) && undefined === data)
@@ -427,15 +424,13 @@ function jSQLTable(name, columns, data, types, keys, auto_increment){
 		}
 
 		// At this point, columns should be an array
-		// - Double check and save it to the object
-		if(!Array.isArray(columns)) return _throw(new jSQL_Error("0009"));
 		self.columns = columns;
 
 		// Fill any missing holes in the types array 
 		// with "ambi" which means it can be any type
 		for(var i=0; i<columns.length; i++)
 			self.types[i] = undefined === types[i] || undefined === types[i].type ? 
-				{type:"ambi", args:[]} : types[i];
+				{type:"ambi", args:[], default: undefined, null: true} : types[i];
 
 		// Validate & normalize each type
 		for(var i=self.types.length; i--;){
@@ -515,7 +510,7 @@ function jSQLTable(name, columns, data, types, keys, auto_increment){
 
 	self.addColumn = function(name, defaultVal, type){
 		if(undefined === type || undefined === type.type)
-			type = {type:"AMBI",args:[]};
+			type = {type:"AMBI",args:[], null:true, default: undefined};
 		type.type = type.type.toUpperCase();
 		if(undefined === defaultVal) defaultVal = null;
 		if('string' != typeof name) name = (function r(n){
@@ -648,6 +643,9 @@ function jSQLTable(name, columns, data, types, keys, auto_increment){
 
 	self.normalizeColumnStoreValue = function(colName, value){
 		var type = self.types[self.colmap[colName]];
+		if([false, undefined].indexOf(type.null) >-1 && value === null) return _throw(new jSQL_Error("0072"));
+		
+		if(null === value && type.default !== undefined) value = type.default;
 		var storeVal = jSQL.types.getByType(type.type.toUpperCase()).serialize(value, type.args);
 		if((!isNaN(parseFloat(storeVal)) && isFinite(storeVal)) || typeof storeVal === "string")
 			return storeVal;
@@ -1107,6 +1105,8 @@ jSQLLexer.prototype.getTokens = function(){
 	return this.tokens;
 };
 
+
+
 jSQLLexer.token_types = [
 	
 	// STRINGs
@@ -1245,6 +1245,16 @@ jSQLLexer.token_types = [
 	{pattern: /set/gi,
 		type: 'KEYWORD',
 		name: "SET"},
+	{pattern: /not null/gi,
+		type: 'KEYWORD',
+		name: "NOT NULL"},
+	{pattern: /null/gi,
+		type: 'KEYWORD',
+		name: "NULL"},
+	{pattern: /default/gi,
+		type: 'KEYWORD',
+		name: "DEFAULT"},
+	
 
 	// DIRECTIVEs
 	{pattern: /create table/gi,
@@ -1275,6 +1285,8 @@ jSQLLexer.token_types = [
 		name: "UNQTD IDENTIFIER"}
 ];
 
+
+
 function jSQLToken(pos, literal, tok_index){
 	this.type_id = tok_index;
 	this.input_pos = pos;
@@ -1293,11 +1305,13 @@ function jSQLToken(pos, literal, tok_index){
 	if(this.type === "STRING" && this.name === "SQ STRING")
 		this.value = literal.substr(1, literal.length - 2).replace(/\'/g, "'");
 	if(this.type === "NUMBER") this.value = parseFloat(this.literal);
+	if(this.type === "KEYWORD" && this.name === "NULL") this.value = null;
 }
+
 
 function jSQLParseQuery(query){
 
-	var tokens = new jSQLLexer(query).getTokens();
+	var tokens = jSQL.tokenize(query);
 	
 	if(!tokens || !Array.isArray(tokens) || !tokens.length) 
 		return _throw(new jSQL_Error("0041"));
@@ -1405,7 +1419,7 @@ function jSQLParseCreateTokens(tokens){
 		if(token.type === "IDENTIFIER") var col_name = token.value;
 		else return _throw(new jSQL_Parse_Error(token, "COLUMN NAME"));
 		
-		var column = {name: col_name, type:"AMBI", args:[]};
+		var column = {name: col_name, type:"AMBI", args:[], null: true, default: undefined};
 		
 		token = tokens.shift();
 		
@@ -1427,16 +1441,26 @@ function jSQLParseCreateTokens(tokens){
 				}
 				token = tokens.shift();
 			}
-			
-			if(token.type === "KEYWORD" && token.name === "AUTO_INCREMENT"){
-				column.auto_increment = true;
-				token = tokens.shift();
-			}
-			
-			if(token.type === "KEYWORD" && (token.name === "UNIQUE KEY" || token.name === "PRIMARY KEY")){
-				keys.push({column: col_name, type: token.name.split(" ")[0].toLowerCase()});
-				token = tokens.shift();
-			}
+		}
+		
+		if(token.type === "KEYWORD" && (token.name === "NULL" || token.name === "NOT NULL")){
+			column.null = token.name === "NULL";
+			token = tokens.shift();
+		}
+		
+		if(token.type === "KEYWORD" && token.name === "DEFAULT"){
+			column.default = tokens.shift().value;
+			token = tokens.shift();
+		}
+		
+		if(token.type === "KEYWORD" && token.name === "AUTO_INCREMENT"){
+			column.auto_increment = true;
+			token = tokens.shift();
+		}
+
+		if(token.type === "KEYWORD" && (token.name === "UNIQUE KEY" || token.name === "PRIMARY KEY")){
+			keys.push({column: col_name, type: token.name.split(" ")[0].toLowerCase()});
+			token = tokens.shift();
 		}
 		
 		params[table_name].push(column);
@@ -2628,7 +2652,9 @@ function createTable(name, columnsOrData, types, keys, auto_increment){
 				columnsOrData.push(col);
 				types.push({
 					type: columnDefs[n].type, 
-					args: (undefined===columnDefs[n].args ? []:columnDefs[n].args)
+					args: (undefined===columnDefs[n].args ? []:columnDefs[n].args),
+					default: (undefined===columnDefs[n].default?undefined:columnDefs[n].default),
+					null: (undefined===columnDefs[n].null?true:columnDefs[n].null),
 				});
 				// if a key is defined in the row column (only for single column keys)
 				if(columnDefs[n].hasOwnProperty("key") && Array.isArray(keys)){
@@ -2701,7 +2727,7 @@ function removeQuotes(str){
 }
 
 return {
-	version: "3.0.2",
+	version: "3.1.0",
 	tables: {},
 	query: jSQLParseQuery,
 	createTable: createTable,

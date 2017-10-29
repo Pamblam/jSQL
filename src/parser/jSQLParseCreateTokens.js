@@ -56,7 +56,7 @@ function jSQLParseCreateTokens(tokens){
 		if(token.type === "IDENTIFIER") var col_name = token.value;
 		else return _throw(new jSQL_Parse_Error(token, "COLUMN NAME"));
 		
-		var column = {name: col_name, type:"AMBI", args:[]};
+		var column = {name: col_name, type:"AMBI", args:[], null: true, default: undefined};
 		
 		token = tokens.shift();
 		
@@ -78,16 +78,26 @@ function jSQLParseCreateTokens(tokens){
 				}
 				token = tokens.shift();
 			}
-			
-			if(token.type === "KEYWORD" && token.name === "AUTO_INCREMENT"){
-				column.auto_increment = true;
-				token = tokens.shift();
-			}
-			
-			if(token.type === "KEYWORD" && (token.name === "UNIQUE KEY" || token.name === "PRIMARY KEY")){
-				keys.push({column: col_name, type: token.name.split(" ")[0].toLowerCase()});
-				token = tokens.shift();
-			}
+		}
+		
+		if(token.type === "KEYWORD" && (token.name === "NULL" || token.name === "NOT NULL")){
+			column.null = token.name === "NULL";
+			token = tokens.shift();
+		}
+		
+		if(token.type === "KEYWORD" && token.name === "DEFAULT"){
+			column.default = tokens.shift().value;
+			token = tokens.shift();
+		}
+		
+		if(token.type === "KEYWORD" && token.name === "AUTO_INCREMENT"){
+			column.auto_increment = true;
+			token = tokens.shift();
+		}
+
+		if(token.type === "KEYWORD" && (token.name === "UNIQUE KEY" || token.name === "PRIMARY KEY")){
+			keys.push({column: col_name, type: token.name.split(" ")[0].toLowerCase()});
+			token = tokens.shift();
 		}
 		
 		params[table_name].push(column);

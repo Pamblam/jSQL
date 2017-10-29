@@ -21,7 +21,6 @@ function jSQLTable(name, columns, data, types, keys, auto_increment){
 
 		// If the types array does not exist, create it
 		if(undefined === types) types = [];
-		if(!Array.isArray(types)) return _throw(new jSQL_Error("0008"));
 
 		// If first param is array, no third param
 		if(Array.isArray(columns) && undefined === data)
@@ -41,15 +40,13 @@ function jSQLTable(name, columns, data, types, keys, auto_increment){
 		}
 
 		// At this point, columns should be an array
-		// - Double check and save it to the object
-		if(!Array.isArray(columns)) return _throw(new jSQL_Error("0009"));
 		self.columns = columns;
 
 		// Fill any missing holes in the types array 
 		// with "ambi" which means it can be any type
 		for(var i=0; i<columns.length; i++)
 			self.types[i] = undefined === types[i] || undefined === types[i].type ? 
-				{type:"ambi", args:[]} : types[i];
+				{type:"ambi", args:[], default: undefined, null: true} : types[i];
 
 		// Validate & normalize each type
 		for(var i=self.types.length; i--;){
@@ -129,7 +126,7 @@ function jSQLTable(name, columns, data, types, keys, auto_increment){
 
 	self.addColumn = function(name, defaultVal, type){
 		if(undefined === type || undefined === type.type)
-			type = {type:"AMBI",args:[]};
+			type = {type:"AMBI",args:[], null:true, default: undefined};
 		type.type = type.type.toUpperCase();
 		if(undefined === defaultVal) defaultVal = null;
 		if('string' != typeof name) name = (function r(n){
@@ -262,6 +259,9 @@ function jSQLTable(name, columns, data, types, keys, auto_increment){
 
 	self.normalizeColumnStoreValue = function(colName, value){
 		var type = self.types[self.colmap[colName]];
+		if([false, undefined].indexOf(type.null) >-1 && value === null) return _throw(new jSQL_Error("0072"));
+		
+		if(null === value && type.default !== undefined) value = type.default;
 		var storeVal = jSQL.types.getByType(type.type.toUpperCase()).serialize(value, type.args);
 		if((!isNaN(parseFloat(storeVal)) && isFinite(storeVal)) || typeof storeVal === "string")
 			return storeVal;

@@ -1,7 +1,7 @@
 
 function jSQLParseQuery(query){
 
-	var tokens = new jSQLLexer(query).getTokens();
+	var tokens = jSQL.tokenize(query);
 	
 	if(!tokens || !Array.isArray(tokens) || !tokens.length) 
 		return _throw(new jSQL_Error("0041"));

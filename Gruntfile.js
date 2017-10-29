@@ -29,6 +29,8 @@ module.exports = function(grunt) {
 					'src/query_types/jSQLUpdateQuery.js',
 					'src/query_types/jSQLCreateQuery.js',
 					'src/lexer/jSQLLexer.js',
+					'src/lexer/token_types.js',
+					'src/lexer/token.js',
 					'src/parser/jSQLParseQuery.js',
 					'src/parser/jSQLParseCreateTokens.js',
 					'src/parser/jSQLParseInsertTokens.js',

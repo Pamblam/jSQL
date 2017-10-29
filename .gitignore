@@ -5,3 +5,4 @@ package-lock.json
 node_modules
 coverage
 .coveralls.yml
+browser_tests
