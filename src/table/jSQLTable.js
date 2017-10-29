@@ -266,7 +266,7 @@ jSQLTable.prototype.updateKeysOnInsert = function(row, ignore){
 		var key_columns = Array.isArray(ukey.column) ? ukey.column : [ukey.column];
 		var col, vals = [];
 		for(var uk=0; uk<key_columns.length; uk++){
-			col=key_columns[uk]
+			col=key_columns[uk];
 			var index = this.colmap[col];
 			if(null === row[index]){
 				if(ignore === true) return false;

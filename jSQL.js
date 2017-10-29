@@ -17,84 +17,85 @@ function jSQL_Error(error_no) {
 	var e = new Error();
 	if(e.stack) this.stack = e.stack;
 	/* istanbul ignore next */
-	switch(error_no){
-		case "0001": this.message = "Corrupted function stored in data."; break;
-		case "0003": this.message = "Invalid datatype definition."; break;
-		case "0004": this.message = "DataType must have a `type` property."; break;
-		case "0005": this.message = "DataType must have a `serialize` function."; break;
-		case "0006": this.message = "DataType must have an `unserialize` function."; break;
-		case "0007": this.message = "Unsupported data type."; break;
-		case "0010": this.message = "Invalid constraint."; break;
-		case "0011": this.message = "This table already has a primary key."; break;
-		case "0012": this.message = "renameColumn expects and old column name and a new one, both must be strings."; break;
-		case "0013": this.message = "Column does not exist."; break;
-		case "0014": this.message = "Data must be an array."; break;
-		case "0015": this.message = "Data not structured properly."; break;
-		case "0016": this.message = "Cannot insert a null value in a primary column."; break;
-		case "0017": this.message = "Primary Key violated."; break;
-		case "0018": this.message = "Cannot insert a null value in a unique column."; break;
-		case "0019": this.message = "Unique key violated."; break;
-		case "0020": this.message = "Data type's serialize() method did not return a string."; break;
-		case "0021": this.message = "Table does not exist."; break;
-		case "0022": this.message = "Method does not apply to query type."; break;
-		case "0023": this.message = "Fetch expects paramter one to be 'ASSOC', 'ARRAY', or undefined."; break;
-		case "0024": this.message = "Expected number or quoted string."; break;
-		case "0025": this.message = "Expected 'ORDER BY'."; break;
-		case "0026": this.message = "Must call ORDER BY before using ASC."; break;
-		case "0027": this.message = "Must call ORDER BY before using DESC."; break;
-		case "0028": this.message = "Unintelligible query. Expected 'FROM'."; break;
-		case "0029": this.message = "Unintelligible query. Expected 'TABLE'."; break;
-		case "0030": this.message = "Unintelligible query. Expected 'INTO'."; break;
-		case "0031": this.message = "Unintelligible query. Expected 'VALUES'."; break;
-		case "0032": this.message = "Unintelligible query. Too many values."; break;
-		case "0033": this.message = "Unintelligible query. Columns mismatch."; break;
-		case "0034": this.message = "Invalid Column definition."; break;
-		case "0035": this.message = "Unintelligible query. Expected 'NOT'."; break;
-		case "0036": this.message = "Unintelligible query. Expected 'EXISTS'."; break;
-		case "0037": this.message = "Unintelligible query. expected ')'."; break;
-		case "0038": this.message = "Invalid Arg definition."; break;
-		case "0039": this.message = "Unintelligible query. Expected 'SET'."; break;
-		case "0040": this.message = "Unintelligible query. Expected 'FROM'."; break;
-		case "0041": this.message = "Unintelligible query. WTF?"; break;
-		case "0042": this.message = "Must add a conditional before adding another 'Where' condition."; break;
-		case "0043": this.message = "Column name must be a string."; break;
-		case "0044": this.message = "Must add a 'where' clause before the 'equals' call."; break;
-		case "0045": this.message = "Must add a 'where' clause before the 'preparedLike' call."; break;
-		case "0046": this.message = "Must add a 'where' clause before the 'doesNotEqual' call."; break;
-		case "0047": this.message = "Must add a 'where' clause before the 'lessThan' call."; break;
-		case "0048": this.message = "Must add a 'where' clause before the 'greaterThan' call."; break;
-		case "0049": this.message = "Must add a 'where' clause before the 'contains' call."; break;
-		case "0050": this.message = "Must add a 'where' clause before the 'endsWith' call."; break;
-		case "0051": this.message = "Must add a 'where' clause before the 'beginsWith' call."; break;
-		case "0052": this.message = "Must use orderBy clause before using ASC."; break;
-		case "0053": this.message = "Must use orderBy clause before using DESC."; break;
-		case "0054": this.message = "Could not execute query."; break;
-		case "0055": this.message = "Error creating table."; break;
-		case "0056": this.message = "Error opening database."; break;
-		case "0057": this.message = "indexedDB is not supported in this browser."; break;
-		case "0058": this.message = "Could not add data after 10 seconds."; break;
-		case "0059": this.message = "Error updating datastore version."; break;
-		case "0060": this.message = "Could not connect to the indexedDB datastore."; break;
-		case "0061": this.message = "Could not initiate a transaction."; break;
-		case "0062": this.message = "Could not initiate a request."; break;
-		case "0063": this.message = "Browser doesn't support Web SQL or IndexedDB."; break;
-		case "0064": this.message = "Unable towrite to datastore file."; break;
-		case "0065": this.message = "AUTO_INCREMENT column must be a key."; break;
-		case "0066": this.message = "AUTO_INCREMENT column must be an INT type."; break;
-		case "0067": this.message = "API is out of memory, cannot store more data."; break;
-		case "0068": this.message = "Invalid ENUM value."; break;
-		case "0069": this.message = "NUMERIC or INT type invalid or out of range."; break;
-		case "0070": this.message = "Unknown Lexer Error."; break;
-		case "0071": this.message = "Unknown Parser Error."; break;
-		case "0072": this.message = "Inserting null into a non-null column."; break;
-		default: this.message = "Unknown error."; break;
-	}
+	if(jSQL_Error.message_codes[error_no]) this.message = jSQL_Error.message_codes[error_no];
+	else this.message = "Unknown error.";
 	this.toString = function () {
 		if(undefined === this.error) return "jSQL Error - "+this.message;
 		return "jSQL Error #"+this.error+" - "+this.message;
 	};
 }
 
+jSQL_Error.message_codes = {
+	"0001": "Corrupted function stored in data.",
+	"0003": "Invalid datatype definition.",
+	"0004": "DataType must have a `type` property.",
+	"0005": "DataType must have a `serialize` function.",
+	"0006": "DataType must have an `unserialize` function.",
+	"0007": "Unsupported data type.",
+	"0010": "Invalid constraint.",
+	"0011": "This table already has a primary key.",
+	"0012": "renameColumn expects and old column name and a new one, both must be strings.",
+	"0013": "Column does not exist.",
+	"0014": "Data must be an array.",
+	"0015": "Data not structured properly.",
+	"0016": "Cannot insert a null value in a primary column.",
+	"0017": "Primary Key violated.",
+	"0018": "Cannot insert a null value in a unique column.",
+	"0019": "Unique key violated.",
+	"0020": "Data type's serialize() method did not return a string.",
+	"0021": "Table does not exist.",
+	"0022": "Method does not apply to query type.",
+	"0023": "Fetch expects paramter one to be 'ASSOC', 'ARRAY', or undefined.",
+	"0024": "Expected number or quoted string.",
+	"0025": "Expected 'ORDER BY'.",
+	"0026": "Must call ORDER BY before using ASC.",
+	"0027": "Must call ORDER BY before using DESC.",
+	"0028": "Unintelligible query. Expected 'FROM'.",
+	"0029": "Unintelligible query. Expected 'TABLE'.",
+	"0030": "Unintelligible query. Expected 'INTO'.",
+	"0031": "Unintelligible query. Expected 'VALUES'.",
+	"0032": "Unintelligible query. Too many values.",
+	"0033": "Unintelligible query. Columns mismatch.",
+	"0034": "Invalid Column definition.",
+	"0035": "Unintelligible query. Expected 'NOT'.",
+	"0036": "Unintelligible query. Expected 'EXISTS'.",
+	"0037": "Unintelligible query. expected ')'.",
+	"0038": "Invalid Arg definition.",
+	"0039": "Unintelligible query. Expected 'SET'.",
+	"0040": "Unintelligible query. Expected 'FROM'.",
+	"0041": "Unintelligible query. WTF?",
+	"0042": "Must add a conditional before adding another 'Where' condition.",
+	"0043": "Column name must be a string.",
+	"0044": "Must add a 'where' clause before the 'equals' call.",
+	"0045": "Must add a 'where' clause before the 'preparedLike' call.",
+	"0046": "Must add a 'where' clause before the 'doesNotEqual' call.",
+	"0047": "Must add a 'where' clause before the 'lessThan' call.",
+	"0048": "Must add a 'where' clause before the 'greaterThan' call.",
+	"0049": "Must add a 'where' clause before the 'contains' call.",
+	"0050": "Must add a 'where' clause before the 'endsWith' call.",
+	"0051": "Must add a 'where' clause before the 'beginsWith' call.",
+	"0052": "Must use orderBy clause before using ASC.",
+	"0053": "Must use orderBy clause before using DESC.",
+	"0054": "Could not execute query.",
+	"0055": "Error creating table.",
+	"0056": "Error opening database.",
+	"0057": "indexedDB is not supported in this browser.",
+	"0058": "Could not add data after 10 seconds.",
+	"0059": "Error updating datastore version.",
+	"0060": "Could not connect to the indexedDB datastore.",
+	"0061": "Could not initiate a transaction.",
+	"0062": "Could not initiate a request.",
+	"0063": "Browser doesn't support Web SQL or IndexedDB.",
+	"0064": "Unable towrite to datastore file.",
+	"0065": "AUTO_INCREMENT column must be a key.",
+	"0066": "AUTO_INCREMENT column must be an INT type.",
+	"0067": "API is out of memory, cannot store more data.",
+	"0068": "Invalid ENUM value.",
+	"0069": "NUMERIC or INT type invalid or out of range.",
+	"0070": "Unknown Lexer Error.",
+	"0071": "Unknown Parser Error.",
+	"0072": "Inserting null into a non-null column."
+};
 
 function jSQL_Lexer_Error(pos, context) {
 	var max_ellipse_len = 25;
@@ -650,7 +651,7 @@ jSQLTable.prototype.updateKeysOnInsert = function(row, ignore){
 		var key_columns = Array.isArray(ukey.column) ? ukey.column : [ukey.column];
 		var col, vals = [];
 		for(var uk=0; uk<key_columns.length; uk++){
-			col=key_columns[uk]
+			col=key_columns[uk];
 			var index = this.colmap[col];
 			if(null === row[index]){
 				if(ignore === true) return false;
