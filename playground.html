@@ -5,12 +5,10 @@
 		<meta http-equiv="X-UA-Compatible" content="IE=edge">
 		<meta name="viewport" content="width=device-width, initial-scale=1">
 
-		<title>jSQL - Javascript Query Language - Live Demo</title>
+		<title>jSQL - Javascript Query Language</title>
 
 		<link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
 		<link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
-		<link href="https://cdn.rawgit.com/xdan/datetimepicker/1525c130/jquery.datetimepicker.css" rel="stylesheet">
-		<link href="css/calendar.css" rel="stylesheet">
 		<link href="css/style.css" rel="stylesheet">
 
 		<!--[if lt IE 9]>
@@ -48,45 +46,18 @@
 		</nav>
 
 		<div class="container">
-			<div class='row'>
-				<div class="col-sm-12">
-					<h1>Live Demo - Calendar</h1>
-					<div class="alert alert-info" role="alert">
-						<p>Use the form to add events to the calendar. Click an event to view or cancel it. Click on "Reset Calendar" to delete all events. If you navigate away from this page your calendar will be the same when you return. In addition to jSQL, this demo uses <a href="https://github.com/Pamblam/CalendarJS" target="_blank">calendarJS</a>, <a href="https://gist.github.com/Pamblam/4d33935d712903da10c7366c20157d21">jsDateFormatter</a>, and <a href="https://xdsoft.net/jqplugins/datetimepicker/" target="_blank">DateTimePicker</a>. There are more examples in the Github project you can check out.</p>
-					</div>
-				</div>
-			</div>
-			<div class="row">
-				<div class="col-sm-6">
-					<div id="cal"></div>
-				</div>
-				<div class="col-sm-6">
-					<div class="form-group input-group-lg">
-						<label for="desc">Title/Description</label>
-						<input type="text" class="form-control" id="desc">
-					</div>
-					<div class="form-group">
-						<label for="startTime">Start Date and Time</label>
-						<input type="text" class="form-control" id="startTime">
-					</div>
-					<div class="form-group">
-						<label for="endTime">End Date and Time</label>
-						<input type="text" class="form-control" id="endTime">
-					</div>
-					<button class="btn btn-info" id="addEvent"><i class="fa fa-calendar-plus-o" aria-hidden="true"></i> Add Event</button>
-					<button class="btn btn-info" id="reset"><i class="fa fa-trash" aria-hidden="true"></i> Reset Calendar</button>
-				</div>
-			</div>
+			...
 		</div>
 		<div class='footer'>
 			<p>jSQL &copy; Rob Parham 2016, 2017 | <a href="https://github.com/Pamblam/jSQL/wiki/License">Apache Licensed</a></p>
 		</div>
+		
+		
+		
 		<script src="//code.jquery.com/jquery-2.2.4.min.js"></script>
 		<script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
 		<script src='scripts/jSQL.min.js'></script>
-		<script src='https://cdn.rawgit.com/xdan/datetimepicker/1525c130/build/jquery.datetimepicker.full.min.js'></script>
-		<script src='scripts/jsDateFormatter.js'></script>
-		<script src='scripts/calendar.js'></script>
-		<script src='scripts/demo.js'></script>
+		<script src='scripts/jsql-devel.js'></script>
+		<script src='scripts/playground.js'></script>
 	</body>
 </html>
