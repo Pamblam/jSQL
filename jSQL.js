@@ -1,5 +1,5 @@
 /**
- * jsql-official - v3.2.1
+ * jsql-official - v3.2.2
  * A persistent SQL database.
  * @author Rob Parham
  * @website http://pamblam.github.io/jSQL/
@@ -2749,7 +2749,7 @@ function removeQuotes(str){
 }
 
 function jsql_export(create_tables, table_names){
-	create_tables = create_tables || true;
+	create_tables = undefined === create_tables ? true : !!create_tables;
 	table_names = table_names || [];
 	var dump_buffer = [];
 	for(var table in jSQL.tables){
@@ -2793,10 +2793,10 @@ function jsql_export(create_tables, table_names){
 					}
 				}
 				dump_buffer.push('CREATE TABLE `'+table+'` ('+(table_buffer.join(","))+"\n)");
-				for(var i=0; i<jSQL.tables[table].data.length; i++){
-					var values = JSON.stringify(jSQL.tables[table].data[i]).trim().slice(1, -1).replace(/"jsqlNull"/g, 'null');
-					dump_buffer.push("INSERT INTO `"+table+"` (`"+(jSQL.tables[table].columns.join('`,`'))+"`) VALUES ("+values+")");
-				}
+			}
+			for(var i=0; i<jSQL.tables[table].data.length; i++){
+				var values = JSON.stringify(jSQL.tables[table].data[i]).trim().slice(1, -1).replace(/"jsqlNull"/g, 'null');
+				dump_buffer.push("INSERT INTO `"+table+"` (`"+(jSQL.tables[table].columns.join('`,`'))+"`) VALUES ("+values+")");
 			}
 		}
 	}
@@ -2816,7 +2816,7 @@ function jsql_import(dump){
 }
 
 return {
-	version: "3.2.1",
+	version: "3.2.2",
 	tables: {},
 	query: jSQLParseQuery,
 	createTable: createTable,
