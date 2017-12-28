@@ -18,7 +18,9 @@ return {
 	rollback: persistenceManager.rollback,
 	setApiPriority: persistenceManager.setApiPriority,
 	getApi: persistenceManager.getApi,
-	tokenize: tokenize
+	tokenize: tokenize,
+	export: jsql_export,
+    import: jsql_import
 };
 
 })();
