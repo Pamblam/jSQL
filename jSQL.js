@@ -1,5 +1,5 @@
 /**
- * jsql-official - v3.1.2
+ * jsql-official - v3.2.1
  * A persistent SQL database.
  * @author Rob Parham
  * @website http://pamblam.github.io/jSQL/
@@ -156,13 +156,13 @@ function jSQLDataTypeList(){
 	},{
 		type: "ENUM",
 		serialize: function(value, args){ 
-			if(value === null) return "-null-";
+			if(value === null) return "jsqlNull";
 			for(var i=args.length; i--;)
 				if(value === removeQuotes(args[i])) return value;
 			return _throw(new jSQL_Error("0068"));
 		},
 		unserialize: function(value, args){ 
-			if(value === "-null-") return null;
+			if(value === "jsqlNull") return null;
 			for(var i=args.length; i--;)
 				if(value === removeQuotes(args[i])) return value;
 			return _throw(new jSQL_Error("0068"));
@@ -240,18 +240,18 @@ function jSQLDataTypeList(){
 		type: "JSON",
 		aliases: ["ARRAY", "OBJECT"],
 		serialize: function(value){
-			if(value === null) return "null";
+			if(value === null) return "jsqlNull";
 			if(typeof value === "string") return value;
 			return JSON.stringify(value);
 		},
 		unserialize: function(value){
-			if(value === "null") return null;
+			if(value === "jsqlNull") return null;
 			return JSON.parse(value);
 		}
 	},{
 		type: "FUNCTION",
 		serialize: function(value){
-			if(value === null) return "null";
+			if(value === null) return "jsqlNull";
 			if(typeof value !== "function"){
 				var f = null;
 				try{
@@ -263,7 +263,7 @@ function jSQLDataTypeList(){
 			return "jSQLFunct-"+value.toString();
 		},
 		unserialize: function(value){
-			if(value === "null") return null;
+			if(value === "jsqlNull") return null;
 			var p = value.split("-");
 			if(p.shift() !== "jSQLFunct") return _throw(new jSQL_Error("0001"));
 			p = value.split("-");
@@ -279,22 +279,22 @@ function jSQLDataTypeList(){
 		type: "BOOLEAN",
 		aliases: ['BOOL'],
 		serialize: function(value){
-			if(value === null) return "null";
+			if(value === null) return "jsqlNull";
 			return value === true || value.toUpperCase() == "TRUE" || value == 1 ? 
 				"1" : "0" ;
 		},
 		unserialize: function(value){
-			if(value === "null") return null;
+			if(value === "jsqlNull") return null;
 			return value === true || value.toUpperCase() == "TRUE" || value == 1 ; 
 		}
 	},{
 		type: "CHAR",
 		serialize: function(value, args){ 
-			if(value === null) return "-null-";
+			if(value === null) return "jsqlNull";
 			return ""+value; 
 		},
 		unserialize: function(value, args){ 
-			if(value === "-null-") return null;
+			if(value === "jsqlNull") return null;
 			var targetLength = args[0]>>0, padString = ' ';
 			if (value.length > targetLength) return value.substr(0, args[0]);
 			else {
@@ -309,35 +309,35 @@ function jSQLDataTypeList(){
 		type: "VARCHAR",
 		aliases: ["LONGTEXT", "MEDIUMTEXT"],
 		serialize: function(value, args){ 
-			if(value === null) return "-null-";
+			if(value === null) return "jsqlNull";
 			return ""+value; 
 		},
 		unserialize: function(value, args){ 
-			if(value === "-null-") return null;
+			if(value === "jsqlNull") return null;
 			return ""+value; 
 		}
 	},{
 		type: "DATE",
 		serialize: function(value){ 
-			if(value === null) return "-null-";
+			if(value === null) return "jsqlNull";
 			if(!(value instanceof Date)) return new Date(value).getTime();
 			return value.getTime(); 
 		},
 		unserialize: function(value){ 
-			if(value === "-null-") return null;
+			if(value === "jsqlNull") return null;
 			return new Date(value);
 		}
 	},{
 		type: "AMBI",
 		serialize: function(value){
-			if(value === null) return "-null-";
+			if(value === null) return "jsqlNull";
 			if(value instanceof Date) return value.getTime();
 			if(typeof value === "function") return "jSQLFunct-"+value.toString();
 			if(!isNaN(parseFloat(value)) && isFinite(value)) return value;
 			return ""+value;
 		},
 		unserialize: function(value){ 
-			if(value === "-null-") return null;
+			if(value === "jsqlNull") return null;
 			if(typeof value === "string"){ 
 				if(value.split("-")[0] === "jSQLFunct"){
 					var p = value.split("-");
@@ -2748,8 +2748,75 @@ function removeQuotes(str){
 	return str;
 }
 
+function jsql_export(create_tables, table_names){
+	create_tables = create_tables || true;
+	table_names = table_names || [];
+	var dump_buffer = [];
+	for(var table in jSQL.tables){
+		if(!jSQL.tables.hasOwnProperty(table)) continue;
+		if(!table_names.length || ~table_names.indexOf(table)){
+			if(create_tables){
+				var table_buffer = [];
+				for(var i=0; i<jSQL.tables[table].columns.length; i++){
+					var col_buffer = [];
+					col_buffer.push("`"+jSQL.tables[table].columns[i]+"` ");
+					var args = "";
+					if(jSQL.tables[table].types[i].args.length) args = JSON.stringify(jSQL.tables[table].types[i].args).trim().slice(1, -1);
+					col_buffer.push(jSQL.tables[table].types[i].type+"("+args+") ");
+					col_buffer.push(jSQL.tables[table].types[i].null ? 'NULL ' : 'NOT NULL ');
+					if(jSQL.tables[table].types[i].default) col_buffer.push('DEFAULT '+JSON.stringify(jSQL.tables[table].types[i].default)+' ');
+					if(jSQL.tables[table].columns[i] === jSQL.tables[table].auto_inc_col) col_buffer.push('AUTO_INCREMENT');
+					table_buffer.push("\n\t"+(col_buffer.join('').trim()))
+				}
+				if(jSQL.tables[table].keys.primary.column){
+					col_buffer = []; 
+					if(Array.isArray(jSQL.tables[table].keys.primary.column)){
+						for(var i=0; i<jSQL.tables[table].keys.primary.column.length; i++){
+							col_buffer.push('`'+jSQL.tables[table].keys.primary.column[i]+'`');
+						}
+					}else{
+						col_buffer.push('`'+jSQL.tables[table].keys.primary.column+'`');
+					}
+					table_buffer.push("\n\tPRIMARY KEY ("+(col_buffer.join(','))+")");
+				}
+				if(jSQL.tables[table].keys.unique.length){
+					for(var n=0; n<jSQL.tables[table].keys.unique.length; n++){
+						col_buffer = []; 
+						if(Array.isArray(jSQL.tables[table].keys.unique[n].column)){
+							for(var i=0; i<jSQL.tables[table].keys.unique[n].column.length; i++){
+								col_buffer.push('`'+jSQL.tables[table].keys.unique[n].column[i]+'`');
+							}
+						}else{
+							col_buffer.push('`'+jSQL.tables[table].keys.unique[n].column+'`');
+						}
+						table_buffer.push("\n\tUNIQUE KEY ("+(col_buffer.join(','))+")");
+					}
+				}
+				dump_buffer.push('CREATE TABLE `'+table+'` ('+(table_buffer.join(","))+"\n)");
+				for(var i=0; i<jSQL.tables[table].data.length; i++){
+					var values = JSON.stringify(jSQL.tables[table].data[i]).trim().slice(1, -1).replace(/"jsqlNull"/g, 'null');
+					dump_buffer.push("INSERT INTO `"+table+"` (`"+(jSQL.tables[table].columns.join('`,`'))+"`) VALUES ("+values+")");
+				}
+			}
+		}
+	}
+	var header = ["-- Exported by jSQL v"+jSQL.version+" "+(new Date().toUTCString())];
+	var hwrapper = "-".repeat(header[0].length);
+	header.unshift(hwrapper);
+	header.push(hwrapper);
+	return (header.join("\n"))+"\n"+(dump_buffer.join(";\n"));
+}
+
+
+function jsql_import(dump){
+	dump = dump.split(";\n");
+	for(var i=0; i<dump.length; i++){
+		jSQL.query(dump[i]).execute();
+	}
+}
+
 return {
-	version: "3.1.2",
+	version: "3.2.1",
 	tables: {},
 	query: jSQLParseQuery,
 	createTable: createTable,
@@ -2767,7 +2834,9 @@ return {
 	rollback: persistenceManager.rollback,
 	setApiPriority: persistenceManager.setApiPriority,
 	getApi: persistenceManager.getApi,
-	tokenize: tokenize
+	tokenize: tokenize,
+	export: jsql_export,
+    import: jsql_import
 };
 
 })();

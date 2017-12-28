@@ -1,8 +1,20 @@
 
 module.exports = function(grunt) {
 	
+	var pkg = grunt.file.readJSON('package.json');
+	pkg.version = pkg.version.split(".");
+	var subversion = pkg.version.pop();
+	subversion++;
+	pkg.version.push(subversion);
+	pkg.version = pkg.version.join(".");
+	grunt.file.write('package.json', JSON.stringify(pkg, null, 2));
+	
+	console.log("---------------------------------------");
+	console.log("  Building jSQL Version "+pkg.version);
+	console.log("---------------------------------------");
+	
 	grunt.initConfig({
-		pkg: grunt.file.readJSON('package.json'),
+		pkg: pkg,
 		concat: {
 			options: {
 				banner: '/**\n * <%= pkg.name %> - v<%= pkg.version %>' +
@@ -52,6 +64,8 @@ module.exports = function(grunt) {
 					'src/helpers/jSQLReset.js',
 					'src/helpers/jSQLMinifier.js',
 					'src/helpers/removeQuotes.js',
+					'src/import_export/export.js',
+					'src/import_export/import.js',
 					'src/wrapper/foot.js.part'
 				],
 				dest: 'jSQL.js',
