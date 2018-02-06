@@ -96,7 +96,7 @@ function jSQLUpdateQuery(){
 				if(!this.table.keys.primary.map.hasOwnProperty(col) || 
 					this.table.keys.primary.map[col] != new_rows[i].rowIndex) continue;
 				delete this.table.keys.primary.map[col];
-				this.table.keys.primary.map[new_rows[i].pk_vals] = rowIndex;
+				this.table.keys.primary.map[new_rows[i].pk_vals] = new_rows[i].rowIndex;
 				break;
 			}
 			for(var k=0; ukey=this.table.keys.unique[k]; k++){
@@ -104,7 +104,7 @@ function jSQLUpdateQuery(){
 					if(!this.table.keys.unique[k].map.hasOwnProperty(col) || 
 						this.table.keys.unique[k].map[col] != new_rows[i].rowIndex) continue;
 					delete this.table.keys.unique[k].map[col];
-					this.table.keys.unique[k].map[new_rows[i].uni_vals[k]] = rowIndex;
+					this.table.keys.unique[k].map[new_rows[i].uni_vals[k]] = new_rows[i].rowIndex;
 					break;
 				}
 			}

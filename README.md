@@ -1,6 +1,6 @@
 [![jSQL Logo](http://i.imgur.com/VQlJKOc.png)](http://pamblam.github.io/jSQL/)
 
-jSQL (Official) - Version 3.2.2  - *Now available without a prescription!*
+jSQL (Official) - Version 3.2.9  - *Now available without a prescription!*
 
 [![npm version](https://badge.fury.io/js/jsql-official.svg)](https://badge.fury.io/js/jsql-official) [![Build Status](https://travis-ci.org/Pamblam/jSQL.svg?branch=master)](https://travis-ci.org/Pamblam/jSQL) [![Inline docs](http://inch-ci.org/github/Pamblam/jSQL.svg?branch=master)](https://github.com/Pamblam/jSQL/wiki) [![Coverage Status](https://coveralls.io/repos/github/Pamblam/jSQL/badge.svg?branch=master)](https://coveralls.io/github/Pamblam/jSQL?branch=master)
 
@@ -81,7 +81,7 @@ jSQL is fully documented in the [jSQL Wiki](https://github.com/Pamblam/jSQL/wiki
 
 ## Browser Support
 
-Works in basically all browsers. jSQL degrades gracefully because it falls back on cookies for persistence if localStorage, IndexedDB and WebSQL are not available. To that end, the library itself does not take advantage of any ES6 features, if you want something that does, have a look at [alaSQL](https://github.com/agershun/alasql).
+Works in basically all browsers. jSQL degrades gracefully because it falls back on cookies for persistence if localStorage, IndexedDB and WebSQL are not available.
 
 While jSQL will work in basically all browsers, these ones are preferred:
 

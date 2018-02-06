@@ -26,12 +26,12 @@ jSQLLexer.token_types = [
 		name: "WHITESPACE"},
 
 	// NUMBERs
-	{pattern: /\d+/g,
-		type: 'NUMBER',
-		name: 'INTEGER'},
-	{pattern: /\d+.\.\d+/g,
+	{pattern: /[?-]?\d+.\.\d+/g,
 		type: 'NUMBER',
 		name: 'FLOAT'},
+	{pattern: /[?-]?\d+/g,
+		type: 'NUMBER',
+		name: 'INTEGER'},
 
 	// QUALIFIERs
 	{pattern: /if not exists/gi,

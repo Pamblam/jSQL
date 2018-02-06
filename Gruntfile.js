@@ -89,7 +89,7 @@ module.exports = function(grunt) {
 				},
 				options: {
 					replacements: [{
-						pattern: /\d.\d.\d/g,
+						pattern: /\d+.\d+.\d+/g,
 						replacement: '<%= pkg.version %>'
 					}]
 				}
