@@ -1,5 +1,5 @@
 /**
- * jsql-official - v3.2.9
+ * jsql-official - v3.3.5
  * A persistent SQL database.
  * @author Rob Parham
  * @website http://pamblam.github.io/jSQL/
@@ -16,10 +16,8 @@ function jSQL_Error(error_no) {
 	this.stack = undefined;
 	var e = new Error();
 	if(e.stack) this.stack = e.stack;
-	if(jSQL_Error.message_codes[error_no]) this.message = jSQL_Error.message_codes[error_no];
-	else this.message = "Unknown error.";
+	this.message = jSQL_Error.message_codes[error_no];
 	this.toString = function () {
-		if(undefined === this.error) return "jSQL Error - "+this.message;
 		return "jSQL Error #"+this.error+" - "+this.message;
 	};
 }
@@ -491,7 +489,6 @@ jSQLTable.prototype.initAI = function(auto_increment){
 	}
 };
 
-/* istanbul ignore next */
 jSQLTable.prototype.renameColumn = function(oldname, newname){
 	if(undefined === oldname || "string" !== typeof newname) return _throw(new jSQL_Error("0012"));
 	if(this.columns.indexOf(oldname) < 0) return _throw(new jSQL_Error("0013"));
@@ -2816,7 +2813,7 @@ function jsql_import(dump){
 }
 
 return {
-	version: "3.2.9",
+	version: "3.3.5",
 	tables: {},
 	query: jSQLParseQuery,
 	createTable: createTable,

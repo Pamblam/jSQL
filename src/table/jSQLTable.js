@@ -107,7 +107,6 @@ jSQLTable.prototype.initAI = function(auto_increment){
 	}
 };
 
-/* istanbul ignore next */
 jSQLTable.prototype.renameColumn = function(oldname, newname){
 	if(undefined === oldname || "string" !== typeof newname) return _throw(new jSQL_Error("0012"));
 	if(this.columns.indexOf(oldname) < 0) return _throw(new jSQL_Error("0013"));

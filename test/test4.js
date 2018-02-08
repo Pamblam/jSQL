@@ -108,5 +108,17 @@ jSQL.load(function () {
 			expect(e_).to.be.true;
 		});
 		
+		it('Testing Parser Error', function(){
+			var e_ = false;
+			try{
+				jSQL.query("insert into farts suckbudda suckbudda suckbudda suckbudda suckbudda suckbudda suckbudda suckbudda suckbudda suckbudda suckbudda suckbudda").execute();
+				q.execute();
+			}catch(e){
+				console.log(e.toString());
+				e_ = true;
+			}
+			expect(e_).to.be.true;
+		});
+		
 	});
 });
