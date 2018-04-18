@@ -142,7 +142,7 @@ var persistenceManager = new (function(){
 								if(!rowdata.hasOwnProperty(c)) continue;
 								rowdata[c] = jSQL.tables[tablename].normalizeColumnFetchValue(c, rowdata[c]);
 							}
-							jSQL.tables[tablename].insertRow(rowdata);
+							jSQL.tables[tablename].insertRow(rowdata, true);
 						}
 					}
 
