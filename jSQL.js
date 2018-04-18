@@ -1,5 +1,5 @@
 /**
- * jsql-official - v3.3.6
+ * jsql-official - v3.3.7
  * A persistent SQL database.
  * @author Rob Parham
  * @website http://pamblam.github.io/jSQL/
@@ -2576,7 +2576,7 @@ var persistenceManager = new (function(){
 								if(!rowdata.hasOwnProperty(c)) continue;
 								rowdata[c] = jSQL.tables[tablename].normalizeColumnFetchValue(c, rowdata[c]);
 							}
-							jSQL.tables[tablename].insertRow(rowdata);
+							jSQL.tables[tablename].insertRow(rowdata, true);
 						}
 					}
 
@@ -2813,7 +2813,7 @@ function jsql_import(dump){
 }
 
 return {
-	version: "3.3.6",
+	version: "3.3.7",
 	tables: {},
 	query: jSQLParseQuery,
 	createTable: createTable,
