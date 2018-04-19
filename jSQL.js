@@ -1,5 +1,5 @@
 /**
- * jsql-official - v3.3.14
+ * jsql-official - v3.3.16
  * A persistent SQL database.
  * @author Rob Parham
  * @website http://pamblam.github.io/jSQL/
@@ -383,6 +383,7 @@ function jSQLDataTypeList(){
 
 function jSQLTable(name, columns, data, types, keys, auto_increment){
 	var self = this;	
+	self.isTemp = false;		// Is a temporary table?
 	self.name = "";				// Table name
 	self.columns = [];			// Array of column names
 	self.data = [];				// Array of arrays
@@ -692,11 +693,12 @@ function jSQLQuery(type){
 	self.newvals = {};
 	self.whereClause = new jSQLWhereClause(self);
 	self.resultSet = [];
-
+	self.isTemp = false;
+	
 	// Methods that every query class should implement
 	var methods = ['init', 'ifNotExists', 'execute', 'fetch', 'ignore', 
 		'fetchAll', 'values', 'set', 'where', 'from', 'orderBy', 'asc',
-		'desc', 'limit', 'distinct'];
+		'desc', 'limit', 'distinct', 'temporary'];
 	var queryTypeConstructors = {
 		CREATE: jSQLCreateQuery,
 		UPDATE: jSQLUpdateQuery,
@@ -1077,7 +1079,12 @@ function jSQLCreateQuery(){
 		if(undefined !== data) this.data = data; 
 		if(!(this.INEFlag && jSQL.tables.hasOwnProperty(this.tablename))){
 			jSQL.tables[this.tablename] = new jSQLTable(this.tablename, this.columns, this.data, this.coltypes, this.keys, this.ai_col);
+			if(this.isTemp) jSQL.tables[this.tablename].isTemp = true;
 		}
+		return this;
+	};
+	this.temporary = function(){
+		this.isTemp = true;
 		return this;
 	};
 	this.fetch = function(){ return null; };
@@ -1214,6 +1221,9 @@ jSQLLexer.token_types = [
 	{pattern: /values(?=[\s(`,]|$)/gi,
 		type: 'KEYWORD',
 		name: "VALUES"},
+	{pattern: /temporary(?=[\s(`,]|$)/gi,
+		type: 'KEYWORD',
+		name: "TEMPORARY"},
 	{pattern: /from(?=[\s(`,]|$)/gi,
 		type: 'KEYWORD',
 		name: "FROM"},
@@ -2465,7 +2475,7 @@ var persistenceManager = new (function(){
 		if(self.error!==false) return _throw(self.error);
 		var rows = [];
 		for(var tbl in jSQL.tables){
-			if(!jSQL.tables.hasOwnProperty(tbl)) continue;
+			if(!jSQL.tables.hasOwnProperty(tbl) || jSQL.tables[tbl].isTemp) continue;
 
 			var keys = [];
 			for(var i=0; i<jSQL.tables[tbl].keys.unique.length; i++)
@@ -2814,7 +2824,7 @@ function jsql_import(dump){
 }
 
 return {
-	version: "3.3.14",
+	version: "3.3.16",
 	tables: {},
 	query: jSQLParseQuery,
 	createTable: createTable,

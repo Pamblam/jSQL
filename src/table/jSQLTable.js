@@ -1,6 +1,7 @@
 
 function jSQLTable(name, columns, data, types, keys, auto_increment){
 	var self = this;	
+	self.isTemp = false;		// Is a temporary table?
 	self.name = "";				// Table name
 	self.columns = [];			// Array of column names
 	self.data = [];				// Array of arrays

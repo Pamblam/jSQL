@@ -11,11 +11,12 @@ function jSQLQuery(type){
 	self.newvals = {};
 	self.whereClause = new jSQLWhereClause(self);
 	self.resultSet = [];
-
+	self.isTemp = false;
+	
 	// Methods that every query class should implement
 	var methods = ['init', 'ifNotExists', 'execute', 'fetch', 'ignore', 
 		'fetchAll', 'values', 'set', 'where', 'from', 'orderBy', 'asc',
-		'desc', 'limit', 'distinct'];
+		'desc', 'limit', 'distinct', 'temporary'];
 	var queryTypeConstructors = {
 		CREATE: jSQLCreateQuery,
 		UPDATE: jSQLUpdateQuery,

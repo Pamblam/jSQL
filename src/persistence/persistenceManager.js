@@ -30,7 +30,7 @@ var persistenceManager = new (function(){
 		if(self.error!==false) return _throw(self.error);
 		var rows = [];
 		for(var tbl in jSQL.tables){
-			if(!jSQL.tables.hasOwnProperty(tbl)) continue;
+			if(!jSQL.tables.hasOwnProperty(tbl) || jSQL.tables[tbl].isTemp) continue;
 
 			var keys = [];
 			for(var i=0; i<jSQL.tables[tbl].keys.unique.length; i++)
