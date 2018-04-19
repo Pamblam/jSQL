@@ -34,6 +34,7 @@ jSQLLexer.prototype.getTokens = function(){
 			var lastToken = this.tokens[this.tokens.length-1];
 			pos = lastToken.input_pos + lastToken.length;
 		}else pos = 0;
+		console.log(this.tokens.map(function(t){return t.literal}).join(' '));
 		return _throw(new jSQL_Lexer_Error(pos, this.input)); 
 	}
 	return this.tokens;
