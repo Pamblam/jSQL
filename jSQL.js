@@ -1,5 +1,5 @@
 /**
- * jsql-official - v3.3.16
+ * jsql-official - v4.0.1
  * A persistent SQL database.
  * @author Rob Parham
  * @website http://pamblam.github.io/jSQL/
@@ -1284,13 +1284,16 @@ jSQLLexer.token_types = [
 	{pattern: /default(?=[\s(`,]|$)/gi,
 		type: 'KEYWORD',
 		name: "DEFAULT"},
+	{pattern: /table(?=[\s(`,]|$)/gi,
+		type: 'KEYWORD',
+		name: "TABLE"},
 	
 
 	// DIRECTIVEs
-	{pattern: /create table/gi,
+	{pattern: /create(?=[\s(`,]|$)/gi,
 		type: 'DIRECTIVE',
-		name: "CREATE TABLE"},
-	{pattern: /insert/gi,
+		name: "CREATE"},
+	{pattern: /insert(?=[\s(`,]|$)/gi,
 		type: 'DIRECTIVE',
 		name: "INSERT"},
 	{pattern: /delete from/gi,
@@ -1299,10 +1302,10 @@ jSQLLexer.token_types = [
 	{pattern: /drop table/gi,
 		type: 'DIRECTIVE',
 		name: "DROP TABLE"},
-	{pattern: /update/gi,
+	{pattern: /update(?=[\s(`,]|$)/gi,
 		type: 'DIRECTIVE',
 		name: "UPDATE"},
-	{pattern: /select/gi,
+	{pattern: /select(?=[\s(`,]|$)/gi,
 		type: 'DIRECTIVE',
 		name: "SELECT"},
 
@@ -1351,7 +1354,7 @@ function jSQLParseQuery(query){
 	
 	var directive = tokens.shift();
 	switch(directive.name){
-		case "CREATE TABLE":
+		case "CREATE":
 			return jSQLParseCreateTokens(tokens);
 			break;
 		case "INSERT":
@@ -1397,8 +1400,17 @@ function jSQLParseCreateTokens(tokens){
 		token,
 		if_not_exists = false,
 		keys = [],
-		params = {};
+		params = {},
+		temp = false;
 
+	token = tokens.shift();
+	
+	if(token.type === 'KEYWORD' && token.name === 'TEMPORARY'){
+		temp = true;
+		token = tokens.shift();
+	}
+	
+	if(token.name !== 'TABLE') return _throw(new jSQL_Parse_Error(token, "TABLE"));
 	token = tokens.shift();
 	
 	if(token.type === "QUALIFIER" && token.name === "IF NOT EXISTS"){
@@ -1504,6 +1516,7 @@ function jSQLParseCreateTokens(tokens){
 	}
 	
 	var query = jSQL.createTable(params, keys);
+	if(temp) query.temporary();
 	if(if_not_exists) query.ifNotExists();
 	
 	return query;
@@ -2824,7 +2837,7 @@ function jsql_import(dump){
 }
 
 return {
-	version: "3.3.16",
+	version: "4.0.1",
 	tables: {},
 	query: jSQLParseQuery,
 	createTable: createTable,

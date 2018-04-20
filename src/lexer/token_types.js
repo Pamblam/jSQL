@@ -149,13 +149,16 @@ jSQLLexer.token_types = [
 	{pattern: /default(?=[\s(`,]|$)/gi,
 		type: 'KEYWORD',
 		name: "DEFAULT"},
+	{pattern: /table(?=[\s(`,]|$)/gi,
+		type: 'KEYWORD',
+		name: "TABLE"},
 	
 
 	// DIRECTIVEs
-	{pattern: /create table/gi,
+	{pattern: /create(?=[\s(`,]|$)/gi,
 		type: 'DIRECTIVE',
-		name: "CREATE TABLE"},
-	{pattern: /insert/gi,
+		name: "CREATE"},
+	{pattern: /insert(?=[\s(`,]|$)/gi,
 		type: 'DIRECTIVE',
 		name: "INSERT"},
 	{pattern: /delete from/gi,
@@ -164,10 +167,10 @@ jSQLLexer.token_types = [
 	{pattern: /drop table/gi,
 		type: 'DIRECTIVE',
 		name: "DROP TABLE"},
-	{pattern: /update/gi,
+	{pattern: /update(?=[\s(`,]|$)/gi,
 		type: 'DIRECTIVE',
 		name: "UPDATE"},
-	{pattern: /select/gi,
+	{pattern: /select(?=[\s(`,]|$)/gi,
 		type: 'DIRECTIVE',
 		name: "SELECT"},
 
