@@ -4,8 +4,17 @@ function jSQLParseCreateTokens(tokens){
 		token,
 		if_not_exists = false,
 		keys = [],
-		params = {};
+		params = {},
+		temp = false;
 
+	token = tokens.shift();
+	
+	if(token.type === 'KEYWORD' && token.name === 'TEMPORARY'){
+		temp = true;
+		token = tokens.shift();
+	}
+	
+	if(token.name !== 'TABLE') return _throw(new jSQL_Parse_Error(token, "TABLE"));
 	token = tokens.shift();
 	
 	if(token.type === "QUALIFIER" && token.name === "IF NOT EXISTS"){
@@ -111,6 +120,7 @@ function jSQLParseCreateTokens(tokens){
 	}
 	
 	var query = jSQL.createTable(params, keys);
+	if(temp) query.temporary();
 	if(if_not_exists) query.ifNotExists();
 	
 	return query;

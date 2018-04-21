@@ -10,6 +10,10 @@ jSQL.load(()=>{
 			]}).temporary().execute();
 			expect(!!jSQL.tables.myTable).to.be.true;
 		});
+		it('Testing temp table parser', function(){
+			jSQL.query("create temporary table fartypoops (id int, name varchar)").execute();
+			expect(jSQL.tables.fartypoops.isTemp).to.be.true;
+		});
 	});
 });
 

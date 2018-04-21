@@ -11,7 +11,7 @@ function jSQLParseQuery(query){
 	
 	var directive = tokens.shift();
 	switch(directive.name){
-		case "CREATE TABLE":
+		case "CREATE":
 			return jSQLParseCreateTokens(tokens);
 			break;
 		case "INSERT":
