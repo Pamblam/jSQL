@@ -12,11 +12,14 @@ function jSQLQuery(type){
 	self.whereClause = new jSQLWhereClause(self);
 	self.resultSet = [];
 	self.isTemp = false;
+	self.selectTable = null;
+	self.pendingJoin = null; // table to be joined on "on" method
 	
 	// Methods that every query class should implement
 	var methods = ['init', 'ifNotExists', 'execute', 'fetch', 'ignore', 
 		'fetchAll', 'values', 'set', 'where', 'from', 'orderBy', 'asc',
-		'desc', 'limit', 'distinct', 'temporary'];
+		'desc', 'limit', 'distinct', 'temporary', 'join', 'innerJoin',
+		'on', 'equals'];
 	var queryTypeConstructors = {
 		CREATE: jSQLCreateQuery,
 		UPDATE: jSQLUpdateQuery,

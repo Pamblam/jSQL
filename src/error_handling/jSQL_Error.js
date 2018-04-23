@@ -79,5 +79,10 @@ jSQL_Error.message_codes = {
 	"0069": "NUMERIC or INT type invalid or out of range.",
 	"0070": "Unknown Lexer Error.",
 	"0071": "Unknown Parser Error.",
-	"0072": "Inserting null into a non-null column."
+	"0072": "Inserting null into a non-null column.",
+	"0073": "No column name given.",
+	"0074": "On method called without join.",
+	"0075": "Unknown join table.",
+	"0076": "Calling Equals without join or where clause.",
+	"0077": "No matching table to join to."
 };
