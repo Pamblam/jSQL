@@ -1,5 +1,5 @@
 /**
- * jsql-official - v3.3.19
+ * jsql-official - v4.0.34
  * A persistent SQL database.
  * @author Rob Parham
  * @website http://pamblam.github.io/jSQL/
@@ -91,7 +91,12 @@ jSQL_Error.message_codes = {
 	"0069": "NUMERIC or INT type invalid or out of range.",
 	"0070": "Unknown Lexer Error.",
 	"0071": "Unknown Parser Error.",
-	"0072": "Inserting null into a non-null column."
+	"0072": "Inserting null into a non-null column.",
+	"0073": "No column name given.",
+	"0074": "On method called without join.",
+	"0075": "Unknown join table.",
+	"0076": "Calling Equals without join or where clause.",
+	"0077": "No matching table to join to."
 };
 
 function jSQL_Lexer_Error(pos, context) {
@@ -385,6 +390,7 @@ function jSQLTable(name, columns, data, types, keys, auto_increment){
 	var self = this;	
 	self.isTemp = false;		// Is a temporary table?
 	self.name = "";				// Table name
+	self.alias = "";
 	self.columns = [];			// Array of column names
 	self.data = [];				// Array of arrays
 	self.colmap = {};			// Colmap
@@ -399,6 +405,7 @@ function jSQLTable(name, columns, data, types, keys, auto_increment){
 	};
 
 	self.name = name;
+	self.alias = name;
 
 	// If the types array does not exist, create it
 	if(undefined === types) types = [];
@@ -694,11 +701,14 @@ function jSQLQuery(type){
 	self.whereClause = new jSQLWhereClause(self);
 	self.resultSet = [];
 	self.isTemp = false;
+	self.selectTable = null;
+	self.pendingJoin = null; // table to be joined on "on" method
 	
 	// Methods that every query class should implement
 	var methods = ['init', 'ifNotExists', 'execute', 'fetch', 'ignore', 
 		'fetchAll', 'values', 'set', 'where', 'from', 'orderBy', 'asc',
-		'desc', 'limit', 'distinct', 'temporary'];
+		'desc', 'limit', 'distinct', 'temporary', 'join', 'innerJoin',
+		'on', 'equals'];
 	var queryTypeConstructors = {
 		CREATE: jSQLCreateQuery,
 		UPDATE: jSQLUpdateQuery,
@@ -848,20 +858,85 @@ function jSQLInsertQuery(){
 
 function jSQLSelectQuery(){
 	this.init = function(columns){
-		this.columns = Array.isArray(columns) ? columns : [columns];
+		var columns = Array.isArray(columns) ? columns : [columns];
+		for(var i=columns.length; i--;){
+			if("string" == typeof columns[i]) columns[i] = {table:null, name:columns[i], alias:columns[i]};
+			if('string' !== typeof columns[i].name) return _throw(new jSQL_Error("0073"));
+			if(!columns[i].alias) columns[i].alias = columns[i].name;
+			if(!columns[i].table) columns[i].table = null;
+		}
+		this.columns = columns;
 		return this;
 	};
-	this.from = function(table){
-		if(undefined === jSQL.tables[table])
-			return _throw(new jSQL_Error("0021"));
+	this.from = function(table, alias){
+		if(undefined === jSQL.tables[table]) return _throw(new jSQL_Error("0021"));
 		this.table = jSQL.tables[table];
-		if(this.columns[0] == "*") this.columns = this.table.columns;
+		if(alias) this.table.alias = alias;
+		
+		// check for * in column names
+		for(var i=0; i<this.columns.length; i++){
+			if(this.columns[i].name == "*"){
+				var all_col = this.columns.splice(i, 1)[0];
+				var colTable = all_col.table || this.table.alias;
+				if(this.table.alias == colTable){
+					for(var n=0; n<this.table.columns.length; n++){
+						this.columns.push({table:colTable, name:this.table.columns[n], alias:this.table.columns[n]});
+					}
+				}
+			}
+		}
 		return this;
+	};
+	this.join=function(table, alias){return this.innerJoin(table, alias);};
+	this.innerJoin = function(table, alias){
+		if(!alias) alias = table;
+		if(undefined === jSQL.tables[table]) return _throw(new jSQL_Error("0021"));
+		this.pendingJoin = {table: table, alias: alias, type: 'inner', onTable:null, onColumn:null, matchType: false, matchTable: null, matchColumn: null};
+		return this;
+	};
+	this.on = function(table, column){
+		var tableName;
+		// make sure the given table is either pending join or already in the tables list
+		if(!this.pendingJoin) return _throw(new jSQL_Error("0074"));
+		var joinTableExists = false;
+		if(this.table.alias == table){
+			tableName = this.table.name;
+			joinTableExists = true;
+		}
+		if(!joinTableExists && this.pendingJoin.alias == table){
+			tableName = this.pendingJoin.table;
+			joinTableExists = true;
+		}
+		if(!joinTableExists) return _throw(new jSQL_Error("0075"));
+		if(!~jSQL.tables[tableName].columns.indexOf(column)) return _throw(new jSQL_Error("0013"));
+		this.pendingJoin.onTable = table;
+		this.pendingJoin.onColumn = column;
+		return this;
+	};
+	this.equals = function(table, column){
+		if(!this.pendingJoin) return _throw(new jSQL_Error("0076"));
+		if(!this.pendingJoin.onTable) return _throw(new jSQL_Error("0077"));
+		var joinTableExists = false;
+		var tableName = false;
+		if(this.table.alias == table){
+			tableName = this.table.name;
+			joinTableExists = true;
+		}
+		if(!joinTableExists && this.pendingJoin.alias == table){
+			tableName = this.pendingJoin.table;
+			joinTableExists = true;
+		}
+		if(!joinTableExists) return _throw(new jSQL_Error("0075"));
+		if(!~jSQL.tables[tableName].columns.indexOf(column)) return _throw(new jSQL_Error("0013"));
+		this.pendingJoin.matchTable = 'table';
+		this.pendingJoin.matchcolumn = 'column';
+		this.pendingJoin.matchType = 'equals';
 	};
 	this.where = function(column){
 		return this.whereClause.where(column);
 	};
 	this.execute = function(){
+		
 		var resultRowIndexes = this.whereClause.getResultRowIndexes();
 		
 		var resultRows = [];
@@ -871,7 +946,7 @@ function jSQLSelectQuery(){
 		for(var i=0; i<resultRows.length; i++){
 			var row = {};
 			for(var n=0; n<this.columns.length; n++){
-				row[this.columns[n]] = resultRows[i][this.table.colmap[this.columns[n]]]
+				row[this.columns[n].name] = resultRows[i][this.table.colmap[this.columns[n].name]]
 			}
 			results.push(row);
 		}
@@ -879,16 +954,23 @@ function jSQLSelectQuery(){
 		return this;
 	};
 	this.fetch = function(Mode){
+		
+		
 		if(undefined === Mode) Mode = "ASSOC";
 		Mode = Mode.toUpperCase();
 		if(Mode !== "ASSOC" && Mode !== "ARRAY") return _throw(new jSQL_Error("0023"));
 		if(!this.resultSet.length) return false;
+		
 		var row = this.resultSet.shift();
+		
+		var aliasmap = {};
+		for(var i=0; i<this.columns.length; i++) aliasmap[this.columns[i].name] = this.columns[i].alias;
 
 		for(var colName in row){
 			if(row.hasOwnProperty(colName)){ 
 				var r = this.table.normalizeColumnFetchValue(colName, row[colName]);
-				row[colName] = r;
+				delete row[colName];
+				row[aliasmap[colName]] = r;
 			}
 		}
 
@@ -2026,7 +2108,8 @@ function jSQLWhereClause(context){
 			for(var i=0; i<resultRows.length; i++){
 				var row = {};
 				for(var n=0; n<self.context.columns.length; n++){
-					row[self.context.columns[n]] = resultRows[i][self.context.table.colmap[self.context.columns[n]]]
+					var colname = self.context.columns[n].name || self.context.columns[n];
+					row[colname] = resultRows[i][self.context.table.colmap[colname]]
 				}
 
 				// is this row unique?
@@ -2837,7 +2920,7 @@ function jsql_import(dump){
 }
 
 return {
-	version: "3.3.19",
+	version: "4.0.34",
 	tables: {},
 	query: jSQLParseQuery,
 	createTable: createTable,

@@ -239,7 +239,8 @@ function jSQLWhereClause(context){
 			for(var i=0; i<resultRows.length; i++){
 				var row = {};
 				for(var n=0; n<self.context.columns.length; n++){
-					row[self.context.columns[n]] = resultRows[i][self.context.table.colmap[self.context.columns[n]]]
+					var colname = self.context.columns[n].name || self.context.columns[n];
+					row[colname] = resultRows[i][self.context.table.colmap[colname]]
 				}
 
 				// is this row unique?

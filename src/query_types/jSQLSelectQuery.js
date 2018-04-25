@@ -3,20 +3,31 @@ function jSQLSelectQuery(){
 	this.init = function(columns){
 		var columns = Array.isArray(columns) ? columns : [columns];
 		for(var i=columns.length; i--;){
-			if("string" == typeof columns[i]) columns[i] = {name: columns[i], alias:columns[i]};
-			if(string !== typeof columns[i].name) return _throw(new jSQL_Error("0073"));
+			if("string" == typeof columns[i]) columns[i] = {table:null, name:columns[i], alias:columns[i]};
+			if('string' !== typeof columns[i].name) return _throw(new jSQL_Error("0073"));
 			if(!columns[i].alias) columns[i].alias = columns[i].name;
+			if(!columns[i].table) columns[i].table = null;
 		}
 		this.columns = columns;
 		return this;
 	};
 	this.from = function(table, alias){
 		if(undefined === jSQL.tables[table]) return _throw(new jSQL_Error("0021"));
-		this.selectTable = {name:table, alias:alias};
+		this.table = jSQL.tables[table];
+		if(alias) this.table.alias = alias;
 		
-		// this.table = jSQL.tables[table];
-		// account for this in the execute function
-		// if(this.columns[0] == "*") this.columns = this.table.columns;
+		// check for * in column names
+		for(var i=0; i<this.columns.length; i++){
+			if(this.columns[i].name == "*"){
+				var all_col = this.columns.splice(i, 1)[0];
+				var colTable = all_col.table || this.table.alias;
+				if(this.table.alias == colTable){
+					for(var n=0; n<this.table.columns.length; n++){
+						this.columns.push({table:colTable, name:this.table.columns[n], alias:this.table.columns[n]});
+					}
+				}
+			}
+		}
 		return this;
 	};
 	this.join=function(table, alias){return this.innerJoin(table, alias);};
@@ -31,8 +42,8 @@ function jSQLSelectQuery(){
 		// make sure the given table is either pending join or already in the tables list
 		if(!this.pendingJoin) return _throw(new jSQL_Error("0074"));
 		var joinTableExists = false;
-		if(this.selectTable.alias == table){
-			tableName = this.selectTable.name;
+		if(this.table.alias == table){
+			tableName = this.table.name;
 			joinTableExists = true;
 		}
 		if(!joinTableExists && this.pendingJoin.alias == table){
@@ -50,8 +61,8 @@ function jSQLSelectQuery(){
 		if(!this.pendingJoin.onTable) return _throw(new jSQL_Error("0077"));
 		var joinTableExists = false;
 		var tableName = false;
-		if(this.selectTable.alias == table){
-			tableName = this.selectTable.name;
+		if(this.table.alias == table){
+			tableName = this.table.name;
 			joinTableExists = true;
 		}
 		if(!joinTableExists && this.pendingJoin.alias == table){
@@ -68,6 +79,7 @@ function jSQLSelectQuery(){
 		return this.whereClause.where(column);
 	};
 	this.execute = function(){
+		
 		var resultRowIndexes = this.whereClause.getResultRowIndexes();
 		
 		var resultRows = [];
@@ -77,7 +89,7 @@ function jSQLSelectQuery(){
 		for(var i=0; i<resultRows.length; i++){
 			var row = {};
 			for(var n=0; n<this.columns.length; n++){
-				row[this.columns[n]] = resultRows[i][this.table.colmap[this.columns[n]]]
+				row[this.columns[n].name] = resultRows[i][this.table.colmap[this.columns[n].name]]
 			}
 			results.push(row);
 		}
@@ -85,16 +97,23 @@ function jSQLSelectQuery(){
 		return this;
 	};
 	this.fetch = function(Mode){
+		
+		
 		if(undefined === Mode) Mode = "ASSOC";
 		Mode = Mode.toUpperCase();
 		if(Mode !== "ASSOC" && Mode !== "ARRAY") return _throw(new jSQL_Error("0023"));
 		if(!this.resultSet.length) return false;
+		
 		var row = this.resultSet.shift();
+		
+		var aliasmap = {};
+		for(var i=0; i<this.columns.length; i++) aliasmap[this.columns[i].name] = this.columns[i].alias;
 
 		for(var colName in row){
 			if(row.hasOwnProperty(colName)){ 
 				var r = this.table.normalizeColumnFetchValue(colName, row[colName]);
-				row[colName] = r;
+				delete row[colName];
+				row[aliasmap[colName]] = r;
 			}
 		}
 
