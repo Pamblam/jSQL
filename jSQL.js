@@ -1,5 +1,5 @@
 /**
- * jsql-official - v4.0.34
+ * jsql-official - v4.1.1
  * A persistent SQL database.
  * @author Rob Parham
  * @website http://pamblam.github.io/jSQL/
@@ -2920,7 +2920,7 @@ function jsql_import(dump){
 }
 
 return {
-	version: "4.0.34",
+	version: "4.1.1",
 	tables: {},
 	query: jSQLParseQuery,
 	createTable: createTable,

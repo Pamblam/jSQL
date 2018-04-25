@@ -1,6 +1,6 @@
 {
   "name": "jsql-official",
-  "version": "4.0.34",
+  "version": "4.1.1",
   "description": "A persistent SQL database.",
   "main": "jSQL.min.js",
   "directories": {
