@@ -1,6 +1,6 @@
 [![jSQL Logo](http://i.imgur.com/VQlJKOc.png)](http://pamblam.github.io/jSQL/)
 
-jSQL (Official) - Version 4.1.1  - *Now available without a prescription!*
+jSQL (Official) - Version 4.1.31  - *Now available without a prescription!*
 
 [![npm version](https://badge.fury.io/js/jsql-official.svg)](https://badge.fury.io/js/jsql-official) [![Build Status](https://travis-ci.org/Pamblam/jSQL.svg?branch=master)](https://travis-ci.org/Pamblam/jSQL) [![Inline docs](http://inch-ci.org/github/Pamblam/jSQL.svg?branch=master)](https://github.com/Pamblam/jSQL/wiki) [![Coverage Status](https://coveralls.io/repos/github/Pamblam/jSQL/badge.svg?branch=master)](https://coveralls.io/github/Pamblam/jSQL?branch=master)
 

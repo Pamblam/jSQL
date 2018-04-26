@@ -14,6 +14,7 @@ function jSQLQuery(type){
 	self.isTemp = false;
 	self.selectTable = null;
 	self.pendingJoin = null; // table to be joined on "on" method
+	self.tempTables = [];
 	
 	// Methods that every query class should implement
 	var methods = ['init', 'ifNotExists', 'execute', 'fetch', 'ignore', 
@@ -32,7 +33,7 @@ function jSQLQuery(type){
 		self[methods[i]] = function(){
 			var q = new queryTypeConstructors[self.type];
 			if(typeof q[methods[i]] == "function") return q[methods[i]].apply(self, arguments);
-			else return _throw(new jSQL_Error("0022"));
+			return _throw(new jSQL_Error("0022"));
 		};
 	})(i);
 }

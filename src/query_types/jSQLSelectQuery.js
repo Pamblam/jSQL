@@ -15,28 +15,17 @@ function jSQLSelectQuery(){
 		if(undefined === jSQL.tables[table]) return _throw(new jSQL_Error("0021"));
 		this.table = jSQL.tables[table];
 		if(alias) this.table.alias = alias;
-		
-		// check for * in column names
-		for(var i=0; i<this.columns.length; i++){
-			if(this.columns[i].name == "*"){
-				var all_col = this.columns.splice(i, 1)[0];
-				var colTable = all_col.table || this.table.alias;
-				if(this.table.alias == colTable){
-					for(var n=0; n<this.table.columns.length; n++){
-						this.columns.push({table:colTable, name:this.table.columns[n], alias:this.table.columns[n]});
-					}
-				}
-			}
-		}
 		return this;
 	};
-	this.join=function(table, alias){return this.innerJoin(table, alias);};
+	
 	this.innerJoin = function(table, alias){
 		if(!alias) alias = table;
 		if(undefined === jSQL.tables[table]) return _throw(new jSQL_Error("0021"));
 		this.pendingJoin = {table: table, alias: alias, type: 'inner', onTable:null, onColumn:null, matchType: false, matchTable: null, matchColumn: null};
 		return this;
 	};
+	this.join=this.innerJoin;
+	
 	this.on = function(table, column){
 		var tableName;
 		// make sure the given table is either pending join or already in the tables list
@@ -71,15 +60,18 @@ function jSQLSelectQuery(){
 		}
 		if(!joinTableExists) return _throw(new jSQL_Error("0075"));
 		if(!~jSQL.tables[tableName].columns.indexOf(column)) return _throw(new jSQL_Error("0013"));
-		this.pendingJoin.matchTable = 'table';
-		this.pendingJoin.matchcolumn = 'column';
+		this.pendingJoin.matchTable = table;
+		this.pendingJoin.matchColumn = column;
 		this.pendingJoin.matchType = 'equals';
+		
+		return jSQLSelectQuery.processJoin(this);
 	};
 	this.where = function(column){
+		jSQLSelectQuery.processColumns(this);
 		return this.whereClause.where(column);
 	};
 	this.execute = function(){
-		
+		jSQLSelectQuery.processColumns(this);
 		var resultRowIndexes = this.whereClause.getResultRowIndexes();
 		
 		var resultRows = [];
@@ -94,6 +86,12 @@ function jSQLSelectQuery(){
 			results.push(row);
 		}
 		this.resultSet = results;
+		
+//		for(var i=0; i<this.tempTables.length; i++){
+//			delete jSQL.tables[this.tempTables[i]];
+//		}
+//		this.tempTables=[];
+		
 		return this;
 	};
 	this.fetch = function(Mode){
@@ -153,3 +151,127 @@ function jSQLSelectQuery(){
 		return this;
 	};
 }
+
+jSQLSelectQuery.processColumns = function(query){
+	// check for * in column names
+	for(var i=0; i<query.columns.length; i++){
+		if(query.columns[i].name == "*"){
+			var all_col = query.columns.splice(i, 1)[0];
+			
+			var tables = [];
+			if(all_col.table){
+				if(query.table.alias == all_col.table || query.table.name == all_col.table) tables.push(query.table.name);
+				else if(query.pendingJoin){
+					if(query.pendingJoin.table == all_col.table) tables.push(query.pendingJoin.table);
+					else if(query.pendingJoin.alias == all_col.table) tables.push(query.pendingJoin.table);
+					else if(query.pendingJoin.matchTable == all_col.matchTable) tables.push(query.pendingJoin.matchTable);
+				}
+			}else{
+				tables.push(query.table.name);
+				if(query.pendingJoin){
+					if(query.pendingJoin.table && !~tables.indexOf(query.pendingJoin.table)) tables.push(query.pendingJoin.table);
+					if(query.pendingJoin.onTable && !~tables.indexOf(query.pendingJoin.onTable)) tables.push(query.pendingJoin.onTable);
+					if(query.pendingJoin.matchTable && !~tables.indexOf(query.pendingJoin.matchTable)) tables.push(query.pendingJoin.matchTable);
+				}
+			}
+			
+			for(var x=0; x<tables.length; x++){
+				for(var n=0; n<jSQL.tables[tables[x]].columns.length; n++){
+					query.columns.push({table:jSQL.tables[tables[x]], name:jSQL.tables[tables[x]].columns[n], alias:jSQL.tables[tables[x]].columns[n]});
+				}
+			}
+			
+		}
+	}
+};
+
+jSQLSelectQuery.processJoin = function(query){
+	// query.pendingJoin = 
+	// {
+	//		table: table, 
+	//		alias: alias, 
+	//		type: 'inner', 
+	//		onTable:null, 
+	//		onColumn:null, 
+	//		matchType: false, 
+	//		matchTable: null, 
+	//		matchColumn: null
+	// };
+	// query.columns = [{table:null, name:columns[i], alias:columns[i]}]
+	
+	var i=0; for(i=0; i++;) if(!jSQL.tables["jt"+i]) break;
+	var tname = "jt"+i;
+	
+	var columns = [];
+	for(var i=0; i<query.columns.length; i++){
+		var col = query.columns[i];
+		col.table = tname;
+		columns.push(col);
+	}
+	
+	var tcols = [];
+	var tdata = [];
+	var types = [];
+	var table1 = jSQL.tables[query.pendingJoin.onTable];
+	var table2 = jSQL.tables[query.pendingJoin.matchTable];
+	
+	var matchColIndex1 = table1.colmap[query.pendingJoin.onColumn];
+	var matchColIndex2 = table2.colmap[query.pendingJoin.matchColumn];
+	
+	// data
+	for(var i=0; i<table1.data.length; i++){
+		var row = [];
+		var t1row = table1.data[i];
+		var t2row = null;
+		
+		for(var n=0; !t2row && n<table2.data.length; n++){
+			switch(query.pendingJoin.matchType){
+				case 'equals':
+				default:
+					if(t1row[matchColIndex1] == table2.data[n][matchColIndex2]){
+						t2row = table2.data[n];
+					}
+					break;
+			}
+		}
+		
+		switch(query.pendingJoin.type){
+			case 'inner':
+			default:
+				if(t2row){
+					row = t1row;
+					for(var x=0; x<t2row.length; x++) row.push(t2row[x]);
+				}
+				break;
+		}
+		
+		if(row.length) tdata.push(row);
+	}
+	 
+	// types
+	for(var i=0; i<table1.types.length; i++){
+		var type = table1.types[i];
+		type.null = true;
+		types.push(type);
+	}
+	for(var i=0; i<table2.types.length; i++){
+		var type = table2.types[i];
+		type.null = true;
+		types.push(type);
+	}
+	
+	// columns
+	for(var i=0; i<table1.columns.length; i++){
+		tcols.push(table1.columns[i]);
+	}
+	for(var i=0; i<table2.columns.length; i++){
+		tcols.push(table2.columns[i]);
+	}
+	
+	jSQL.tables[tname] = new jSQLTable(tname, tcols, tdata, types, []);
+	jSQL.tables[tname].isTemp = true;
+	
+	var q = jSQL.select(columns).from(tname);
+	q.tempTables.push(tname);
+	return q;
+};
