@@ -1,5 +1,5 @@
 /**
- * jsql-official - v4.2.1
+ * jsql-official - v4.3.1
  * A persistent SQL database.
  * @author Rob Parham
  * @website http://pamblam.github.io/jSQL/
@@ -879,7 +879,7 @@ function jSQLSelectQuery(){
 	this.innerJoin = function(table, alias){
 		if(!alias) alias = table;
 		if(undefined === jSQL.tables[table]) return _throw(new jSQL_Error("0021"));
-		this.pendingJoin = {table: table, alias: alias, type: 'inner', onTable:null, onColumn:null, matchType: false, matchTable: null, matchColumn: null};
+		this.pendingJoin = {table: table, alias: alias, fromTable:this.table.name, fromAlias:this.table.alias, type: 'inner', onTable:null, onColumn:null, matchType: false, matchTable: null, matchColumn: null};
 		return this;
 	};
 	this.join=this.innerJoin;
@@ -944,16 +944,13 @@ function jSQLSelectQuery(){
 			results.push(row);
 		}
 		this.resultSet = results;
-		
-//		for(var i=0; i<this.tempTables.length; i++){
-//			delete jSQL.tables[this.tempTables[i]];
-//		}
-//		this.tempTables=[];
-		
+		for(var i=0; i<this.tempTables.length; i++){
+			delete jSQL.tables[this.tempTables[i]];
+		}
+		this.tempTables=[];
 		return this;
 	};
 	this.fetch = function(Mode){
-		
 		
 		if(undefined === Mode) Mode = "ASSOC";
 		Mode = Mode.toUpperCase();
@@ -1044,18 +1041,13 @@ jSQLSelectQuery.processColumns = function(query){
 };
 
 jSQLSelectQuery.processJoin = function(query){
-	// query.pendingJoin = 
-	// {
-	//		table: table, 
-	//		alias: alias, 
-	//		type: 'inner', 
-	//		onTable:null, 
-	//		onColumn:null, 
-	//		matchType: false, 
-	//		matchTable: null, 
-	//		matchColumn: null
-	// };
-	// query.columns = [{table:null, name:columns[i], alias:columns[i]}]
+	
+	var tableMap = {};
+	tableMap[query.pendingJoin.table] = query.pendingJoin.alias;
+	tableMap[query.pendingJoin.fromTable] = query.pendingJoin.fromAlias;
+
+	var t1, t2; // the actual table names of the tables
+	for(var prop in tableMap) if(undefined === t1) t1 = prop; else t2 = prop;
 	
 	var i=0; for(i=0; i++;) if(!jSQL.tables["jt"+i]) break;
 	var tname = "jt"+i;
@@ -1070,11 +1062,12 @@ jSQLSelectQuery.processJoin = function(query){
 	var tcols = [];
 	var tdata = [];
 	var types = [];
-	var table1 = jSQL.tables[query.pendingJoin.onTable];
-	var table2 = jSQL.tables[query.pendingJoin.matchTable];
 	
-	var matchColIndex1 = table1.colmap[query.pendingJoin.onColumn];
-	var matchColIndex2 = table2.colmap[query.pendingJoin.matchColumn];
+	var table1 = jSQL.tables[t1];
+	var table2 = jSQL.tables[t2];
+	
+	var matchColIndex1 = table1.colmap[query.pendingJoin.matchColumn];
+	var matchColIndex2 = table2.colmap[query.pendingJoin.onColumn];
 	
 	// data
 	for(var i=0; i<table1.data.length; i++){
@@ -3042,7 +3035,7 @@ function jsql_import(dump){
 }
 
 return {
-	version: "4.2.1",
+	version: "4.3.1",
 	tables: {},
 	query: jSQLParseQuery,
 	createTable: createTable,
